@@ -1,0 +1,46 @@
+java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'fffds' for key 'items.SN'
+having duplicat SN
+
+java.sql.SQLIntegrityConstraintViolationException: Duplicate entry '17' for key 'items.PRIMARY'
+
+
+
+
+//            ImageView imgview = new ImageView("...");
+//            imgview.setFitWidth(200);
+//            imgview.setFitHeight(200);
+//            try{
+//                imgview.setImage(new Image(new FileInputStream(fl)));
+//            } catch (FileNotFoundException ex) {
+//                ex.printStackTrace();
+//            }
+//            StackPane imgWrap = new StackPane(imgview);
+//            imgWrap.setMaxSize(200, 200);
+//            imgWrap.setStyle("-fx-border-radius: 20; " +
+//                "-fx-border-color: black;" +
+//                "-fx-border-width: 5 ;");
+//            vbox.getChildren().add(imgWrap);
+//            VBox.setMargin(imgWrap, new Insets(10, 10, 10, 10));
+
+
+
+CREATE TABLE `items` (
+  `SKU` bigint NOT NULL,
+  `SN` varchar(50) DEFAULT NULL,
+  `PN` varchar(50) DEFAULT NULL,
+  `UPC` varchar(50) DEFAULT NULL,
+  `Grade` varchar(50) DEFAULT NULL,
+  `Location` varchar(50) DEFAULT NULL,
+  `Notes` varchar(500) DEFAULT NULL,
+  `User` varchar(50) DEFAULT NULL,
+  `DateTime` timestamp NULL DEFAULT NULL,
+  `Images` varchar(200) DEFAULT NULL,
+  `OtherRecords` varchar(1000) DEFAULT NULL,
+  `DateModified` timestamp NULL DEFAULT NULL,
+  `POnumber` varchar(50) DEFAULT NULL,
+  `Specs` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`SKU`),
+  UNIQUE KEY `SKU` (`SKU`),
+  UNIQUE KEY `SN` (`SN`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
