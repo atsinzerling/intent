@@ -34,8 +34,8 @@ public class LoginPage extends Application {
 //    private String locUser = "localuser";
 //    private String locPass = "intentgroup";
     String connectionUrl =
-//    "mysql://DESKTOP-E5VI6AD:3306/products";
-    "mysql://localhost:3306/products";
+    "mysql://DESKTOP-E5VI6AD:3306/products";
+//    "mysql://localhost:3306/products";
 
     @Override
     public void start(Stage primaryStage) {

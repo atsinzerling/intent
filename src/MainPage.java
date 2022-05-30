@@ -48,10 +48,13 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.simple.JSONArray;
@@ -63,16 +66,19 @@ import java.awt.font.TextAttribute;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -90,8 +96,8 @@ public class MainPage extends Application {
 
     static TableView<Item> table = new TableView<Item>();
     static String urll =
-//        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
-        "jdbc:mysql://localhost:3306/products";
+        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+//        "jdbc:mysql://localhost:3306/products";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
     static String user = "admin";
     static String passw = "newpass";
@@ -142,114 +148,115 @@ public class MainPage extends Application {
         Button importBtn = new Button("Import ");
         FileChooser importFileChooser = new FileChooser();
         importBtn.setOnAction(e->{
-            configureImportFileChooser(importFileChooser);
-            File importFile = importFileChooser.showOpenDialog(primaryStage);
-//            (System.getProperty("user.dir") + "/src/data/table.xlsx")
-            if (importFile == null){
-                return;
-            }
-            try {
-                XSSFSheet sheet = new XSSFWorkbook(new FileInputStream(importFile)).getSheetAt(0);;
-                Iterator<Row> rowIterator = sheet.iterator();
-                if (rowIterator.hasNext()) { //just the first column
-                    Row firstRow = rowIterator.next();
-                    int num_columns = firstRow.getLastCellNum();
-                    String[] columns = new String[num_columns];
-                    Iterator<Cell> cellIterator = firstRow.cellIterator();
 
-                    HashMap<String, Integer> colsHashm = new HashMap<>();
-                    colsHashm.put("SKU", null);
-                    colsHashm.put("SN", null);
-                    colsHashm.put("PN", null);
-                    colsHashm.put("UPC", null);
-                    colsHashm.put("Grade", null);
-                    colsHashm.put("Location", null);
-                    colsHashm.put("Notes", null);
-                    colsHashm.put("User", null);
-                    colsHashm.put("Images", null);
-                    colsHashm.put("OtherRecords", null);
-                    colsHashm.put("POnumber", null);
-                    colsHashm.put("Specs", null);
+            new ImportPreviewWindow().importBtnAction(importFileChooser, user, primaryStage);
 
-                    for (int i = 0; i < num_columns; i++) {
-                        String colmnString = cellIterator.next().getStringCellValue();
-                        if (colsHashm.containsKey(colmnString)){
-                            colsHashm.put(colmnString, i);
-                        } else{
-                            //columns are wrong output
-                        }
-                    }
-                    //now need to
-                    Row currRow = null;
-
-                    ObservableList<Item> importData = FXCollections.observableArrayList();
-
-                    while (rowIterator.hasNext()){
-                        long currSKU = 0;
-                        String currSN = null;
-                        String currPN = null;
-                        String currUPC = null;
-                        String currGrade = null;
-                        String currLocation = null;
-                        String currNotes = null;
-                        String currUser = null;
-                        String currImages = null;
-                        String currOtherRecords = null;
-                        String currPOnumber = null;
-                        String currSpecs = null;
-
-                        currRow = rowIterator.next();
-                        //now i go throw values in hashmap, and then get a cell with corresponding number; and then use
-                        // algo to generate SKU, and then check by creating and deleting the item
-
-                        if (colsHashm.get("SKU") != null){
-                            Cell SKUcell = currRow.getCell(colsHashm.get("SKU"));
-                            currSKU = (long) SKUcell.getNumericCellValue();
-                        } else{
-//                            currSKU =
-                        }
-
-                        if (colsHashm.get("SN") != null){
-                            Cell SNcell = currRow.getCell(colsHashm.get("SN"));
-                            currSN = (SNcell == null? null:SNcell.getStringCellValue());
-                        } else{
-                            currSN = null;
-                        }
-
-                        if (colsHashm.get("POnumber") != null){
-                            Cell POnumcell = currRow.getCell(colsHashm.get("POnumber"));
-                            currPOnumber = (POnumcell == null? null: POnumcell.getStringCellValue());
-                        } else{
-                            currPOnumber = null;
-                        }
-                        importData.add(new Item(
-                            currSKU,
-                            currSN,
-                            currPN,
-                            currUPC,
-                            currGrade,
-                            currLocation,
-                            currNotes,
-                            user,
-                            new Timestamp(System.currentTimeMillis()),
-                            currImages,
-                            currOtherRecords,
-                            new Timestamp(System.currentTimeMillis()),
-                            currPOnumber,
-                            currSpecs
-                        ));
-                    }
-                    new ImportPreviewWindow(importData).start(primaryStage);
-
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
         });
 
         Button exportBtn = new Button("Export");
+        exportBtn.setOnAction(e->{
+            DirectoryChooser exportDirChooser = new DirectoryChooser();
+            exportDirChooser.setTitle("Choose the destination for the export");
+            exportDirChooser.setInitialDirectory(
+                new File("D:\\Download")
+            );
+//            exportFileChooser.getExtensionFilters().addAll(
+////            new FileChooser.ExtensionFilter("All Images", "*.*"),
+//                new FileChooser.ExtensionFilter("Microsoft Excel Worksheet", "*.xlsx")
+////            new FileChooser.ExtensionFilter("PNG", "*.png")
+//            );
+
+            File exportFile = exportDirChooser.showDialog(primaryStage);
+            if (exportFile == null){
+                return;
+            }
+            System.out.println(exportFile.getAbsolutePath().toString());
+
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            XSSFSheet spreadsheet = workbook.createSheet("Intent Data");
+            XSSFRow row = spreadsheet.createRow(0);
+
+            try {
+                Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                Statement stmt = conn.createStatement();
+
+                ResultSet rs = stmt.executeQuery("SELECT * FROM items");
+                ResultSetMetaData metadata = rs.getMetaData();
+
+                int columnCount = metadata.getColumnCount();
+
+                System.out.println("test_table columns : ");
+
+                for (int i=0; i<columnCount; i++) {
+
+                    String columnName = metadata.getColumnName(i+1);
+
+                    System.out.println(columnName);
+
+                    row.createCell(i).setCellValue(columnName);
+                }
+
+                int rowCounter = 1;
+
+                while(rs.next()){
+                    row = spreadsheet.createRow(rowCounter);
+                    for (int i = 0; i<columnCount; i++){
+                        switch (i){
+                        case 0:
+                            row.createCell(i).setCellValue(rs.getLong(0+1));
+                            break;
+                        case 8:
+
+                        case 11:
+                            Cell timecell = row.createCell(i);
+                            CellStyle timestyle = workbook.createCellStyle();
+                            timestyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("d/m/yy h:mm"));
+                            timecell.setCellStyle(timestyle);
+
+                            if (rs.getTimestamp(i+1) != null) {
+                                timecell.setCellValue(new Date(rs.getTimestamp(i + 1).getTime()));
+                            }
+                            break;
+                        default:
+                            row.createCell(i).setCellValue(rs.getString(i+1));
+                            break;
+                        }
+                    }
+                    rowCounter++;
+                }
+
+                String fullpath = exportFile.getAbsolutePath().toString() + "\\Database_export.xlsx";
+                FileOutputStream out = new FileOutputStream(new File(fullpath));
+
+                workbook.write(out);
+                out.close();
+                workbook.close();
+
+                stmt.close();
+                conn.close();
+                rs.close();
+
+
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Export Successful!");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                alert.setContentText("Successfully exported to\n"+fullpath);
+
+                alert.showAndWait();
+//                if (result.get() == ButtonType.OK)
+
+            } catch (SQLException | IOException ex) {
+                ex.printStackTrace();
+            }
+
+
+//            for
+        });
 
         Button manageUsersBtn = new Button("Manage Users");
+        manageUsersBtn.setOnAction(e -> {
+            new ManageUsers().start(primaryStage);
+        });
 
         HBox adminOptHbox = new HBox(15, importBtn, exportBtn, manageUsersBtn);
 
@@ -724,17 +731,6 @@ public class MainPage extends Application {
             }
         }
 
-    }
-    private static void configureImportFileChooser(final FileChooser fileChooser) {
-        fileChooser.setTitle("Choose Pictures");
-        fileChooser.setInitialDirectory(
-            new File(System.getProperty("user.home"))
-        );
-        fileChooser.getExtensionFilters().addAll(
-//            new FileChooser.ExtensionFilter("All Images", "*.*"),
-            new FileChooser.ExtensionFilter("Microsoft Excel Worksheet", "*.xlsx")
-//            new FileChooser.ExtensionFilter("PNG", "*.png")
-        );
     }
 }
 

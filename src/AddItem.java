@@ -71,8 +71,8 @@ public class AddItem extends Application {
     Item currItem = null;
     ArrayList<Image> images = new ArrayList<>();
     String initDirectory =
-//        "\\\\DESKTOP-E5VI6AD\\application\\Images";
-        "D:\\Mine stuff\\Compiling\\Images";
+        "\\\\DESKTOP-E5VI6AD\\application\\Images";
+//        "D:\\Mine stuff\\Compiling\\Images";
     String user = "";
 
     public AddItem(String windowMode, Item currItem, String user) {
@@ -147,17 +147,26 @@ public class AddItem extends Application {
         rightGrid.add(notesArea, 0, 3);
         rightGrid.add(specsArea, 0, 1);
 
-        HBox hbox = new HBox(10);
-        hbox.setAlignment(Pos.CENTER_RIGHT);
+        TextArea historyArea = new TextArea();
+        historyArea.setMaxWidth(320);
+        historyArea.setPrefRowCount(11);
+        historyArea.setEditable(false);
+        historyArea.setWrapText(true);
+
+        VBox historyVbox = new VBox(5, new Label("History of changes:"), historyArea);
+        historyVbox.setVisible(false);
+
         Button save = new Button("Add Item");
         Button cancel = new Button("Cancel");
+        HBox hbox = new HBox(10, historyVbox, cancel, save);
+        hbox.setAlignment(Pos.TOP_LEFT);
 
-        hbox.getChildren().addAll(cancel, save);
 
         hbox.setStyle("-fx-padding: 0 0 10 0; "
 //            +"-fx-background-color: #dbdbff;"
         );
         GridPane.setMargin(hbox, new Insets(50,0,0,0));
+        HBox.setMargin(historyArea, new Insets(0,20,0,0));
 
         Button edit = new Button("Edit");
         edit.setVisible(false);
@@ -184,6 +193,8 @@ public class AddItem extends Application {
         inputpane.setCenter(rightGrid);
 //        inputpane.setAlignment(rightGrid, Pos.TOP_LEFT);
         inputpane.setLeft(grid);
+        inputpane.setBottom(hbox);
+        BorderPane.setMargin(hbox, new Insets(50, 10, 10, 30));
 
         status.setAlignment(Pos.CENTER);
         status.setMaxWidth(Double.MAX_VALUE);
@@ -513,6 +524,8 @@ public class AddItem extends Application {
                 notesArea.setText(currItem.Notes);
                 specsArea.setText(currItem.Specs);
 
+                historyVbox.setVisible(false);
+
                 save.setVisible(true);
                 save.setText("Save Changes");
                 save.setOnAction(e -> {
@@ -574,6 +587,8 @@ public class AddItem extends Application {
                 notesArea.setText(currItem.Notes);
                 specsArea.setText(currItem.Specs);
 
+                historyArea.setText((currItem.OtherRecords!=null?"   "+currItem.OtherRecords.replaceAll("\n","\t").replaceAll("<<<:::===", "\n\n   "):""));
+                historyVbox.setVisible(true);
 
                 save.setVisible(false);
 
@@ -725,22 +740,14 @@ public class AddItem extends Application {
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
 
-                    String SNnew =
-                        (SNField.getText() != null && SNField.getText().equals("") ? null : SNField.getText());
-                    String PNnew =
-                        (PNField.getText() != null && PNField.getText().equals("") ? null : PNField.getText());
-                    String UPCnew =
-                        (UPCField.getText() != null && UPCField.getText().equals("") ? null : UPCField.getText());
-                    String Gradenew =
-                        (gradeField.getText() != null && gradeField.getText().equals("") ? null : gradeField.getText());
-                    String Locationnew =
-                        (locField.getText() != null && locField.getText().equals("") ? null : locField.getText());
-                    String Notesnew =
-                        (notesArea.getText() != null && notesArea.getText().equals("") ? null : notesArea.getText());
-                    String POnumnew =
-                        (POnumField.getText() != null && POnumField.getText().equals("") ? null : POnumField.getText());
-                    String Specsnew =
-                        (specsArea.getText() != null && specsArea.getText().equals("") ? null : specsArea.getText());
+                    String SNnew = (SNField.getText() != null && SNField.getText().equals("") ? null : SNField.getText());
+                    String PNnew = (PNField.getText() != null && PNField.getText().equals("") ? null : PNField.getText());
+                    String UPCnew = (UPCField.getText() != null && UPCField.getText().equals("") ? null : UPCField.getText());
+                    String Gradenew = (gradeField.getText() != null && gradeField.getText().equals("") ? null : gradeField.getText());
+                    String Locationnew = (locField.getText() != null && locField.getText().equals("") ? null : locField.getText());
+                    String Notesnew = (notesArea.getText() != null && notesArea.getText().equals("") ? null : notesArea.getText());
+                    String POnumnew = (POnumField.getText() != null && POnumField.getText().equals("") ? null : POnumField.getText());
+                    String Specsnew = (specsArea.getText() != null && specsArea.getText().equals("") ? null : specsArea.getText());
 
                     String sql = "UPDATE items SET " +
                         (needReplacement(SNnew, currItem.SN) ?
@@ -756,20 +763,35 @@ public class AddItem extends Application {
                                 "Location=" + Locationnew + ", ") : "") +
                         (needReplacement(Notesnew, currItem.Notes) ?
                             (Notesnew != null ? "Notes='" + Notesnew + "', " : "Notes=" + Notesnew + ", ") : "") +
-                        "DateModified='" + new Timestamp(System.currentTimeMillis()) + "',"+
                         (needReplacement(POnumnew, currItem.POnumber) ?
                             (POnumnew != null ? "POnumber='" + POnumnew + "', " :
                                 "POnumber=" + POnumnew + ", ") : "") +
                         (needReplacement(Specsnew, currItem.Specs) ?
                             (Specsnew != null ? "Specs='" + Specsnew + "', " : "Specs=" + Specsnew + ", ") : "")+
                         "WHERE SKU=" + currItem.SKU;
-                    if (sql.contains(", WHERE")) {
-                        System.out.println("sql does contain , WHERE");
-                        sql = sql.replace(", WHERE", " WHERE");
+                    if (sql.contains(", WHERE SKU=" + currItem.SKU)) {
+                        sql = sql.replace(", WHERE SKU=" + currItem.SKU, " WHERE SKU=" + currItem.SKU);
                     }
-                    System.out.println(sql);
+
                     if (!sql.contains("UPDATE items SET WHERE SKU=")) {
                         try {
+                            String otherRecs = MainPage.user + " on " + new Timestamp(System.currentTimeMillis()) + ": " +
+                                (sql.contains("Notes=")?"updated Notes to \""+ Notesnew+"\", ":"") +
+                                (sql.contains("SN=")?"updated SN to \""+ SNnew+"\", ":"") +
+                                (sql.contains("PN=")?"updated PN to \""+ PNnew+"\", ":"") +
+                                (sql.contains("UPC=")?"updated UPC to \""+ UPCnew+"\", ":"") +
+                                (sql.contains("Grade=")?"updated Grade to \""+ Gradenew+"\", ":"") +
+                                (sql.contains("Location=")?"updated Location to \""+ Locationnew+"\", ":"") +
+                                (sql.contains("POnumber=")?"updated POnumber to \""+ POnumnew+"\", ":"") +
+                                (sql.contains("Specs=")?"updated Specs to \""+ Specsnew+"\"":"");
+                            if (otherRecs.length()>2 && otherRecs.substring(otherRecs.length()-2, otherRecs.length()).equals(", ")){
+                                otherRecs = otherRecs.substring(0, otherRecs.length()-2);
+                            }
+                            otherRecs = otherRecs + ";<<<:::==="+(currItem.OtherRecords==null?"":currItem.OtherRecords);
+                            sql = sql.replace(" WHERE SKU=" + currItem.SKU,", OtherRecords='"+otherRecs+"', "+
+                                "DateModified='" + new Timestamp(System.currentTimeMillis()) +"' WHERE SKU=" + currItem.SKU);
+                            System.out.println(sql);
+
                             stmt.executeUpdate(sql);
                         } catch (SQLIntegrityConstraintViolationException ex) {
                             String message = ex.getMessage();
