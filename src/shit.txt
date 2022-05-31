@@ -55,3 +55,11 @@ Specs
 
 admin on 2022-05-30 15:38:52.38: updated UPC to "cccc", updated POnumber to "fg"<<<:::===admin on 2022-05-30 15:38:46.149: updated UPC to "cccccccccc"<<<:::===admin on 2022-05-30 15:38:33.83: updated Notes to "dd", updated Grade to "sdwdewd", updated Specs to "gddddd"<<<:::===admin on 2022-05-30 15:28:55.464: updated Notes to "gt4g", updated PN to "frg4", updated Specs to "g"<<<:::===
 
+
+
+when adding new user, first try to add it into the database, then add to the arraylist and update
+probably add button to refresh
+
+Platform.runLater(() -> {
+//            userLbl.setMinHeight(userTextF.getHeight());
+        });
