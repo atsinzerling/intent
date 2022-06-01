@@ -82,30 +82,12 @@ public class AddItem extends Application {
     }
 
     public void start(Stage primaryStage) {
-//        Label secondLabel = new Label(" and whether they are \nin the right place (then they appear green).");
-//        Label instructs = new Label("Instructions");
-//        //            instructs.setFont(header);
-//        secondLabel.setAlignment(Pos.CENTER);
-//        secondLabel.setMaxWidth(Double.MAX_VALUE);
-//        instructs.setAlignment(Pos.CENTER);
-//        instructs.setMaxWidth(Double.MAX_VALUE);
-//
-//
-//        VBox secondaryLayout = new VBox(15);
-//        secondLabel.setFont(new Font("Calibri", 13));
-//        secondaryLayout.getChildren().addAll(instructs, secondLabel);
-//
-//        secondaryLayout.setMargin(instructs, new Insets(10, 0, 0, 0));
 
         GridPane grid = new GridPane();
         grid.setHgap(5);
         grid.setVgap(5);
         GridPane rightGrid = new GridPane();
         rightGrid.setVgap(7);
-//        rightGrid.setAlignment(Pos.TOP_LEFT);
-//        rightGrid.setMaxWidth(Double.MAX_VALUE);
-//        rightGrid.setBackground(new Background(
-//            new BackgroundFill(Color.RED, new CornerRadii(0), Insets.EMPTY)));
 
         grid.add(new Label("SKU:"), 0, 0);
         grid.add(new Label("SN:"), 0, 1);
@@ -116,6 +98,10 @@ public class AddItem extends Application {
         grid.add(new Label("PO number:"), 0, 6);
         rightGrid.add(new Label("Notes:"), 0, 2);
         rightGrid.add(new Label("Specs:"), 0, 0);
+
+        Label createdBy = new Label("");
+        GridPane.setMargin(createdBy, new Insets(8,0,0,0));
+        grid.add(createdBy, 0,7, 2,1);
 
         TextField SKUField = new TextField();
         TextField SNField = new TextField();
@@ -153,7 +139,7 @@ public class AddItem extends Application {
         historyArea.setEditable(false);
         historyArea.setWrapText(true);
 
-        VBox historyVbox = new VBox(5, new Label("History of changes:"), historyArea);
+        VBox historyVbox = new VBox(5, new Label("History of changes to the Item:"), historyArea);
         historyVbox.setVisible(false);
 
         Button save = new Button("Add Item");
@@ -226,10 +212,6 @@ public class AddItem extends Application {
 
 
 
-
-
-
-
         /** imagepane */
 
         BorderPane imageBlockPane = new BorderPane();
@@ -278,54 +260,50 @@ public class AddItem extends Application {
                 vbox.setPrefWidth(450);
                 if (images != null) {
                     for (Image imgg : images) {
-
-                        try {
-                            Rectangle rectangle = new Rectangle(0, 0, 120, 80);
-                            rectangle.setArcWidth(10.0);   // Corner radius
-                            rectangle.setArcHeight(10.0);
+                        Rectangle rectangle = new Rectangle(0, 0, 120, 80);
+                        rectangle.setArcWidth(10.0);   // Corner radius
+                        rectangle.setArcHeight(10.0);
 
 //                        System.out.println(fl.getAbsolutePath());
-                            ImagePattern pattern = new ImagePattern(imgg);
+                        ImagePattern pattern = new ImagePattern(imgg);
 
-                            rectangle.setFill(pattern);
-                            rectangle.setStrokeType(StrokeType.OUTSIDE);
-                            rectangle.setStrokeWidth(0.5);
-                            rectangle.setStroke(Color.BLACK);
-                rectangle.setEffect(new DropShadow(2, Color.BLACK));  // Shadow
-                            StackPane imgWrap = new StackPane(rectangle);
-                            imgWrap.setMaxSize(rectangle.getWidth(), rectangle.getHeight());
+                        rectangle.setFill(pattern);
+                        rectangle.setStrokeType(StrokeType.OUTSIDE);
+                        rectangle.setStrokeWidth(0.5);
+                        rectangle.setStroke(Color.BLACK);
+                        rectangle.setEffect(new DropShadow(2, Color.BLACK));  // Shadow
+                        StackPane imgWrap = new StackPane(rectangle);
+                        imgWrap.setMaxSize(rectangle.getWidth(), rectangle.getHeight());
 //                            imgWrap.setStyle("-fx-background-color: #ffb3b3;");
-                            rectangle.setOnMouseClicked(e ->{
-                                new ImageWindow(imgg).start(primaryStage);
-                            });
+                        rectangle.setOnMouseClicked(e ->{
+                            new ImageWindow(imgg).start(primaryStage);
+                        });
 
-                            if (!windowMode.equals("previewing")){
-                                Label del = new Label("x");
+                        if (!windowMode.equals("previewing")){
+                            Label del = new Label("x");
 //                                del.setStyle("-fx-background-color: rgba(231,231,231,0.76);");
-                                del.setMaxSize(30, 10);
-                                del.setAlignment(Pos.CENTER);
+                            del.setMaxSize(30, 10);
+                            del.setAlignment(Pos.CENTER);
 
-                                del.setBackground(new Background(new BackgroundFill(Color.rgb(231,231,231,0.76), new CornerRadii(3), Insets.EMPTY)));
-                                del.setBorder(new Border(new BorderStroke(Color.web("#000000FF"), BorderStrokeStyle.SOLID, new CornerRadii(3),
-                                    new BorderWidths(0.3))));
-                                imgWrap.setAlignment(Pos.TOP_RIGHT);
-                                del.setFont(Font.font("Arial", FontWeight.BOLD, 15));
-                                imgWrap.getChildren().add(del);
-                                del.setOnMouseClicked(e -> {
-                                    images.remove(imgg);
-                                    imageBlockPane.setCenter(generateImages());
+                            del.setBackground(new Background(new BackgroundFill(Color.rgb(231,231,231,0.76), new CornerRadii(3), Insets.EMPTY)));
+                            del.setBorder(new Border(new BorderStroke(Color.web("#000000FF"), BorderStrokeStyle.SOLID, new CornerRadii(3),
+                                new BorderWidths(0.3))));
+                            imgWrap.setAlignment(Pos.TOP_RIGHT);
+                            del.setFont(Font.font("Arial", FontWeight.BOLD, 15));
+                            imgWrap.getChildren().add(del);
+                            del.setOnMouseClicked(e -> {
+                                images.remove(imgg);
+                                imageBlockPane.setCenter(generateImages());
 //                                    pane.setRight(imageBlockPane);
-                                });
-                                del.setOnMouseEntered(e -> {
-                                    del.setCursor(Cursor.HAND);
-                                });
-                            }
-
-                            vbox.getChildren().add(imgWrap);
-                            FlowPane.setMargin(imgWrap, new Insets(6));
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
+                            });
+                            del.setOnMouseEntered(e -> {
+                                del.setCursor(Cursor.HAND);
+                            });
                         }
+
+                        vbox.getChildren().add(imgWrap);
+                        FlowPane.setMargin(imgWrap, new Insets(6));
+
                     }
                 }
                 return vbox;
@@ -347,7 +325,8 @@ public class AddItem extends Application {
                     Files.createDirectories(Paths.get(directory));
                     FileUtils.cleanDirectory(new File(directory));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    MainPage.ioErrorAlert(e).showAndWait();
+                    return;
                 }
 
                 for (Image imgg: images){
@@ -479,12 +458,6 @@ public class AddItem extends Application {
 
 
 
-
-
-
-
-
-
         class additMethods {
 
             private String notEditableColorCSS = "-fx-text-inner-color: #5f5f5f;";
@@ -605,6 +578,12 @@ public class AddItem extends Application {
                 edit.setOnAction(e -> {
                     setEditing();
                 });
+                if (!user.equals("admin") && !user.equals(currItem.User)){
+                    edit.setDisable(true);
+                }
+                //add field that was created by user
+                createdBy.setText("Item created by "+currItem.User);
+
                 System.out.println(currItem);
                 updateFields();
 
@@ -713,26 +692,9 @@ public class AddItem extends Application {
                     new additMethods().setPreviewing();
                 } catch (SQLException ex) {
                     System.out.println("some big unhandled error");
-                    ex.printStackTrace();
+                    MainPage.databaseErrorAlert(ex).showAndWait();
                 }
 
-
-//            Item[] oldArr = MainPage.readJson();
-//            Item[] newArr = new Item[oldArr.length+1];
-//            new Item(
-//                Integer.parseInt(SKUFieled.getText()),
-//                SNFieled.getText(),
-//                PNFieled.getText(),
-//                UPCFieled.getText(),
-//                "","","","",null,"",""
-//            );
-//            for (int i = 0; i < oldArr.length; i++){
-//                newArr[i+1] = oldArr[i];
-//            }
-//            MainPage.writeToJson(newArr);
-
-
-//            MainPage.table.refresh();
             }
 
             void saveChangesAction() {
@@ -818,7 +780,7 @@ public class AddItem extends Application {
                     System.out.println("error saving changes");
                     setImageStatus("", 0, "");
 //            System.out.println(e.getMessage());
-                    e.printStackTrace();
+                    MainPage.databaseErrorAlert(e).showAndWait();
                 }
 
 
@@ -883,7 +845,6 @@ public class AddItem extends Application {
                         break;
                     }
                 }
-
 
             }
 
@@ -951,23 +912,6 @@ public class AddItem extends Application {
             break;
         case "previewing":
             new additMethods().setPreviewing();
-//            ArrayList<Image> imagesFinal = new ArrayList<>();
-//            Thread newThread = new Thread(() -> {
-//                try {
-//                    System.out.println("started loading images");
-//
-//
-//
-//                } catch (IOException ex) {
-//                    ex.printStackTrace();
-//                }
-//            });
-//            newThread.start();
-//            try {
-//                newThread.join();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
             new imageAdditMethods().loadImagesFromDir();
 //            imageBlockPane.setCenter(new imageAdditMethods().generateImages());
 
@@ -975,9 +919,6 @@ public class AddItem extends Application {
         default:
             System.out.println("WTF LOL DEBUG THIS IMMIDIATELY");
         }
-
-
-//        gridpane.requestFocus();
 
 
     }
@@ -1023,13 +964,6 @@ public class AddItem extends Application {
             timeline.play();
         }
     }
-
-
-
-
-
-
-
 
 
 }

@@ -119,12 +119,6 @@ public class ImportPreviewWindow  extends Application {
         importPreviewStage.initModality(Modality.WINDOW_MODAL);
         importPreviewStage.setResizable(true);
         importPreviewStage.show();
-//        scene.setOnKeyPressed((KeyEvent e) -> {
-//            if (e.getCode() == KeyCode.ESCAPE) {
-//                imageViewStage.close();
-//            }
-//        });
-
 
 
         cancel.setOnAction(e->{
@@ -171,12 +165,9 @@ public class ImportPreviewWindow  extends Application {
 
                 alert.showAndWait();
 
-
             } catch (SQLException ex) {
-                ex.printStackTrace();
+                MainPage.databaseErrorAlert(ex).showAndWait();
             }
-
-
         });
     }
 
@@ -386,9 +377,18 @@ public class ImportPreviewWindow  extends Application {
                 System.out.println("num of rows "+ rowNum);
 
             }
-        } catch (IOException | SQLException ex) {
-            errorString += "ERROR: uncatched glodal error;";
-            ex.printStackTrace();
+        } catch (SQLException ex) {
+            errorString += "ERROR: uncatched database error;";
+            MainPage.databaseErrorAlert(ex).showAndWait();
+        } catch (IOException ioe){
+            errorString += "ERROR: uncatched IO Files error;";
+            for (int i=0; i<100; i++){
+                System.out.println("ААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА ОШИБКА");
+            }
+            MainPage.ioErrorAlert(ioe).showAndWait();
+            for (int i=0; i<100; i++){
+                System.out.println("ААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА ОШИБКА");
+            }
         }
         new ImportPreviewWindow(importDataMethod, errorString).start(primaryStage);
 

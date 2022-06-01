@@ -117,15 +117,14 @@ public class MainPage extends Application {
 //        }
 
 //        Additional.setNulls();
+        table = new TableView<Item>();
 
         BorderPane pane = new BorderPane();
+        pane.setPadding(new Insets(8));
 
-//        Label jordle = new Label("JORDLE...");
-//        jordle.setMaxWidth(Double.MAX_VALUE);
-//        jordle.setAlignment(Pos.CENTER);
-//        pane.setMargin(jordle, new Insets(20, 0, 0, 0));
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         TableColumn[] tablArr = updateTable();
+        BorderPane.setMargin(table,new Insets(7,7,12,7));
 
         table.getColumns()
             .addAll(tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[6], tablArr[7],
@@ -139,7 +138,6 @@ public class MainPage extends Application {
             }
         });
         pane.setCenter(table);
-
 
         /** admin block */
 
@@ -160,11 +158,6 @@ public class MainPage extends Application {
             exportDirChooser.setInitialDirectory(
                 new File("D:\\Download")
             );
-//            exportFileChooser.getExtensionFilters().addAll(
-////            new FileChooser.ExtensionFilter("All Images", "*.*"),
-//                new FileChooser.ExtensionFilter("Microsoft Excel Worksheet", "*.xlsx")
-////            new FileChooser.ExtensionFilter("PNG", "*.png")
-//            );
 
             File exportFile = exportDirChooser.showDialog(primaryStage);
             if (exportFile == null){
@@ -243,14 +236,11 @@ public class MainPage extends Application {
                 alert.setContentText("Successfully exported to\n"+fullpath);
 
                 alert.showAndWait();
-//                if (result.get() == ButtonType.OK)
 
             } catch (SQLException | IOException ex) {
                 ex.printStackTrace();
             }
 
-
-//            for
         });
 
         Button manageUsersBtn = new Button("Manage Users");
@@ -361,130 +351,8 @@ public class MainPage extends Application {
         primaryStage.show();
     }
 
-//    public static void main(String[] args) {
-//        launch(args);
-//    }
-
-
-//    public static Item[] readJson(){
-//        JSONParser jsonParser = new JSONParser();
-//
-//        FileReader reader = null;
-//        try {
-//            reader = new FileReader("src/items.json");
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//
-//        Object obj = null;
-//        try {
-//            obj = jsonParser.parse(reader);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//        }
-//
-//        JSONArray arr = (JSONArray) obj;
-//        System.out.println(arr);
-//        Item[] out = new Item[arr.size()];
-//        int coun = 0;
-//        for (Object elm: arr){
-//            JSONObject ell = (JSONObject) elm;
-//            out[coun] = new Item((int)ell.get("SKU"),(String)ell.get("SN"),(String)ell.get("PN"),(String)ell.get("UPC"),true,null);
-//            coun++;
-//        }
-//        return out;
-//    }
-
-//    public static boolean writeToJson(Item[] arr){
-//        JSONArray jsonArr = new JSONArray();
-//        for (Item ite: arr){
-//            JSONObject jsonItem = new JSONObject();
-//            jsonItem.put("SKU", ite.SKU);
-//            jsonItem.put("SN", ite.SN);
-//            jsonItem.put("PN", ite.PN);
-//            jsonItem.put("UPC", ite.UPC);
-//            jsonItem.put("isPerfect", ite.isPerfect);
-//
-//            JSONArray jsonImages = new JSONArray();
-//            if (ite.images != null){
-//                for (String img : ite.images) {
-//                    jsonImages.add(img);
-//                }
-//            }
-//            jsonItem.put("images", jsonImages);
-//
-//
-//
-//            jsonArr.add(jsonItem);
-//        }
-//        try (FileWriter file = new FileWriter("src/items.json")) {
-//            //We can write any JSONArray or JSONObject instance to the file
-////            String st = jsonArr.toString(4);
-//            String stt = (new ObjectMapper()).writerWithDefaultPrettyPrinter().writeValueAsString(jsonArr);
-//            file.write(stt);
-//            System.out.println(stt);
-//            file.flush();
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return true;
-//    }
-
     public static Item[] extractItemsFromDb(String query) {
         System.out.println("*** extracting   " + query.replace("\n", "\t\t") + " ***");
-
-//        ArrayList<Item> outList = new ArrayList<>();
-//
-//
-//        try {
-//            Connection conn = DriverManager.getConnection(urll);
-//            Statement stmt = conn.createStatement();
-////            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
-//            ResultSet rs = stmt.executeQuery(query);
-////            out = new Item[row_count];
-////            rs.next();
-//
-//
-//            while (rs.next()) {
-////                System.out.println(rs.getInt(1) +  "\t" +
-////                    rs.getString(2) + "\t" +
-////                    rs.getString(3) + "\t" +
-////                    rs.getString(4) + "\t" +
-////                    rs.getString(5) + "\t" +
-////                    rs.getString(6) + "\t" +
-////                    rs.getString(7) + "\t" +
-////                    rs.getString(8) + "\t" +
-////                    rs.getTimestamp(9) + "\t" +
-////                    rs.getString(10) + "\t" +
-////                    rs.getString(11) + "\t"
-////                );
-////                if (rs.getTimestamp(9) != null){
-////                    System.out.println(rs.getTimestamp(9).getClass());
-////                }
-//                outList.add(new Item(
-//                    rs.getInt(1),
-//                    rs.getString(2),
-//                    rs.getString(3),
-//                    rs.getString(4),
-//                    rs.getString(5),
-//                    rs.getString(6),
-//                    rs.getString(7),
-//                    rs.getString(8),
-//                    rs.getTimestamp(9),
-//                    rs.getString(10),
-//                    rs.getString(11)
-//                ));
-////                rs.next();
-//                conn.close();
-//            }
-//        } catch (SQLException e) {
-//            System.out.println(e.getMessage());
-//        }
-//        Item[] out = outList.toArray(new Item[outList.size()]);
 
         /** just copy of convResultSetToItem(getResultSet(query)) but closing connection */
 
@@ -497,28 +365,13 @@ public class MainPage extends Application {
 //            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
             rs = stmt.executeQuery(query);
         } catch (SQLException e) {
-            e.printStackTrace();
+            MainPage.databaseErrorAlert(e).showAndWait();
         }
 
 
         ArrayList<Item> outList = new ArrayList<>();
         try {
             while (rs.next()) {
-//                System.out.println(rs.getInt(1) +  "\t" +
-//                    rs.getString(2) + "\t" +
-//                    rs.getString(3) + "\t" +
-//                    rs.getString(4) + "\t" +
-//                    rs.getString(5) + "\t" +
-//                    rs.getString(6) + "\t" +
-//                    rs.getString(7) + "\t" +
-//                    rs.getString(8) + "\t" +
-//                    rs.getTimestamp(9) + "\t" +
-//                    rs.getString(10) + "\t" +
-//                    rs.getString(11) + "\t"
-//                );
-//                if (rs.getTimestamp(9) != null){
-//                    System.out.println(rs.getTimestamp(9).getClass());
-//                }
                 long st1 = rs.getInt(1);
                 String st2=rs.getString(2);
                 String st3=rs.getString(3);
@@ -555,52 +408,21 @@ public class MainPage extends Application {
 
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            MainPage.databaseErrorAlert(e).showAndWait();
         }
         try {rs.close();} catch (SQLException e) {e.printStackTrace();}
         try {conn.close();} catch (SQLException e) {e.printStackTrace();}
         try {stmt.close();} catch (SQLException e) {e.printStackTrace();}
 
         Item[] out = outList.toArray(new Item[outList.size()]);
-//        for (Item it: out){
-//            System.out.println(it);
-//        }
         return out;
     }
-
-//    public static ResultSet getResultSet(String query) {
-//        ResultSet rs = null;
-//        try {
-//            Connection conn = DriverManager.getConnection(urll);
-//            Statement stmt = conn.createStatement();
-////            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
-//            rs = stmt.executeQuery(query);
-////            conn.close();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return rs;
-//    }
 
     public static Item[] convResultSetToItem(ResultSet rs) {
         ArrayList<Item> outList = new ArrayList<>();
         try {
             while (rs.next()) {
-//                System.out.println(rs.getInt(1) +  "\t" +
-//                    rs.getString(2) + "\t" +
-//                    rs.getString(3) + "\t" +
-//                    rs.getString(4) + "\t" +
-//                    rs.getString(5) + "\t" +
-//                    rs.getString(6) + "\t" +
-//                    rs.getString(7) + "\t" +
-//                    rs.getString(8) + "\t" +
-//                    rs.getTimestamp(9) + "\t" +
-//                    rs.getString(10) + "\t" +
-//                    rs.getString(11) + "\t"
-//                );
-//                if (rs.getTimestamp(9) != null){
-//                    System.out.println(rs.getTimestamp(9).getClass());
-//                }
+
                 outList.add(new Item(
                     rs.getInt(1),
                     rs.getString(2),
@@ -621,7 +443,7 @@ public class MainPage extends Application {
 //                rs.next();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            MainPage.databaseErrorAlert(e).showAndWait();
         }
         try {rs.close();} catch (SQLException e) {e.printStackTrace();}
         Item[] out = outList.toArray(new Item[outList.size()]);
@@ -696,41 +518,51 @@ public class MainPage extends Application {
                 try {
                     Connection conn = DriverManager.getConnection(urll,user,passw);
                     Statement stmt = conn.createStatement();
-
-                    //part before for not main functionality
-
-//                        System.out.println("SELECT from items WHERE SKU=" + itemsSelect.get(0).SKU);
-//                        ResultSet rss = stmt.executeQuery("SELECT * FROM items WHERE SKU=''");
-//                        System.out.println(rss.isClosed());
-//                        System.out.println((new Item(
-//                            rss.getInt(1),
-//                            rss.getString(2),
-//                            rss.getString(3),
-//                            rss.getString(4),
-//                            rss.getString(5),
-//                            rss.getString(6),
-//                            rss.getString(7),
-//                            rss.getString(8),
-//                            rss.getTimestamp(9),
-//                            rss.getString(10),
-//                            rss.getString(11)
-//                        )));
-
+                    String failed = "";
 
                     for (Item ite: itemsSelect){
+                        if (!user.equals("admin") && !user.equals(ite.User)){
+                            failed += ite.SKU + ", ";
+                            continue;
+                        }
                         System.out.println("*** deleting item SKU "+ ite.SKU+" *** - " +"DELETE from items WHERE SKU=" + ite.SKU);
                         stmt.executeUpdate("DELETE from items WHERE SKU=" + ite.SKU);
                     }
                     conn.close();
                     stmt.close();
                     updateTable();
+                    if (failed.equals("")){
+                        return;
+                    } else{
+                        Alert alert2 = new Alert(Alert.AlertType.INFORMATION, "Enter a 5-letter word maybe? LoL");
+                        alert2.setTitle("Deletion Confirmation");
+//                      alert.setHeaderText("Look, a Confirmation Dialog");
+                        alert2.setContentText("User "+user+" is not allowed to delete elements "+ failed.substring(0,failed.length()-2)+" created by other users.");
+                        alert2.showAndWait();
+                    }
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    MainPage.databaseErrorAlert(ex).showAndWait();
                 }
 
             }
         }
 
+    }
+    public static Alert databaseErrorAlert(SQLException e){
+        e.printStackTrace();
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Database Error");
+//                    alert2.setHeaderText("Look, a Confirmation Dialog");
+        alert.setContentText(e.getMessage());
+
+        return alert;
+    }
+    public static Alert ioErrorAlert(IOException e){
+        e.printStackTrace();
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("IO File Error");
+        alert.setContentText(e.getMessage());
+        return alert;
     }
 }
 

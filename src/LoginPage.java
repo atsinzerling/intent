@@ -114,8 +114,6 @@ public class LoginPage extends Application {
 
 
 
-
-
         VBox fieldsVbox = new VBox(3,loginSuccessLbl,loginSuccessCommentLbl, username, passwordStack,showPass, signinBtn);
         fieldsVbox.setMaxWidth(260);
         fieldsVbox.setAlignment(Pos.TOP_RIGHT);
@@ -205,10 +203,11 @@ public class LoginPage extends Application {
     public static boolean checkCredetials(String connUrl, String user, String passw){
         try {
             Connection conn = DriverManager.getConnection(connUrl,user,passw);
-            boolean validd = conn.isValid(3);
+            boolean validd = conn.isValid(5);
             conn.close();
             return validd;
         } catch (SQLException e) {
+            e.printStackTrace();
             System.out.println("checkCreds exception catched");
             return false;
         }

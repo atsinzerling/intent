@@ -1,21 +1,18 @@
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
@@ -28,7 +25,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -38,25 +34,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ManageUsers extends Application {
     ArrayList<User> users = new ArrayList<>();
     VBox usersVbox = null;
 
-
-//    public ManageUsers(Image imgg) {
-//        this.imgg = imgg;
-//    }
-
     @Override
     public void start(Stage secondStage) {
         retrieveUsers();
-//        createUser("sampleuser3", "sample3");
-
-//        ImageView imgview = new ImageView(imgg);
-//        imgview.setFitHeight(700);
-//        imgview.setFitWidth(1244);
-//        imgview.setPreserveRatio(true);
 
         usersVbox = generateUsersVbox();
         HBox.setMargin(usersVbox, new Insets(0,0,80,0));
@@ -69,9 +56,9 @@ public class ManageUsers extends Application {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setPrefWidth(530);
+        scrollPane.setPrefWidth(570);
 //        scrollPane.setPrefHeight();
-        scrollPane.setContent(new HBox(20, usersVbox, addUserBtn));
+        scrollPane.setContent(new HBox(10, usersVbox, addUserBtn));
 
         BorderPane pane = new BorderPane();
         pane.setLeft(scrollPane);
@@ -87,10 +74,12 @@ public class ManageUsers extends Application {
 
         addUserBtn.setOnAction(e->{
             System.out.println("addUser btn pressed");
-            users.add(0, new User("","", false));
-            setUsersBox();
-            scrollPane.setContent(new HBox(20, usersVbox, addUserBtn));
-            pane.setLeft(scrollPane);
+            User newwUser = new User("","", false);
+            users.add(0, newwUser);
+            usersVbox.getChildren().add(0,generateUserBox(newwUser));
+//            setUsersBox();
+//            scrollPane.setContent(new HBox(20, usersVbox, addUserBtn));
+//            pane.setLeft(scrollPane);
             for(User us: users){
                 System.out.println((us==null?"null":us));
             }
@@ -115,10 +104,12 @@ public class ManageUsers extends Application {
     }
     public BorderPane generateUserBox(User userObj){
 
+        AtomicBoolean passwWasAltered = new AtomicBoolean(false);
 
         Button edit = new Button("Edit user");
         Button delete = new Button("Delete user");
         Button save = new Button("Save changes");
+        Button cancel = new Button("Cancel");
         save.setDisable(true);
 //        edit.setMaxHeight(5);
         edit.setPrefHeight(20);
@@ -127,7 +118,11 @@ public class ManageUsers extends Application {
         delete.setPrefHeight(20);
         save.setMinHeight(22);
         save.setPrefHeight(20);
-        VBox.setMargin(save, new Insets(45,0,0,0));
+        cancel.setMinHeight(22);
+        cancel.setPrefHeight(20);
+        cancel.setVisible(false);
+        HBox saveCancelHbox = new HBox(5,cancel,save);
+        VBox.setMargin(saveCancelHbox, new Insets(45,0,0,0));
 
         Label userLbl = new Label(userObj.getUsername());
         userLbl.setAlignment(Pos.CENTER_LEFT);
@@ -174,7 +169,10 @@ public class ManageUsers extends Application {
         passwStackPane.setAlignment(Pos.TOP_LEFT);
 
         Label showPass = new Label("show");
+        showPass.setDisable(true);
         VBox.setMargin(showPass,new Insets(0,5,0,0));
+
+
 
         /** password functionality*/
         showPass.setOnMouseEntered(e -> {
@@ -206,6 +204,23 @@ public class ManageUsers extends Application {
 
         /** edit and save funcs */
         edit.setOnAction(e->{
+            passwPassF.setOnMousePressed((eee) -> {
+
+                System.out.println("smth pressed");
+                showPass.setDisable(false);
+                passwPassF.setText("");
+                passwTextF.setText("");
+                passwPassF.setPromptText("type new password");
+                passwTextF.setPromptText("type new password");
+                showPass.setDisable(false);
+                passwPassF.setOnMousePressed((eeee) -> {
+
+                });
+                passwWasAltered.set(true);
+
+            });
+
+            cancel.setVisible(true);
             passwPassF.setEditable(true);
             passwTextF.setEditable(true);
             save.setDisable(false);
@@ -220,11 +235,23 @@ public class ManageUsers extends Application {
 
             if (newUsern.equals("")){
 
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Empty username");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                alert.setContentText("Cannot "+(userObj.wasCreated?"save changes to":"create")+" user with empty username.");
+
+                alert.showAndWait();
 
                 return;
             }
             if (newPassw.equals("")){
 
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Empty password");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                alert.setContentText("Cannot "+(userObj.wasCreated?"save changes to":"create")+" user with empty password.");
+
+                alert.showAndWait();
 
                 return;
             }
@@ -235,44 +262,54 @@ public class ManageUsers extends Application {
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
                     String sqlCreate = "CREATE USER '"+newUsern+"'@'%' IDENTIFIED WITH mysql_native_password BY '"+newPassw+"'";
-                    String sqlUpdate = "UPDATE mysql.user SET authentication_string = '"+newPassw+"' WHERE User = '"+newUsern+"';";
+//                    String sqlUpdate = "UPDATE mysql.user SET authentication_string = '"+newPassw+"' WHERE User = '"+newUsern+"';";
 
                     stmt.executeUpdate(sqlCreate);
-                    stmt.executeUpdate(sqlUpdate);
+                    stmt.executeUpdate("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
 
                     stmt.close();
                     conn.close();
-                    users.remove(0);
                     userObj.setWasCreated(true);
                     userObj.setUsername(newUsern);
                     userObj.setPassword(newPassw);
-                    users.set(0,userObj);
 
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    MainPage.databaseErrorAlert(ex).showAndWait();
+                    return;
                 }
 
             } else
-            /** updating password */
+            /** updating password and username */
             if (!userObj.getPassword().equals(newPassw) || !userObj.getUsername().equals(newUsern)) {
                 try {
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
                     String sqlUpdate =
                         "UPDATE mysql.user SET " +
-                            "authentication_string = '" + newPassw + "', " +
                             "user = '"+ newUsern+"'"+
                             "WHERE (User = '" + userObj.getUsername() + "') and (host='%')";
 
-                    System.out.println(sqlUpdate+" ------ "+stmt.executeUpdate(sqlUpdate));
-                    ;
+                    String sqlOAOA = "ALTER USER '"+ newUsern+"'@'%'" +
+                        " IDENTIFIED WITH mysql_native_password" +
+                        " BY '"+ newPassw+"';";
+
+//                    System.out.println(sqlUpdate+" ------ "+);
+                    System.out.println(sqlUpdate);
+                    System.out.println(sqlOAOA);
+                    stmt.executeUpdate(sqlUpdate);
+                    stmt.execute("FLUSH PRIVILEGES;");
+                    stmt.executeUpdate("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
+                    if (passwWasAltered.get()) {
+                        stmt.execute(sqlOAOA);
+                    }
                     stmt.close();
                     conn.close();
 
                     userObj.setUsername(newUsern);
                     userObj.setPassword(newPassw);
                 } catch (SQLException exx) {
-                    exx.printStackTrace();
+                    MainPage.databaseErrorAlert(exx).showAndWait();
+                    return;
                 }
             } else{
                 //no changes were made
@@ -281,9 +318,14 @@ public class ManageUsers extends Application {
 
 
 
+            passwPassF.setOnMousePressed((ee) -> {
 
+            });
+
+            cancel.setVisible(false);
             passwPassF.toFront();
             showPass.setText("show");
+            showPass.setDisable(true);
             userLbl.setText(newUsern);
 
             passwPassF.setEditable(false);
@@ -293,6 +335,64 @@ public class ManageUsers extends Application {
 
             System.out.println(userObj);
 
+        });
+        delete.setOnAction(e->{
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Deletion Confirmation");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+            alert.setContentText("Are you sure you want to delete user " +userObj.getUsername()+ "?");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == ButtonType.OK) {
+                try{
+                    Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                    Statement stmt = conn.createStatement();
+                    String sqlDelete = "DELETE from mysql.user WHERE User = '"+userObj.getUsername()+"';";
+//                String sqlUpdate = "UPDATE mysql.user SET authentication_string = '"+newPassw+"' WHERE User = '"+newUsern+"';";
+
+                    stmt.executeUpdate(sqlDelete);
+//                stmt.executeUpdate(sqlUpdate);
+
+                    stmt.close();
+                    conn.close();
+
+                    usersVbox.getChildren().remove(users.indexOf(userObj));
+                    users.remove(userObj);
+
+
+//                setUsersBox();
+//                scrollPane.setContent(new HBox(20, usersVbox, addUserBtn));
+
+
+//                userObj.setWasCreated(true);
+//                userObj.setUsername(newUsern);
+//                userObj.setPassword(newPassw);
+//                users.set(0,userObj);
+
+                } catch (SQLException ex) {
+                    MainPage.databaseErrorAlert(ex).showAndWait();
+                    return;
+                }
+            }
+        });
+        cancel.setOnAction(e->{
+
+
+            passwPassF.setOnMousePressed((ee) -> {
+
+            });
+
+            cancel.setVisible(false);
+            passwPassF.toFront();
+            showPass.setText("show");
+            showPass.setDisable(true);
+            userLbl.setText(userObj.getUsername());
+            passwPassF.setText(userObj.getPassword());
+
+            passwPassF.setEditable(false);
+            passwTextF.setEditable(false);
+            save.setDisable(true);
+            userTextF.setVisible(false);
         });
 
         VBox passwVbox = new VBox(3,passwStackPane, showPass);
@@ -305,7 +405,7 @@ public class ManageUsers extends Application {
         VBox leftVbox = new VBox(8, new HBox(20,userStackPane, rightsVbox), passwVbox, seeActivity);
         BorderPane.setMargin(leftVbox, new Insets(10));
 
-        VBox rightVbox = new VBox(5,edit, delete, save);
+        VBox rightVbox = new VBox(5,edit, delete, saveCancelHbox);
         rightVbox.setAlignment(Pos.TOP_RIGHT);
         BorderPane.setMargin(rightVbox, new Insets(10));
 
@@ -343,7 +443,8 @@ public class ManageUsers extends Application {
             stmt.close();
             conn.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            MainPage.databaseErrorAlert(e).showAndWait();
+            return;
         }
     }
 }
