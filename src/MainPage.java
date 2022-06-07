@@ -96,18 +96,23 @@ public class MainPage extends Application {
 
     static TableView<Item> table = new TableView<Item>();
     static String urll =
-        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+//        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+        "";
 //        "jdbc:mysql://localhost:3306/products";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
-    static String user = "admin";
-    static String passw = "newpass";
+    static String user =
+//        "admin";
+        "";
+    static String passw =
+//        "newpass";
+        "";
 
     public MainPage(String urll, String user, String passw) {
         this.urll = urll;
         this.user = user;
         this.passw = passw;
     }
-    public MainPage() {}
+//    public MainPage() {}
 
     @Override
     public void start(Stage primaryStage) {
@@ -257,11 +262,14 @@ public class MainPage extends Application {
         HBox.setMargin(adminOptVbox, new Insets(0, 50,0,0));
         adminOptVbox.setBorder(new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, new CornerRadii(3),
             new BorderWidths(0.5))));
+        if (!user.equals("admin")){
+            adminOptVbox.setVisible(false);
+        }
 
 
         /** profile */
 
-        Label loggedInLbl = new Label("user "+user.toUpperCase());
+        Label loggedInLbl = new Label("logged in as "+user.toUpperCase());
 //        loggedInLbl.setPrefHeight(30);
         loggedInLbl.setAlignment(Pos.CENTER);
         Label signOut = new Label("Sign out");
@@ -299,6 +307,7 @@ public class MainPage extends Application {
         /** Search **/
         TextField searchField = new TextField();
         searchField.setPromptText("Search");
+        searchField.setPrefWidth(300);
         Button searchSubm = new Button("Search");
         HBox searchHBox = new HBox(searchField, searchSubm);
         searchHBox.setAlignment(Pos.CENTER);
@@ -341,9 +350,9 @@ public class MainPage extends Application {
         pane.setLeft(delete);
 
 
-
 //        primaryStage.setScene(new Scene(root));
 //        primaryStage.show();
+        primaryStage.getIcons().add(new Image("file:src/intent_facebook_logo edited 2.png"));
         Scene scene = new Scene(pane, 1000, 700);
         primaryStage.setTitle("Intent - database tool");
         primaryStage.setScene(scene);
@@ -537,7 +546,8 @@ public class MainPage extends Application {
                         Alert alert2 = new Alert(Alert.AlertType.INFORMATION, "Enter a 5-letter word maybe? LoL");
                         alert2.setTitle("Deletion Confirmation");
 //                      alert.setHeaderText("Look, a Confirmation Dialog");
-                        alert2.setContentText("User "+user+" is not allowed to delete elements "+ failed.substring(0,failed.length()-2)+" created by other users.");
+                        failed = failed.substring(0,failed.length()-2);
+                        alert2.setContentText("User "+user+" is not allowed to delete elements "+ (failed.length()>12?"\n"+failed:failed)+"\ncreated by other users.");
                         alert2.showAndWait();
                     }
                 } catch (SQLException ex) {

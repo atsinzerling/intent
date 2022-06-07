@@ -578,9 +578,9 @@ public class AddItem extends Application {
                 edit.setOnAction(e -> {
                     setEditing();
                 });
-                if (!user.equals("admin") && !user.equals(currItem.User)){
-                    edit.setDisable(true);
-                }
+//                if (!user.equals("admin") && !user.equals(currItem.User)){
+//                    edit.setDisable(true);
+//                }
                 //add field that was created by user
                 createdBy.setText("Item created by "+currItem.User);
 
@@ -603,17 +603,33 @@ public class AddItem extends Application {
                 try {
                     // I "manually" handle sku = null and sku containing text, and I have to handle uniqueness of sku and sn with try catch
 
+                    //check if text=="", text is number, and then that its 6-digit
 
                     long SKU = 0;
-                    if (SKUField.getText() == "") {
-                        setStatus("Cannot have empty SKU", 5, "red");
-                        setImageStatus("", 0, "");
-                        return;
+                    boolean SKUmessage = false;
+                    String SKUfieldText = SKUField.getText().strip();
+                    if (SKUfieldText== "") {
+//                        setStatus("Cannot have empty SKU", 5, "red");
+//                        setImageStatus("", 0, "");
+                        SKUmessage = true;
+//                        return;
+                    }else {
+                        try {
+                            SKU = Integer.parseInt(SKUfieldText);
+
+                            if (SKUfieldText.length()!=6 || SKUfieldText.charAt(0)=='0'){
+                                SKUmessage = true;
+                            }
+                        } catch (NumberFormatException eeeeeerocks) {
+//                            setStatus("SKU should be a number", 5, "red");
+//                            setImageStatus("", 0, "");
+                            SKUmessage = true;
+//                            return;
+                        }
                     }
-                    try {
-                        SKU = Integer.parseInt(SKUField.getText());
-                    } catch (NumberFormatException eee) {
-                        setStatus("SKU should be a number", 5, "red");
+
+                    if (SKUmessage){
+                        setStatus("SKU should be a 6-digit number without leading zeros", 5, "red");
                         setImageStatus("", 0, "");
                         return;
                     }
@@ -639,19 +655,19 @@ public class AddItem extends Application {
 //                    System.out.println((SNField.getText().equals("") ? null :  "'"+SNField.getText() + "'"));
                     String values =
                         "'" + SKU + "'" + "," +
-                        (SNField.getText().equals("") ? null : "'" + SNField.getText() + "'") + "," +
-                        (PNField.getText().equals("") ? null : "'" + PNField.getText() + "'") + "," +
-                        (UPCField.getText().equals("") ? null : "'" + UPCField.getText() + "'") + "," +
-                        (gradeField.getText().equals("") ? null : "'" + gradeField.getText() + "'") + "," +
-                        (locField.getText().equals("") ? null : "'" + locField.getText() + "'") + "," +
-                        (notesArea.getText().equals("") ? null : "'" + notesArea.getText() + "'") + "," +
+                        (SNField.getText().strip().equals("") ? null : "'" + SNField.getText().strip() + "'") + "," +
+                        (PNField.getText().strip().equals("") ? null : "'" + PNField.getText().strip() + "'") + "," +
+                        (UPCField.getText().strip().equals("") ? null : "'" + UPCField.getText().strip() + "'") + "," +
+                        (gradeField.getText().strip().equals("") ? null : "'" + gradeField.getText().strip() + "'") + "," +
+                        (locField.getText().strip().equals("") ? null : "'" + locField.getText().strip() + "'") + "," +
+                        (notesArea.getText().strip().equals("") ? null : "'" + notesArea.getText().strip() + "'") + "," +
                         "'" + MainPage.user + "'" + "," +
                         "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
                         null + "," +
                         null + "," +
                         "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
-                        (POnumField.getText().equals("") ? null : "'" + POnumField.getText() + "'") + "," +
-                        (specsArea.getText().equals("") ? null : "'" + specsArea.getText() + "'");
+                        (POnumField.getText().strip().equals("") ? null : "'" + POnumField.getText().strip() + "'") + "," +
+                        (specsArea.getText().strip().equals("") ? null : "'" + specsArea.getText().strip() + "'");
                     String sql = ("INSERT INTO items " +
 //                        "(SKU,SN,PN,UPC,Grade,Location,Notes,User,DateTime,Images,OtherRecords) " +
                         "VALUES (" + values + ")");

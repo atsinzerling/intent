@@ -265,7 +265,9 @@ public class ManageUsers extends Application {
 //                    String sqlUpdate = "UPDATE mysql.user SET authentication_string = '"+newPassw+"' WHERE User = '"+newUsern+"';";
 
                     stmt.executeUpdate(sqlCreate);
+                    stmt.execute(new String("FLUSH PRIVILEGES;"));
                     stmt.executeUpdate("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
+                    stmt.execute(new String("FLUSH PRIVILEGES;"));
 
                     stmt.close();
                     conn.close();
@@ -285,23 +287,26 @@ public class ManageUsers extends Application {
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
                     String sqlUpdate =
-                        "UPDATE mysql.user SET " +
-                            "user = '"+ newUsern+"'"+
-                            "WHERE (User = '" + userObj.getUsername() + "') and (host='%')";
+                        "RENAME USER '"+userObj.getUsername()+"'@'%' TO '"+ newUsern+"'@'%';";
+//                        "UPDATE mysql.user SET " +
+//                            "user = '"+ newUsern+"'"+
+//                            "WHERE (User = '" + userObj.getUsername() + "') and (host='%')";
 
                     String sqlOAOA = "ALTER USER '"+ newUsern+"'@'%'" +
                         " IDENTIFIED WITH mysql_native_password" +
                         " BY '"+ newPassw+"';";
 
 //                    System.out.println(sqlUpdate+" ------ "+);
-                    System.out.println(sqlUpdate);
-                    System.out.println(sqlOAOA);
-                    stmt.executeUpdate(sqlUpdate);
-                    stmt.execute("FLUSH PRIVILEGES;");
-                    stmt.executeUpdate("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
-                    if (passwWasAltered.get()) {
-                        stmt.execute(sqlOAOA);
+                    if (!userObj.getUsername().equals(newUsern)){
+                        stmt.execute(sqlUpdate);
+                        stmt.execute(new String("FLUSH PRIVILEGES;"));
                     }
+                    stmt.execute(sqlOAOA);
+                    stmt.execute(new String("FLUSH PRIVILEGES;"));
+//                    System.out.println("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
+                    stmt.executeUpdate("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
+                    stmt.execute(new String("FLUSH PRIVILEGES;"));
+
                     stmt.close();
                     conn.close();
 
@@ -347,7 +352,7 @@ public class ManageUsers extends Application {
                 try{
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
-                    String sqlDelete = "DELETE from mysql.user WHERE User = '"+userObj.getUsername()+"';";
+                    String sqlDelete = "DROP User '"+userObj.getUsername()+"'@'%';";
 //                String sqlUpdate = "UPDATE mysql.user SET authentication_string = '"+newPassw+"' WHERE User = '"+newUsern+"';";
 
                     stmt.executeUpdate(sqlDelete);

@@ -92,7 +92,7 @@ public class ImportPreviewWindow  extends Application {
 
         TextArea errorsArea = new TextArea();
         errorsArea.setMaxWidth(Double.MAX_VALUE);
-        errorsArea.setPrefRowCount(10);
+        errorsArea.setPrefRowCount(18);
         errorsArea.setEditable(false);
         errorsArea.setWrapText(true);
         errorsArea.setText(errorString);
@@ -111,7 +111,7 @@ public class ImportPreviewWindow  extends Application {
         BorderPane.setMargin(buttonsHbox, new Insets(10));
 
 
-        Scene scene = new Scene(pane, 700, 500);
+        Scene scene = new Scene(pane, 700, 650);
         Stage importPreviewStage = new Stage();
         importPreviewStage.setTitle("Import data preview");
         importPreviewStage.setScene(scene);
@@ -151,6 +151,7 @@ public class ImportPreviewWindow  extends Application {
                     String sql = ("INSERT INTO items " +
                         "VALUES (" + values + ")");
                     countAdded += stmt.executeUpdate(sql);
+                    System.out.println("added elm "+it.SKU);
                 }
 
                 stmt.close();
@@ -260,9 +261,10 @@ public class ImportPreviewWindow  extends Application {
                         Cell SKUcell = currRow.getCell(colsHashm.get("SKU"));
                         if (SKUcell == null){
                             needGenerating = true;
-                        } else if (SKUcell.getCellType() == CellType.NUMERIC) {
+                        } else if (SKUcell.getCellType() == CellType.NUMERIC || (SKUcell.getCellType() == CellType.FORMULA && SKUcell.getCachedFormulaResultType() == CellType.NUMERIC)) {
                             currSKU = (long) SKUcell.getNumericCellValue();
-                        } else{
+                        } else {
+                            System.out.println(SKUcell.getCellType());
                             errorString += "Error in row "+rowNum+": couldn't retrieve SKU number from a cell;\n";
                         }
                     } else{
@@ -289,21 +291,21 @@ public class ImportPreviewWindow  extends Application {
 
                     if (colsHashm.get("SN") != null){
                         Cell SNcell = currRow.getCell(colsHashm.get("SN"));
-                        currSN = (SNcell == null? null:(readCell(SNcell).equals("")?null: readCell(SNcell)));
+                        currSN = (SNcell == null || readCell(SNcell)==null || readCell(SNcell).equals("")? null: readCell(SNcell));
                     } else{
                         currSN = null;
                     }
 
                     if (colsHashm.get("POnumber") != null){
                         Cell POnumcell = currRow.getCell(colsHashm.get("POnumber"));
-                        currPOnumber = (POnumcell == null? null: (readCell(POnumcell).equals("")?null: readCell(POnumcell)));
+                        currPOnumber = (POnumcell == null || readCell(POnumcell)==null? null: (readCell(POnumcell).equals("")?null: readCell(POnumcell)));
                     } else{
                         currPOnumber = null;
                     }
 
                     if (colsHashm.get("Specs") != null){
                         Cell specscell = currRow.getCell(colsHashm.get("Specs"));
-                        currSpecs = (specscell == null? null: (readCell(specscell).equals("")?null: readCell(specscell)));
+                        currSpecs = (specscell == null || readCell(specscell)==null? null: (readCell(specscell).equals("")?null: readCell(specscell)));
                     } else{
                         currSpecs = null;
                     }
@@ -399,7 +401,18 @@ public class ImportPreviewWindow  extends Application {
             return cell.getStringCellValue();
         case NUMERIC:
             return Integer.toString((int) cell.getNumericCellValue());
+        case FORMULA:
+            switch (cell.getCachedFormulaResultType()){
+            case NUMERIC:
+                return Integer.toString((int) cell.getNumericCellValue());
+            case STRING:
+                return cell.getStringCellValue();
+            default:
+                System.out.println("readCell() returned null,lol");
+                return null;
+            }
         default:
+            System.out.println("readCell() returned null,lol");
             return null;
         }
     }

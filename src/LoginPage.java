@@ -111,7 +111,16 @@ public class LoginPage extends Application {
         signinBtn.setPrefWidth(Double.MAX_VALUE);
         signinBtn.setPrefHeight(50);
 
-
+        passwordShow.setOnKeyPressed((KeyEvent e) -> {
+            if (e.getCode().getCode() == 10 && !username.getText().equals("")) {
+                signinBtn.fire();
+            }
+        });
+        passwordHid.setOnKeyPressed((KeyEvent e) -> {
+            if (e.getCode().getCode() == 10 && !username.getText().equals("")) {
+                signinBtn.fire();
+            }
+        });
 
 
         VBox fieldsVbox = new VBox(3,loginSuccessLbl,loginSuccessCommentLbl, username, passwordStack,showPass, signinBtn);
@@ -180,7 +189,7 @@ public class LoginPage extends Application {
 
                 AddItem.setLblStatus(loginSuccessLbl, "Sign in successful!", 0, "green");
                 AddItem.setLblStatus(loginSuccessCommentLbl, "Launching the Main page.", 0, "");
-                Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1.5), ev -> {
+                Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1.2), ev -> {
 
                     new MainPage("jdbc:"+connectionUrl, usern, passw).start(primaryStage);
                     loginStage.close();
@@ -196,8 +205,14 @@ public class LoginPage extends Application {
         });
 
         //initial credentials for easy sign in
-        username.setText("admin");
-        passwordHid.setText("newpass");
+//        username.setText("admin");
+//        passwordHid.setText("newpass");
+        loginStage.getIcons().add(new Image("file:src/intent_facebook_logo edited 2.png"));
+        class addMethod{
+            void onEnter(){
+
+            }
+        }
 
     }
     public static boolean checkCredetials(String connUrl, String user, String passw){
@@ -212,4 +227,8 @@ public class LoginPage extends Application {
             return false;
         }
     }
+    public static void main(String[] args) {
+        launch(args);
+    }
+
 }

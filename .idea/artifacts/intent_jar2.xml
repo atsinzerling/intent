@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="intent:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/intent_jar2</output-path>
+    <root id="archive" name="intent.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/smth/META-INF/MANIFEST.MF" />
+        <element id="module-source" name="intent" />
+        <element id="library" level="application" name="lib" />
+      </element>
+      <element id="module-output" name="intent" />
+    </root>
+  </artifact>
+</component>
