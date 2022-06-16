@@ -92,7 +92,8 @@ public class Search {
                         ite.time!=null && ite.time.toString().contains(searchText) ||
                         ite.DateModified!=null && ite.DateModified.toString().contains(searchText) ||
                         ite.POnumber != null && ite.POnumber.contains(searchText)||
-                        ite.Specs != null && ite.Specs.contains(searchText)
+                        ite.Specs != null && ite.Specs.contains(searchText)||
+                        ite.OtherRecords != null && ite.OtherRecords.contains(searchText)
                 ) {
                     data.add(ite);
                     System.out.println("ADDED!!!!!!!!!!");

@@ -1,13 +1,11 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="intent:jar2">
-    <output-path>$PROJECT_DIR$/out/artifacts/intent_jar2</output-path>
-    <root id="archive" name="intent_jar2.jar">
-      <element id="directory" name="META-INF">
-        <element id="file-copy" path="$PROJECT_DIR$/src/smth/META-INF/MANIFEST.MF" />
-        <element id="module-source" name="intent" />
-        <element id="library" level="application" name="lib" />
+  <artifact name="intent:jar3">
+    <output-path>$PROJECT_DIR$/out/artifacts/intent_jar3</output-path>
+    <root id="root">
+      <element id="archive" name="intent.jar">
+        <element id="module-output" name="intent" />
       </element>
-      <element id="module-output" name="intent" />
+      <element id="library" level="project" name="commons-codec-1.15" />
       <element id="file-copy" path="$PROJECT_DIR$/../../../../Program Files/Eclipse Adoptium/libsss/javafx/javafx.media.jar" />
       <element id="file-copy" path="$PROJECT_DIR$/../../../../Program Files/Eclipse Adoptium/libsss/mysql-connector-java-8.0.29/mysql-connector-java-8.0.29.jar" />
       <element id="file-copy" path="$PROJECT_DIR$/../../../../Program Files/Eclipse Adoptium/libsss/javafx/javafx.graphics.jar" />
@@ -45,8 +43,6 @@
       <element id="file-copy" path="$PROJECT_DIR$/../../../../Program Files/Eclipse Adoptium/libsss/some poi i think/slf4j-api-1.7.36.jar" />
       <element id="file-copy" path="$PROJECT_DIR$/../../../../Program Files/Eclipse Adoptium/libsss/some poi i think/SparseBitSet-1.2.jar" />
       <element id="file-copy" path="$PROJECT_DIR$/../../../../Program Files/Eclipse Adoptium/libsss/some poi i think/xmlbeans-5.0.3.jar" />
-      <element id="library" level="project" name="commons-codec-1.15" />
-      <element id="library" level="application" name="lib" />
     </root>
   </artifact>
 </component>

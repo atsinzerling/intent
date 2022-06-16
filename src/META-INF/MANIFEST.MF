@@ -1,3 +1,25 @@
 Manifest-Version: 1.0
-Main-Class: MainPage
+Main-Class: LoginPage
+Class-Path: commons-codec-1.15.jar commons-collections4-4.4.jar commons-
+ compress-1.21.jar commons-io-2.11.0.jar commons-logging-1.2.jar commons
+ -math3-3.6.1.jar curvesapi-1.07.jar jackson-annotations-2.9.0.jar jacks
+ on-core-2.9.5.jar jackson-databind-2.9.5.jar javafx-swt.jar javafx.base
+ .jar javafx.controls.jar javafx.fxml.jar javafx.graphics.jar javafx.med
+ ia.jar javafx.swing.jar javafx.web.jar json-simple-1.1.1.jar log4j-api-
+ 2.17.1.jar log4j-core-2.17.1.jar mysql-connector-java-8.0.29.jar org.js
+ on-chargebee-1.0.jar poi-5.2.2.jar poi-examples-5.2.2.jar poi-excelant-
+ 5.2.2.jar poi-ooxml-5.2.2.jar poi-ooxml-full-5.2.2.jar poi-scratchpad-5
+ .2.2.jar protobuf-java-3.19.4.jar slf4j-api-1.7.36.jar SparseBitSet-1.2
+ .jar xmlbeans-5.0.3.jar javafx.media.jar mysql-connector-java-8.0.29.ja
+ r javafx.graphics.jar org.json-chargebee-1.0.jar jackson-annotations-2.
+ 9.0.jar javafx.base.jar jackson-core-2.9.5.jar javafx.swing.jar commons
+ -io-2.11.0-tests.jar javafx-swt.jar javafx.web.jar javafx.fxml.jar comm
+ ons-io-2.11.0.jar json-simple-1.1.1.jar protobuf-java-3.19.4.jar jackso
+ n-databind-2.9.5.jar javafx.controls.jar commons-codec-1.15.jar commons
+ -collections4-4.4.jar commons-compress-1.21.jar commons-io-2.11.0.jar c
+ ommons-logging-1.2.jar commons-math3-3.6.1.jar curvesapi-1.07.jar log4j
+ -api-2.17.1.jar log4j-api-2.17.2.jar log4j-core-2.17.1.jar poi-5.2.2.ja
+ r poi-examples-5.2.2.jar poi-excelant-5.2.2.jar poi-ooxml-5.2.2.jar poi
+ -ooxml-full-5.2.2.jar poi-ooxml-lite-5.2.2.jar poi-scratchpad-5.2.2.jar
+  slf4j-api-1.7.36.jar SparseBitSet-1.2.jar xmlbeans-5.0.3.jar
 

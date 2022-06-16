@@ -1,6 +1,8 @@
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -10,7 +12,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
@@ -41,9 +45,14 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 //import java.awt.TextArea;
+import java.awt.Desktop;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -56,12 +65,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javafx.util.Duration;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.FileUtils;
 
 import javax.imageio.ImageIO;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
 
 public class AddItem extends Application {
 
@@ -70,9 +83,9 @@ public class AddItem extends Application {
     String windowMode = "adding";
     Item currItem = null;
     ArrayList<Image> images = new ArrayList<>();
-    String initDirectory =
-        "\\\\DESKTOP-E5VI6AD\\application\\Images";
-//        "D:\\Mine stuff\\Compiling\\Images";
+//    String initDirectory =
+//        "\\\\DESKTOP-E5VI6AD\\application\\Images";
+    //        "D:\\Mine stuff\\Compiling\\Images";
     String user = "";
 
     public AddItem(String windowMode, Item currItem, String user) {
@@ -95,13 +108,13 @@ public class AddItem extends Application {
         grid.add(new Label("UPC:"), 0, 3);
         grid.add(new Label("Grade:"), 0, 4);
         grid.add(new Label("Location:"), 0, 5);
-        grid.add(new Label("PO number:"), 0, 6);
+        grid.add(new Label("PO#:"), 0, 6);
         rightGrid.add(new Label("Notes:"), 0, 2);
         rightGrid.add(new Label("Specs:"), 0, 0);
 
         Label createdBy = new Label("");
-        GridPane.setMargin(createdBy, new Insets(8,0,0,0));
-        grid.add(createdBy, 0,7, 2,1);
+        GridPane.setMargin(createdBy, new Insets(8, 0, 0, 0));
+        grid.add(createdBy, 0, 7, 2, 1);
 
         TextField SKUField = new TextField();
         TextField SNField = new TextField();
@@ -143,26 +156,30 @@ public class AddItem extends Application {
         historyVbox.setVisible(false);
 
         Button save = new Button("Add Item");
+        save.setMinHeight(40);
         Button cancel = new Button("Cancel");
-        HBox hbox = new HBox(10, historyVbox, cancel, save);
-        hbox.setAlignment(Pos.TOP_LEFT);
+        HBox bottomHistoryHbox = new HBox(10, historyVbox, cancel, save);
+        bottomHistoryHbox.setAlignment(Pos.BOTTOM_LEFT);
 
 
-        hbox.setStyle("-fx-padding: 0 0 10 0; "
-//            +"-fx-background-color: #dbdbff;"
-        );
-        GridPane.setMargin(hbox, new Insets(50,0,0,0));
-        HBox.setMargin(historyArea, new Insets(0,20,0,0));
+//        bottomHistoryHbox.setStyle("-fx-padding: 0 0 10 0; "
+////            +"-fx-background-color: #dbdbff;"
+//        );
+//        GridPane.setMargin(bottomHistoryHbox, new Insets(50,0,0,0));
+        HBox.setMargin(historyArea, new Insets(0, 20, 0, 0));
 
-        Button edit = new Button("Edit");
+        Button edit = new Button("Edit Item");
+        edit.setMinSize(120, 40);
         edit.setVisible(false);
+
 
         HBox editButHBox = new HBox();
         editButHBox.setAlignment(Pos.CENTER_RIGHT);
         editButHBox.getChildren().addAll(edit);
-        editButHBox.setStyle("-fx-padding: 5 10 0 0; "
-//            +"-fx-background-color: #dbdbff;"
-        );
+//        editButHBox.setStyle("-fx-padding: 5 10 0 0; "
+////            +"-fx-background-color: #dbdbff;"
+//        );
+        VBox.setMargin(editButHBox, new Insets(10, 16, 0, 0));
 
 
         grid.setStyle("-fx-padding: 10 0 0 30; "
@@ -175,18 +192,18 @@ public class AddItem extends Application {
 
         BorderPane inputpane = new BorderPane();
 //        inputpane.alignment="CENTER";
-        rightGrid.add(hbox, 0,4);
+//        rightGrid.add(hbox, 0,4);
         inputpane.setCenter(rightGrid);
 //        inputpane.setAlignment(rightGrid, Pos.TOP_LEFT);
         inputpane.setLeft(grid);
-        inputpane.setBottom(hbox);
-        BorderPane.setMargin(hbox, new Insets(50, 10, 10, 30));
+        inputpane.setBottom(bottomHistoryHbox);
+        BorderPane.setMargin(bottomHistoryHbox, new Insets(50, 10, 10, 30));
 
         status.setAlignment(Pos.CENTER);
         status.setMaxWidth(Double.MAX_VALUE);
 
         imageStatus.setAlignment(Pos.CENTER);
-        HBox statusHbox = new HBox(60, status,imageStatus);
+        HBox statusHbox = new HBox(60, status, imageStatus);
         statusHbox.setAlignment(Pos.CENTER);
 
 
@@ -196,7 +213,7 @@ public class AddItem extends Application {
         pane.setTop(new VBox(editButHBox, statusHbox));
 
 
-        Scene secondScene = new Scene(pane, 1000, 600);
+        Scene secondScene = new Scene(pane, 1000, 610);
         Stage newWindow = new Stage();
 //        newWindow.setMaxWidth(800);
         newWindow.setTitle("Add New Item");
@@ -211,7 +228,6 @@ public class AddItem extends Application {
         newWindow.show();
 
 
-
         /** imagepane */
 
         BorderPane imageBlockPane = new BorderPane();
@@ -224,9 +240,11 @@ public class AddItem extends Application {
 ////                "-fx-border-color: #5f5f5f;" +
 ////                "-fx-border-width: 3 ;" +
 //            "");
-        dragDropLbl.setBackground(new Background(new BackgroundFill(Color.web("#d5d5d5"), new CornerRadii(10), Insets.EMPTY)));
-        dragDropLbl.setBorder(new Border(new BorderStroke(Color.web("#b4b4b4"), BorderStrokeStyle.SOLID, new CornerRadii(10),
-            BorderWidths.DEFAULT)));
+        dragDropLbl.setBackground(
+            new Background(new BackgroundFill(Color.web("#d5d5d5"), new CornerRadii(10), Insets.EMPTY)));
+        dragDropLbl.setBorder(
+            new Border(new BorderStroke(Color.web("#b4b4b4"), BorderStrokeStyle.SOLID, new CornerRadii(10),
+                BorderWidths.DEFAULT)));
         dragDropLbl.setAlignment(Pos.CENTER);
         dragDropLbl.setOnMouseEntered(e -> {
             dragDropLbl.setCursor(Cursor.HAND);
@@ -237,29 +255,71 @@ public class AddItem extends Application {
         HBox dragHbox = new HBox(dragDropLbl, updateImages);
         HBox.setMargin(updateImages, new Insets(0, 0, 10, 30));
         dragHbox.setAlignment(Pos.BOTTOM_LEFT);
-        Label directr = new Label("Current directory: "+initDirectory+"\\");
+        Label directr = new Label("Current directory: " + MainPage.imagesPath + "\\");
+        directr.setOnMouseEntered(e -> {
+            directr.setCursor(Cursor.HAND);
+        });
+        directr.setOnMouseClicked(e -> {
+            String directory = MainPage.imagesPath + "\\" + currItem.SKU;
+            try {
+                Files.createDirectories(Paths.get(directory));
+            } catch (IOException ee) {
+                MainPage.ioErrorAlert(ee).showAndWait();
+            }
+            File file = new File(directory);
+            if (file.exists()) {
+                try {
+                    Desktop desktop = Desktop.getDesktop();
+                    desktop.open(file);
+                } catch (IOException exxxx) {
+                    exxxx.printStackTrace();
+                }
+            } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Folder unavailable");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                    alert.setContentText("Folder " + MainPage.imagesPath + " is unavailable");
+
+                    alert.showAndWait();
+
+            }
+        });
         imageBlockPane.setTop(new VBox(10, dragHbox, directr));
         imageBlockPane.setMargin(dragDropLbl, new Insets(10, 10, 10, 10));
 
 
-        class imageAdditMethods{
+        class imageAdditMethods {
             private void configureFileChooser(
                 final FileChooser fileChooser) {
                 fileChooser.setTitle("Choose Pictures");
-                fileChooser.setInitialDirectory(
-                    new File(System.getProperty("user.home"))
-                );
+//                fileChooser.setInitialDirectory(
+//                    new File(System.getProperty("user.home"))
+//                );
                 fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("All Images", "*.*"),
-                    new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                    new FileChooser.ExtensionFilter("PNG", "*.png")
+                    new FileChooser.ExtensionFilter("All Images", "*.jpg; *.png; *.bmp")
+//                    ,
+//                    new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+//                    new FileChooser.ExtensionFilter("PNG", "*.png")
                 );
             }
-            FlowPane generateImages(){
+
+            ScrollPane generateImages() {
                 FlowPane vbox = new FlowPane();
-                vbox.setPrefWidth(450);
+                vbox.setPrefWidth(435);
+                vbox.setMaxWidth(435);
+
+                ScrollPane scrollPane = new ScrollPane();
+                scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+                scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+                scrollPane.setPrefWidth(425);
+                scrollPane.setMaxWidth(425);
+                scrollPane.setPrefHeight(310);
+                scrollPane.setMaxHeight(310);
                 if (images != null) {
                     for (Image imgg : images) {
+                        if (imgg == null) {
+                            continue;
+                        }
                         Rectangle rectangle = new Rectangle(0, 0, 120, 80);
                         rectangle.setArcWidth(10.0);   // Corner radius
                         rectangle.setArcHeight(10.0);
@@ -275,26 +335,27 @@ public class AddItem extends Application {
                         StackPane imgWrap = new StackPane(rectangle);
                         imgWrap.setMaxSize(rectangle.getWidth(), rectangle.getHeight());
 //                            imgWrap.setStyle("-fx-background-color: #ffb3b3;");
-                        rectangle.setOnMouseClicked(e ->{
+                        rectangle.setOnMouseClicked(e -> {
                             new ImageWindow(imgg).start(primaryStage);
                         });
 
-                        if (!windowMode.equals("previewing")){
+                        if (!windowMode.equals("previewing")) {
                             Label del = new Label("x");
 //                                del.setStyle("-fx-background-color: rgba(231,231,231,0.76);");
                             del.setMaxSize(30, 10);
                             del.setAlignment(Pos.CENTER);
 
-                            del.setBackground(new Background(new BackgroundFill(Color.rgb(231,231,231,0.76), new CornerRadii(3), Insets.EMPTY)));
-                            del.setBorder(new Border(new BorderStroke(Color.web("#000000FF"), BorderStrokeStyle.SOLID, new CornerRadii(3),
-                                new BorderWidths(0.3))));
+                            del.setBackground(new Background(
+                                new BackgroundFill(Color.rgb(231, 231, 231, 0.76), new CornerRadii(3), Insets.EMPTY)));
+                            del.setBorder(new Border(
+                                new BorderStroke(Color.web("#000000FF"), BorderStrokeStyle.SOLID, new CornerRadii(3),
+                                    new BorderWidths(0.3))));
                             imgWrap.setAlignment(Pos.TOP_RIGHT);
                             del.setFont(Font.font("Arial", FontWeight.BOLD, 15));
                             imgWrap.getChildren().add(del);
                             del.setOnMouseClicked(e -> {
                                 images.remove(imgg);
                                 imageBlockPane.setCenter(generateImages());
-//                                    pane.setRight(imageBlockPane);
                             });
                             del.setOnMouseEntered(e -> {
                                 del.setCursor(Cursor.HAND);
@@ -303,15 +364,17 @@ public class AddItem extends Application {
 
                         vbox.getChildren().add(imgWrap);
                         FlowPane.setMargin(imgWrap, new Insets(6));
-
                     }
                 }
-                return vbox;
+                scrollPane.setContent(vbox);
+                BorderPane.setAlignment(scrollPane, Pos.TOP_CENTER);
+                return scrollPane;
             }
+
             /** methods for save button, only in editing and adding*/
 
-            void saveOnActionImages(){
-                if (windowMode.equals("previewing")){
+            void saveOnActionImages() {
+                if (windowMode.equals("previewing")) {
                     return;
                 }
 
@@ -320,7 +383,7 @@ public class AddItem extends Application {
                 Thread[] thrds = new Thread[images.size()];
                 AtomicBoolean allSaved = new AtomicBoolean(true);
 
-                String directory = initDirectory+"\\"+ currItem.SKU;
+                String directory = MainPage.imagesPath + "\\" + currItem.SKU;
                 try {
                     Files.createDirectories(Paths.get(directory));
                     FileUtils.cleanDirectory(new File(directory));
@@ -329,23 +392,23 @@ public class AddItem extends Application {
                     return;
                 }
 
-                for (Image imgg: images){
+                for (Image imgg : images) {
                     int finalCount = count;
                     Thread newThread = new Thread(() -> {
                         try {
-                            System.out.println("started "+finalCount);
+                            System.out.println("started " + finalCount);
 //                            File directoryFile = new File(directory);
 //                            if (directoryFile.exists()){
 //                                FileUtils.cleanDirectory(directoryFile);
 //                            } else {
 //                                Files.createDirectories(Paths.get(directory));
 //                            }
-                            File saveTo = new File(directory+"\\"
-                                + currItem.SKU +"_" + String.format("%02d", finalCount) + ".jpg"
+                            File saveTo = new File(directory + "\\"
+                                + currItem.SKU + "_" + String.format("%02d", finalCount) + ".jpg"
                             );
                             BufferedImage buffImg = SwingFXUtils.fromFXImage(imgg, null);
-                            ImageIO.write(buffImg , "jpg", saveTo);
-                            System.out.println(finalCount+" saved");
+                            ImageIO.write(buffImg, "jpg", saveTo);
+                            System.out.println(finalCount + " saved");
 
 
                         } catch (IOException ex) {
@@ -353,33 +416,34 @@ public class AddItem extends Application {
                             allSaved.set(false);
                         }
                     });
-                    thrds[count-1] = newThread;
+                    thrds[count - 1] = newThread;
                     newThread.start();
                     count++;
                 }
 
-                try{
+                try {
                     for (Thread thr : thrds) {
                         thr.join();
                     }
-                }catch (InterruptedException ex) {
+                } catch (InterruptedException ex) {
                     ex.printStackTrace();
                     allSaved.set(false);
                 }
-                if (allSaved.get()){
+                if (allSaved.get()) {
                     setImageStatus("Images saved!", 3, "green");
-                } else{
+                } else {
                     setImageStatus("There was an error saving images", 3, "red");
                 }
 
             }
-            void loadImagesFromDir(){
-                File dir = new File(initDirectory+"\\"+currItem.SKU);
-                if (dir.exists()){
+
+            void loadImagesFromDir() {
+                File dir = new File(MainPage.imagesPath + "\\" + currItem.SKU);
+                if (dir.exists()) {
                     File[] fls = dir.listFiles();
                     Thread[] thrds = new Thread[fls.length];
                     images = new ArrayList<Image>();
-                    for (int i = 0; i< fls.length; i++){
+                    for (int i = 0; i < fls.length; i++) {
 
 
                         int finalI = i;
@@ -393,14 +457,13 @@ public class AddItem extends Application {
                     }
 
                     try {
-                        for (Thread thr: thrds){
+                        for (Thread thr : thrds) {
                             thr.join();
                         }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     imageBlockPane.setCenter(new imageAdditMethods().generateImages());
-//                    pane.setRight(imageBlockPane);
                 }
             }
 
@@ -411,10 +474,10 @@ public class AddItem extends Application {
         FileChooser fil_chooser = new FileChooser();
 
         dragDropLbl.setOnDragOver((EventHandler) e -> {
-            if (e instanceof DragEvent){
+            if (e instanceof DragEvent) {
                 DragEvent event = (DragEvent) e;
                 if (event.getDragboard().hasFiles()) {
-                    event.acceptTransferModes(TransferMode.ANY);
+                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
                 }
                 event.consume();
             }
@@ -422,20 +485,31 @@ public class AddItem extends Application {
         dragDropLbl.setOnDragDropped((EventHandler) e -> {
             System.out.println("dropped");
             System.out.println(e instanceof DragEvent);
-            if (e instanceof DragEvent){
+            if (e instanceof DragEvent) {
                 DragEvent event = (DragEvent) e;
-                for (File fl: event.getDragboard().getFiles()){
-                    images.add(new Image(fl.toURI().toString()));
+                for (File fl : event.getDragboard().getFiles()) {
+                    try {
+                        if (fl.isFile()){
+                            String[] star = fl.toString().split("\\.");
+                            if (star.length>1 && (star[star.length-1].equals("jpg")||star[star.length-1].equals("png")||star[star.length-1].equals("bmp"))){
+                                Image img = (new Image(fl.toURI().toString()));
+                                if (img != null){
+                                    images.add(img);
+                                }
+                            }
+                        }
+                    } catch (Exception exc){
+                        System.out.println("There was an error processing file");
+                    }
                 }
                 System.out.println("Got " + images.size() + " files");
                 imageBlockPane.setCenter(new imageAdditMethods().generateImages());
-//                pane.setRight(imageBlockPane);
 //                newWindow.setHeight(secondScene.getHeight()+200);
                 event.consume();
             }
         });
 
-        dragDropLbl.setOnMousePressed((e) ->{
+        dragDropLbl.setOnMousePressed((e) -> {
             new imageAdditMethods().configureFileChooser(fil_chooser);
             List<File> files = fil_chooser.showOpenMultipleDialog(newWindow);
             if (files != null) {
@@ -445,17 +519,117 @@ public class AddItem extends Application {
                 System.out.println("Got " + images.size() + " files");
 
                 imageBlockPane.setCenter(new imageAdditMethods().generateImages());
-//                pane.setRight(imageBlockPane);
             }
         });
-        updateImages.setOnAction(e ->{
+        updateImages.setOnAction(e -> {
             new imageAdditMethods().saveOnActionImages();
+            String timm = new Timestamp(System.currentTimeMillis()).toString();
+            if (timm.split("\\.").length>0){
+                timm = timm.split("\\.")[0];
+            }
+            String otherRecs =
+                MainPage.user + " on " + timm + " : saved images; total " +
+                    (images.size() == 1 ? "1 image." : images.size() + " images.");
+            if (otherRecs.length() > 2 &&
+                otherRecs.substring(otherRecs.length() - 2, otherRecs.length()).equals(", ")) {
+                otherRecs = otherRecs.substring(0, otherRecs.length() - 2);
+            }
+            otherRecs = otherRecs + ";<<<:::===" + (currItem.OtherRecords == null ? "" : currItem.OtherRecords);
+
+            String sqll = "UPDATE items SET OtherRecords='" + otherRecs + "' WHERE SKU=" + currItem.SKU;
+            System.out.println(sqll);
+
+            try {
+                Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                Statement stmt = conn.createStatement();
+                stmt.executeUpdate(sqll);
+                currItem.OtherRecords = otherRecs;
+                stmt.close();
+                conn.close();
+            } catch (SQLException ee) {
+                ee.printStackTrace();
+                MainPage.databaseErrorAlert(ee).showAndWait();
+            }
         });
 
         pane.setRight(imageBlockPane);
-        BorderPane.setMargin(imageBlockPane, new Insets(0,0,0, 10));
+        BorderPane.setMargin(imageBlockPane, new Insets(0, 8, 0, 10));
         /** images ended*/
 
+        /** print block added to the bottom of imageblockpane*/
+
+        Label chosePrinLbl = new Label("Choose printer:");
+        VBox.setMargin(chosePrinLbl, new Insets(5, 0, 0, 0));
+
+        ObservableList<String> printersObsList = FXCollections.observableArrayList();
+//        PrintServiceLookup.lookupPrintServices(null, null)
+        PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
+        PrintService defaultPrinter = PrintServiceLookup.lookupDefaultPrintService();
+        String defaultPr = defaultPrinter.toString();
+        for (PrintService ps : printServices) {
+            String pss = ps.toString();
+            if (pss.contains("Win32 Printer : ")) {
+                pss = pss.replace("Win32 Printer : ", "");
+            }
+            if (ps.equals(defaultPrinter)) {
+                pss += " (default)";
+                defaultPr = pss;
+            }
+            printersObsList.add(pss);
+        }
+
+        ChoiceBox printerChoiceBox = new ChoiceBox(printersObsList);
+        printerChoiceBox.setValue(defaultPr);
+        VBox.setMargin(printerChoiceBox, new Insets(0, 0, 8, 0));
+
+        VBox printerVbox = new VBox(8, chosePrinLbl, printerChoiceBox);
+        printerVbox.setAlignment(Pos.BOTTOM_LEFT);
+
+
+        ObservableList<String> labelsObsList = FXCollections.observableArrayList();
+        labelsObsList.addAll("default label");
+        ChoiceBox labelChoiceBox = new ChoiceBox((labelsObsList));
+        labelChoiceBox.setValue("default label");
+        labelChoiceBox.setDisable(true);
+
+        Button printBtn = new Button("Print");
+        printBtn.setMinSize(100, 40);
+
+        VBox printVbox = new VBox(3, labelChoiceBox, printBtn);
+
+        HBox printHBox = new HBox(30, printerVbox, printVbox);
+        printHBox.setAlignment(Pos.BOTTOM_RIGHT);
+        BorderPane.setMargin(printHBox, new Insets(9, 14, 25, 9));
+        printHBox.setPadding(new Insets(7));
+        printHBox.setBorder(
+            new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, new CornerRadii(3),
+                new BorderWidths(0.5))));
+
+        printHBox.setVisible(false);
+
+        imageBlockPane.setBottom(printHBox);
+
+        printBtn.setOnAction(e -> {
+            if (!new File(MainPage.bartendPath + "\\bartend.exe").exists()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error location \"bartend.exe\" file");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                alert.setContentText(
+                    "Make sure that \"bartend.exe\" exists at the directory\n\"" + MainPage.bartendPath +
+                        "\", \nspecified in the configg.csv file");
+                alert.showAndWait();
+                return;
+            }
+            String printer = (String) printerChoiceBox.getValue();
+            System.out.println(printer + " " + printer.contains(" (default)"));
+            if (printer.contains(" (default)")) {
+                printer = printer.replace(" (default)", "");
+            }
+            System.out.println(printer);
+            printNewLbl(currItem.PN, currItem.SN, currItem.Grade, currItem.Specs, "Win32 Printer : " + printer);
+        });
+
+        /** end printing*/
 
 
         class additMethods {
@@ -487,6 +661,13 @@ public class AddItem extends Application {
                 notesArea.setStyle(editableColorCSS);
                 specsArea.setStyle(editableColorCSS);
 
+                if (!user.equals(currItem.User)) {
+                    SNField.setEditable(false);
+                    specsArea.setEditable(false);
+                    SNField.setStyle(notEditableColorCSS);
+                    specsArea.setStyle(notEditableColorCSS);
+                }
+
                 SKUField.setText(Long.toString(currItem.SKU));
                 SNField.setText(currItem.SN);
                 PNField.setText(currItem.PN);
@@ -498,6 +679,7 @@ public class AddItem extends Application {
                 specsArea.setText(currItem.Specs);
 
                 historyVbox.setVisible(false);
+                printHBox.setVisible(false);
 
                 save.setVisible(true);
                 save.setText("Save Changes");
@@ -518,10 +700,9 @@ public class AddItem extends Application {
 //                dragDropLbl.setVisible(true);
                 dragDropLbl.setDisable(false);
                 updateImages.setVisible(true);
-                directr.setText("Current directory: "+initDirectory+"\\"+ currItem.SKU+ "\\");
+                directr.setText("Current directory: " + MainPage.imagesPath + "\\" + currItem.SKU + "\\");
 
                 imageBlockPane.setCenter(new imageAdditMethods().generateImages());
-//                pane.setRight(imageBlockPane);
 
             }
 
@@ -560,9 +741,14 @@ public class AddItem extends Application {
                 notesArea.setText(currItem.Notes);
                 specsArea.setText(currItem.Specs);
 
-                historyArea.setText((currItem.OtherRecords!=null?"   "+currItem.OtherRecords.replaceAll("\n","\t").replaceAll("<<<:::===", "\n\n   "):""));
+                historyArea.setText((currItem.OtherRecords != null ?
+                    "   " + currItem.OtherRecords.replaceAll("\n", "\t").replaceAll("<<<:::===", "\n\n   ") : ""));
                 historyVbox.setVisible(true);
 
+                printHBox.setVisible(true);
+                if (MainPage.bartendPath == null) {
+                    printHBox.setDisable(true);
+                }
                 save.setVisible(false);
 
                 cancel.setVisible(true);
@@ -574,7 +760,7 @@ public class AddItem extends Application {
                 });
 
                 edit.setVisible(true);
-                edit.setText("Edit");
+                edit.setText("Edit Item");
                 edit.setOnAction(e -> {
                     setEditing();
                 });
@@ -582,7 +768,7 @@ public class AddItem extends Application {
 //                    edit.setDisable(true);
 //                }
                 //add field that was created by user
-                createdBy.setText("Item created by "+currItem.User);
+                createdBy.setText("Item created by " + currItem.User);
 
                 System.out.println(currItem);
                 updateFields();
@@ -590,9 +776,8 @@ public class AddItem extends Application {
 //                dragDropLbl.setVisible(false);
                 dragDropLbl.setDisable(true);
                 updateImages.setVisible(false);
-                directr.setText("Current directory: "+initDirectory+"\\"+ currItem.SKU+ "\\");
+                directr.setText("Current directory: " + MainPage.imagesPath + "\\" + currItem.SKU + "\\");
 
-//                pane.setRight(imageBlockPane);
             }
 
             /**
@@ -608,16 +793,16 @@ public class AddItem extends Application {
                     long SKU = 0;
                     boolean SKUmessage = false;
                     String SKUfieldText = SKUField.getText().strip();
-                    if (SKUfieldText== "") {
+                    if (SKUfieldText == "") {
 //                        setStatus("Cannot have empty SKU", 5, "red");
 //                        setImageStatus("", 0, "");
                         SKUmessage = true;
 //                        return;
-                    }else {
+                    } else {
                         try {
                             SKU = Integer.parseInt(SKUfieldText);
 
-                            if (SKUfieldText.length()!=6 || SKUfieldText.charAt(0)=='0'){
+                            if (SKUfieldText.length() != 6 || SKUfieldText.charAt(0) == '0') {
                                 SKUmessage = true;
                             }
                         } catch (NumberFormatException eeeeeerocks) {
@@ -628,7 +813,7 @@ public class AddItem extends Application {
                         }
                     }
 
-                    if (SKUmessage){
+                    if (SKUmessage) {
                         setStatus("SKU should be a 6-digit number without leading zeros", 5, "red");
                         setImageStatus("", 0, "");
                         return;
@@ -655,19 +840,26 @@ public class AddItem extends Application {
 //                    System.out.println((SNField.getText().equals("") ? null :  "'"+SNField.getText() + "'"));
                     String values =
                         "'" + SKU + "'" + "," +
-                        (SNField.getText().strip().equals("") ? null : "'" + SNField.getText().strip() + "'") + "," +
-                        (PNField.getText().strip().equals("") ? null : "'" + PNField.getText().strip() + "'") + "," +
-                        (UPCField.getText().strip().equals("") ? null : "'" + UPCField.getText().strip() + "'") + "," +
-                        (gradeField.getText().strip().equals("") ? null : "'" + gradeField.getText().strip() + "'") + "," +
-                        (locField.getText().strip().equals("") ? null : "'" + locField.getText().strip() + "'") + "," +
-                        (notesArea.getText().strip().equals("") ? null : "'" + notesArea.getText().strip() + "'") + "," +
-                        "'" + MainPage.user + "'" + "," +
-                        "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
-                        null + "," +
-                        null + "," +
-                        "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
-                        (POnumField.getText().strip().equals("") ? null : "'" + POnumField.getText().strip() + "'") + "," +
-                        (specsArea.getText().strip().equals("") ? null : "'" + specsArea.getText().strip() + "'");
+                            (SNField.getText().strip().equals("") ? null : "'" + SNField.getText().strip() + "'") +
+                            "," +
+                            (PNField.getText().strip().equals("") ? null : "'" + PNField.getText().strip() + "'") +
+                            "," +
+                            (UPCField.getText().strip().equals("") ? null : "'" + UPCField.getText().strip() + "'") +
+                            "," +
+                            (gradeField.getText().strip().equals("") ? null :
+                                "'" + gradeField.getText().strip() + "'") + "," +
+                            (locField.getText().strip().equals("") ? null : "'" + locField.getText().strip() + "'") +
+                            "," +
+                            (notesArea.getText().strip().equals("") ? null : "'" + notesArea.getText().strip() + "'") +
+                            "," +
+                            "'" + MainPage.user + "'" + "," +
+                            "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
+                            null + "," +
+                            null + "," +
+                            "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
+                            (POnumField.getText().strip().equals("") ? null :
+                                "'" + POnumField.getText().strip() + "'") + "," +
+                            (specsArea.getText().strip().equals("") ? null : "'" + specsArea.getText().strip() + "'");
                     String sql = ("INSERT INTO items " +
 //                        "(SKU,SN,PN,UPC,Grade,Location,Notes,User,DateTime,Images,OtherRecords) " +
                         "VALUES (" + values + ")");
@@ -718,16 +910,24 @@ public class AddItem extends Application {
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
 
-                    String SNnew = (SNField.getText() != null && SNField.getText().equals("") ? null : SNField.getText());
-                    String PNnew = (PNField.getText() != null && PNField.getText().equals("") ? null : PNField.getText());
-                    String UPCnew = (UPCField.getText() != null && UPCField.getText().equals("") ? null : UPCField.getText());
-                    String Gradenew = (gradeField.getText() != null && gradeField.getText().equals("") ? null : gradeField.getText());
-                    String Locationnew = (locField.getText() != null && locField.getText().equals("") ? null : locField.getText());
-                    String Notesnew = (notesArea.getText() != null && notesArea.getText().equals("") ? null : notesArea.getText());
-                    String POnumnew = (POnumField.getText() != null && POnumField.getText().equals("") ? null : POnumField.getText());
-                    String Specsnew = (specsArea.getText() != null && specsArea.getText().equals("") ? null : specsArea.getText());
+                    String SNnew =
+                        (SNField.getText() != null && SNField.getText().equals("") ? null : SNField.getText());
+                    String PNnew =
+                        (PNField.getText() != null && PNField.getText().equals("") ? null : PNField.getText());
+                    String UPCnew =
+                        (UPCField.getText() != null && UPCField.getText().equals("") ? null : UPCField.getText());
+                    String Gradenew =
+                        (gradeField.getText() != null && gradeField.getText().equals("") ? null : gradeField.getText());
+                    String Locationnew =
+                        (locField.getText() != null && locField.getText().equals("") ? null : locField.getText());
+                    String Notesnew =
+                        (notesArea.getText() != null && notesArea.getText().equals("") ? null : notesArea.getText());
+                    String POnumnew =
+                        (POnumField.getText() != null && POnumField.getText().equals("") ? null : POnumField.getText());
+                    String Specsnew =
+                        (specsArea.getText() != null && specsArea.getText().equals("") ? null : specsArea.getText());
 
-                    String sql = "UPDATE items SET " +
+                    String sqll = "UPDATE items SET " +
                         (needReplacement(SNnew, currItem.SN) ?
                             (SNnew != null ? "SN='" + SNnew + "', " : "SN=" + SNnew + ", ") : "") +
                         (needReplacement(PNnew, currItem.PN) ?
@@ -745,32 +945,42 @@ public class AddItem extends Application {
                             (POnumnew != null ? "POnumber='" + POnumnew + "', " :
                                 "POnumber=" + POnumnew + ", ") : "") +
                         (needReplacement(Specsnew, currItem.Specs) ?
-                            (Specsnew != null ? "Specs='" + Specsnew + "', " : "Specs=" + Specsnew + ", ") : "")+
+                            (Specsnew != null ? "Specs='" + Specsnew + "', " : "Specs=" + Specsnew + ", ") : "") +
                         "WHERE SKU=" + currItem.SKU;
-                    if (sql.contains(", WHERE SKU=" + currItem.SKU)) {
-                        sql = sql.replace(", WHERE SKU=" + currItem.SKU, " WHERE SKU=" + currItem.SKU);
+                    if (sqll.contains(", WHERE SKU=" + currItem.SKU)) {
+                        sqll = sqll.replace(", WHERE SKU=" + currItem.SKU, " WHERE SKU=" + currItem.SKU);
                     }
 
-                    if (!sql.contains("UPDATE items SET WHERE SKU=")) {
+                    if (!sqll.contains("UPDATE items SET WHERE SKU=")) {
                         try {
-                            String otherRecs = MainPage.user + " on " + new Timestamp(System.currentTimeMillis()) + ": " +
-                                (sql.contains("Notes=")?"updated Notes to \""+ Notesnew+"\", ":"") +
-                                (sql.contains("SN=")?"updated SN to \""+ SNnew+"\", ":"") +
-                                (sql.contains("PN=")?"updated PN to \""+ PNnew+"\", ":"") +
-                                (sql.contains("UPC=")?"updated UPC to \""+ UPCnew+"\", ":"") +
-                                (sql.contains("Grade=")?"updated Grade to \""+ Gradenew+"\", ":"") +
-                                (sql.contains("Location=")?"updated Location to \""+ Locationnew+"\", ":"") +
-                                (sql.contains("POnumber=")?"updated POnumber to \""+ POnumnew+"\", ":"") +
-                                (sql.contains("Specs=")?"updated Specs to \""+ Specsnew+"\"":"");
-                            if (otherRecs.length()>2 && otherRecs.substring(otherRecs.length()-2, otherRecs.length()).equals(", ")){
-                                otherRecs = otherRecs.substring(0, otherRecs.length()-2);
+                            String timm = new Timestamp(System.currentTimeMillis()).toString();
+                            if (timm.split("\\.").length>0){
+                                timm = timm.split("\\.")[0];
                             }
-                            otherRecs = otherRecs + ";<<<:::==="+(currItem.OtherRecords==null?"":currItem.OtherRecords);
-                            sql = sql.replace(" WHERE SKU=" + currItem.SKU,", OtherRecords='"+otherRecs+"', "+
-                                "DateModified='" + new Timestamp(System.currentTimeMillis()) +"' WHERE SKU=" + currItem.SKU);
-                            System.out.println(sql);
+                            String otherRecs =
+                                MainPage.user + " on " + timm+ " : " +
+                                    (sqll.contains("Notes=") ? "updated Notes to \"" + Notesnew + "\", " : "") +
+                                    (sqll.contains("SN=") ? "updated SN to \"" + SNnew + "\", " : "") +
+                                    (sqll.contains("PN=") ? "updated PN to \"" + PNnew + "\", " : "") +
+                                    (sqll.contains("UPC=") ? "updated UPC to \"" + UPCnew + "\", " : "") +
+                                    (sqll.contains("Grade=") ? "updated Grade to \"" + Gradenew + "\", " : "") +
+                                    (sqll.contains("Location=") ? "updated Location to \"" + Locationnew + "\", " :
+                                        "") +
+                                    (sqll.contains("POnumber=") ? "updated POnumber to \"" + POnumnew + "\", " : "") +
+                                    (sqll.contains("Specs=") ? "updated Specs to \"" + Specsnew + "\"" : "");
+                            if (otherRecs.length() > 2 &&
+                                otherRecs.substring(otherRecs.length() - 2, otherRecs.length()).equals(", ")) {
+                                otherRecs = otherRecs.substring(0, otherRecs.length() - 2);
+                            }
+                            otherRecs =
+                                otherRecs + ";<<<:::===" + (currItem.OtherRecords == null ? "" : currItem.OtherRecords);
+                            sqll = sqll.replace(" WHERE SKU=" + currItem.SKU, ", OtherRecords='" + otherRecs + "', " +
+                                "DateModified='" + new Timestamp(System.currentTimeMillis()) + "' WHERE SKU=" +
+                                currItem.SKU);
+                            System.out.println(sqll);
 
-                            stmt.executeUpdate(sql);
+                            stmt.executeUpdate(sqll);
+                            currItem.OtherRecords = otherRecs;
                         } catch (SQLIntegrityConstraintViolationException ex) {
                             String message = ex.getMessage();
                             if (message.contains("Duplicate entry ") && message.contains(" for key 'items.SN'")) {
@@ -911,12 +1121,12 @@ public class AddItem extends Application {
         save.setOnAction(e -> {
             new additMethods().addItemAction();
         });
-        save.setOnMousePressed(e ->{
-            if (windowMode!="editing") {
+        save.setOnMousePressed(e -> {
+            if (windowMode != "editing") {
                 setImageStatus("saving images...", 0, "");
             }
         });
-        updateImages.setOnMousePressed(e ->{
+        updateImages.setOnMousePressed(e -> {
             setImageStatus("saving images...", 0, "");
         });
 
@@ -939,10 +1149,12 @@ public class AddItem extends Application {
 
     }
 
-    /** setting status */
+    /**
+     * setting status
+     */
     public void setStatus(String message, double seconds, String color) {
         status.setText(message);
-        status.setTextFill((color.equals("red")?Color.RED : (color.equals("green")?Color.GREEN:Color.BLACK)));
+        status.setTextFill((color.equals("red") ? Color.RED : (color.equals("green") ? Color.GREEN : Color.BLACK)));
         if (seconds != 0) {
             Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(seconds), ev -> {
                 if (status.getText().equals(message)) {
@@ -956,7 +1168,8 @@ public class AddItem extends Application {
 
     public void setImageStatus(String message, double seconds, String color) {
         imageStatus.setText(message);
-        imageStatus.setTextFill((color.equals("red")?Color.RED : (color.equals("green")?Color.GREEN:Color.BLACK)));
+        imageStatus.setTextFill(
+            (color.equals("red") ? Color.RED : (color.equals("green") ? Color.GREEN : Color.BLACK)));
         if (seconds != 0) {
             Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(seconds), ev -> {
                 if (imageStatus.getText().equals(message)) {
@@ -967,9 +1180,10 @@ public class AddItem extends Application {
             timeline.play();
         }
     }
+
     public static void setLblStatus(Label labl, String message, double seconds, String color) {
         labl.setText(message);
-        labl.setTextFill((color.equals("red")?Color.RED : (color.equals("green")?Color.GREEN:Color.BLACK)));
+        labl.setTextFill((color.equals("red") ? Color.RED : (color.equals("green") ? Color.GREEN : Color.BLACK)));
         if (seconds != 0) {
             Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(seconds), ev -> {
                 if (labl.getText().equals(message)) {
@@ -979,6 +1193,107 @@ public class AddItem extends Application {
             timeline.setCycleCount(1);
             timeline.play();
         }
+    }
+
+    void printNewLbl(String pn, String sn, String grade, String specs, String printer) {
+        String filepath = "C:\\Program Files Intent\\Intent Database 1.0.0\\zpprint";
+
+
+        if (grade == null) {
+            grade = "-";
+        } else {
+            switch (grade.toUpperCase()) {
+            case "A":
+                grade = "";
+                break;
+            case "B":
+                grade = ".";
+                break;
+            case "U":
+                grade = "..";
+                break;
+            case "C":
+                grade = "...";
+                break;
+            default:
+                grade = "-";
+                System.out.println("didn't recognize grade");
+                break;
+            }
+        }
+
+        //write to xml
+
+        String xmlShit = "" +
+            "<XMLScript Version=\"2.0\" Name=\"09232006_103601_Job1\" ID=\"123\">\n" +
+            "\t<Command Name=\"Job1\">\n" +
+            "\t\t<Print> \n" +
+            "\t\t\t<Format>" + filepath + "\\pn-sn-grade-specs.btw</Format>\n" +
+            "\t\t\t<PrintSetup>\n" +
+            "\t\t\t\t<IdenticalCopiesOfLabel>1</IdenticalCopiesOfLabel>\n" +
+            "\t\t\t</PrintSetup>\n" +
+            "\t\t\t<NamedSubString Name=\"pn\"> \n" +
+            "\t\t\t\t<Value>" + pn + "</Value>\n" +
+            "\t\t\t</NamedSubString> \n" +
+            "\t\t\t<NamedSubString Name=\"sn\"> \n" +
+            "\t\t\t\t<Value>" + sn + "</Value>\n" +
+            "\t\t\t</NamedSubString> \n" +
+            "\t\t\t<NamedSubString Name=\"grade\"> \n" +
+            "\t\t\t\t<Value>" + grade + "</Value>\n" +
+            "\t\t\t</NamedSubString>\n" +
+            "\t\t\t<NamedSubString Name=\"specs\"> \n" +
+            "\t\t\t\t<Value>" + specs + "</Value>\n" +
+            "\t\t\t</NamedSubString>\n" +
+            "\t\t</Print> \n" +
+            "\t</Command> \n" +
+            "</XMLScript>" +
+            "";
+
+
+        try (PrintWriter out = new PrintWriter(filepath + "\\pn-sn-grade-specs.xml")) {
+            out.println(xmlShit);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            MainPage.ioErrorAlert(e);
+        }
+
+        String scriptShit = "cd \"" + MainPage.bartendPath + "\"\n" +
+            "bartend.exe /XMLScript=\"C:\\Program Files Intent\\Intent Database 1.0.0\\zpprint\\pn-sn-grade-specs.xml\" /PRN=\"" +
+            printer + "\" /X";
+
+        try (PrintWriter out = new PrintWriter(filepath + "\\pn-sn-grade-specs.bat")) {
+            out.println(scriptShit);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            MainPage.ioErrorAlert(e);
+        }
+
+        //print this shit     .bat file will be stored in the folder, and i will manually adjust where the crack of the program is stored
+        //xml file is stored at the same folder
+
+        try {
+            Process process2 = Runtime.getRuntime().exec("cmd /c pn-sn-grade-specs.bat",
+                null, new File(filepath));
+
+
+//            Process runtime = Runtime.getRuntime().exec("ping www.delftstack.com");
+            Show_Output(process2);
+        } catch (IOException e) {
+            e.printStackTrace();
+            MainPage.ioErrorAlert(e);
+        }
+    }
+
+
+    public static String Show_Output(Process process) throws IOException {
+        BufferedReader output_reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        String output = "";
+        String allout = "";
+        while ((output = output_reader.readLine()) != null) {
+            System.out.println(output);
+            allout += output;
+        }
+        return allout;
     }
 
 

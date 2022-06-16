@@ -39,6 +39,12 @@ public class LoginPage extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        try {
+            Class.forName("org.apache.poi.ss.usermodel.Cell");
+//            Class.forName("com.mysql.cj.jdbc.com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         Label signinLbl = new Label("Sign in");
         signinLbl.setMaxWidth(Double.MAX_VALUE);
@@ -96,7 +102,7 @@ public class LoginPage extends Application {
         });
 
         username.setOnKeyPressed((KeyEvent e) -> {
-            if (e.getCode().getCode() == 10) {
+            if (e.getCode().getCode() == 10 || e.getCode() == KeyCode.TAB) {
                 if (showPass.getText().equals("show")){
                     passwordHid.requestFocus();
                     passwordHid.setText(passwordShow.getText());
@@ -112,12 +118,12 @@ public class LoginPage extends Application {
         signinBtn.setPrefHeight(50);
 
         passwordShow.setOnKeyPressed((KeyEvent e) -> {
-            if (e.getCode().getCode() == 10 && !username.getText().equals("")) {
+            if ((e.getCode().getCode() == 10  || e.getCode() == KeyCode.TAB)&& !username.getText().equals("")) {
                 signinBtn.fire();
             }
         });
         passwordHid.setOnKeyPressed((KeyEvent e) -> {
-            if (e.getCode().getCode() == 10 && !username.getText().equals("")) {
+            if ((e.getCode().getCode() == 10  || e.getCode() == KeyCode.TAB)&& !username.getText().equals("")) {
                 signinBtn.fire();
             }
         });
@@ -191,7 +197,7 @@ public class LoginPage extends Application {
                 AddItem.setLblStatus(loginSuccessCommentLbl, "Launching the Main page.", 0, "");
                 Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1.2), ev -> {
 
-                    new MainPage("jdbc:"+connectionUrl, usern, passw).start(primaryStage);
+                    new MainPage("jdbc:"+connectionUrl, usern, passw, "\\\\DESKTOP-E5VI6AD\\application\\Images").start(primaryStage);
                     loginStage.close();
                 }));
                 timeline.setCycleCount(1);
@@ -207,7 +213,7 @@ public class LoginPage extends Application {
         //initial credentials for easy sign in
 //        username.setText("admin");
 //        passwordHid.setText("newpass");
-        loginStage.getIcons().add(new Image("file:src/intent_facebook_logo edited 2.png"));
+        loginStage.getIcons().add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
         class addMethod{
             void onEnter(){
 

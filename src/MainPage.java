@@ -62,6 +62,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import java.awt.Desktop;
 import java.awt.font.TextAttribute;
 import java.io.File;
 import java.io.FileInputStream;
@@ -85,6 +86,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Scanner;
 
 //import com.fasterxml.jackson.*;
 //import com.fasterxml.jackson.map.JsonMappingException;
@@ -97,31 +99,64 @@ public class MainPage extends Application {
     static TableView<Item> table = new TableView<Item>();
     static String urll =
 //        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
-        "";
-//        "jdbc:mysql://localhost:3306/products";
+//        "";
+        "jdbc:mysql://localhost:3306/products";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
     static String user =
-//        "admin";
-        "";
+        "admin";
+//        "";
     static String passw =
-//        "newpass";
-        "";
+//        "658etra";
+//        "";
+    "newpass";
+    static String bartendPath = null;
+    static String imagesPath =
+//        "\\\\DESKTOP-E5VI6AD\\application\\Images";
+            "D:\\Mine stuff\\Compiling\\Images";
 
-    public MainPage(String urll, String user, String passw) {
+    public MainPage(String urll, String user, String passw, String imagesPath) {
         this.urll = urll;
         this.user = user;
         this.passw = passw;
+        this.imagesPath = imagesPath;
     }
-//    public MainPage() {}
+    public MainPage() {}
 
     @Override
     public void start(Stage primaryStage) {
-//        Item[] lol = extractFromDb();
-//        for (Item it: lol){
-//            System.out.println(it);
+//        try {
+//            Class.forName("com.mysql.cj.jdbc");
+////            Class.forName("com.mysql.cj.jdbc.com.mysql.cj.jdbc.Driver");
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
 //        }
+        try {
+            Class.forName("org.apache.poi.ss.usermodel.Cell");
+//            Class.forName("com.mysql.cj.jdbc.com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Current dir "+System.getProperty("user.dir"));
 
-//        Additional.setNulls();
+        //read path to bartend.exe
+
+        try {
+            File fl = new File("C:\\Program Files Intent\\configg.csv");
+
+            Scanner myReader = new Scanner(fl);
+            myReader.nextLine();
+            String printEnabledStr = myReader.nextLine().split(",")[1].strip();
+            boolean printEnabled = printEnabledStr.equalsIgnoreCase("true");
+            if (printEnabled){
+                bartendPath = myReader.nextLine().split(",")[1].strip();
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        System.out.println("path to bartend "+bartendPath);
+
         table = new TableView<Item>();
 
         BorderPane pane = new BorderPane();
@@ -129,17 +164,19 @@ public class MainPage extends Application {
 
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         TableColumn[] tablArr = updateTable();
-        BorderPane.setMargin(table,new Insets(7,7,12,7));
+        BorderPane.setMargin(table,new Insets(14,9,12,9));
 
         table.getColumns()
-            .addAll(tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[6], tablArr[7],
-                tablArr[8], tablArr[9],tablArr[10], tablArr[11]);
+            .addAll(tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7], tablArr[9],
+                tablArr[8], tablArr[6],tablArr[11], tablArr[10],tablArr[12]);
         table.setOnMouseClicked((MouseEvent event) -> {
             System.out.println("smth pressed");
 //            System.out.println();
             if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2){
                 System.out.println(table.getSelectionModel().getSelectedItem());
-                new AddItem("previewing", table.getSelectionModel().getSelectedItem(), user).start(primaryStage);
+                if (table.getSelectionModel().getSelectedItem()!= null){
+                    new AddItem("previewing", table.getSelectionModel().getSelectedItem(), user).start(primaryStage);
+                }
             }
         });
         pane.setCenter(table);
@@ -147,6 +184,23 @@ public class MainPage extends Application {
         /** admin block */
 
         Label adminToolsLbl = new Label("Admin Tools");
+
+        ImageView infoPic = new ImageView("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\info_icon.png");
+        infoPic.setFitHeight(15);
+        infoPic.setPreserveRatio(true);
+        BorderPane infoWrap = new BorderPane(infoPic);
+        HBox.setMargin(infoWrap, new Insets(3,0,0,0));
+        infoWrap.setOnMouseEntered(e->{
+            infoPic.setCursor(Cursor.HAND);
+        });
+        infoWrap.setOnMouseClicked(e->{
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Information for importing");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+            alert.setContentText("The columns in the imported xlsx file should be named \"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\".");
+
+            alert.showAndWait();
+        });
 
         Button importBtn = new Button("Import ");
         FileChooser importFileChooser = new FileChooser();
@@ -160,9 +214,9 @@ public class MainPage extends Application {
         exportBtn.setOnAction(e->{
             DirectoryChooser exportDirChooser = new DirectoryChooser();
             exportDirChooser.setTitle("Choose the destination for the export");
-            exportDirChooser.setInitialDirectory(
-                new File("D:\\Download")
-            );
+//            exportDirChooser.setInitialDirectory(
+//                new File("D:\\Download")
+//            );
 
             File exportFile = exportDirChooser.showDialog(primaryStage);
             if (exportFile == null){
@@ -188,7 +242,20 @@ public class MainPage extends Application {
                 for (int i=0; i<columnCount; i++) {
 
                     String columnName = metadata.getColumnName(i+1);
-
+                    switch (columnName){
+                    case "DateTime":
+                        columnName="Date Created";
+                        break;
+                    case "DateModified":
+                        columnName="Date Modified";
+                        break;
+                    case "OtherRecords":
+                        columnName="History";
+                        break;
+                    case "POnumber":
+                        columnName="PO#";
+                        break;
+                    }
                     System.out.println(columnName);
 
                     row.createCell(i).setCellValue(columnName);
@@ -235,17 +302,36 @@ public class MainPage extends Application {
                 rs.close();
 
 
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Export Successful!");
-//            alert.setHeaderText("Look, a Confirmation Dialog");
-                alert.setContentText("Successfully exported to\n"+fullpath);
+                File file = new File (exportFile.getAbsolutePath() + "\\Database_export.xlsx");
+                if (file.exists()){
+                    try {
+                        Desktop desktop = Desktop.getDesktop();
+                        desktop.open(file);
+                    } catch (IOException exxxx) {
+                        exxxx.printStackTrace();
+                    }
+                } else{
+//                    Alert alert = new Alert(Alert.AlertType.ERROR);
+//                    alert.setTitle("Folder unavailable");
+////            alert.setHeaderText("Look, a Confirmation Dialog");
+//                    alert.setContentText("Folder "+initDirectory+" is unavailable");
+//
+//                    alert.showAndWait();
+                }
 
-                alert.showAndWait();
-
-            } catch (SQLException | IOException ex) {
+//                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//                alert.setTitle("Export Successful!");
+////            alert.setHeaderText("Look, a Confirmation Dialog");
+//                alert.setContentText("Successfully exported to\n"+fullpath);
+//
+//                alert.showAndWait();
+            } catch (SQLException ex) {
+                MainPage.databaseErrorAlert(ex).showAndWait();
                 ex.printStackTrace();
+            } catch (IOException iox){
+                MainPage.ioErrorAlert(iox).showAndWait();
+                iox.printStackTrace();
             }
-
         });
 
         Button manageUsersBtn = new Button("Manage Users");
@@ -253,7 +339,7 @@ public class MainPage extends Application {
             new ManageUsers().start(primaryStage);
         });
 
-        HBox adminOptHbox = new HBox(15, importBtn, exportBtn, manageUsersBtn);
+        HBox adminOptHbox = new HBox(15, importBtn, infoWrap, exportBtn, manageUsersBtn);
 
         VBox adminOptVbox = new VBox(3,adminToolsLbl, adminOptHbox);
 //        adminOptHbox.setPrefWidth(Double.MAX_VALUE);
@@ -294,7 +380,7 @@ public class MainPage extends Application {
 
 
         VBox.setMargin(loggedInLbl, new Insets(5,0,0,0));
-        ImageView profilePic = new ImageView("file:src/profile_icon.png");
+        ImageView profilePic = new ImageView("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\profile_icon.png");
         profilePic.setFitHeight(40);
         profilePic.setPreserveRatio(true);
         VBox profileTextVbox = new VBox(0,loggedInLbl, signOut);
@@ -308,7 +394,9 @@ public class MainPage extends Application {
         TextField searchField = new TextField();
         searchField.setPromptText("Search");
         searchField.setPrefWidth(300);
+        searchField.setMinHeight(30);
         Button searchSubm = new Button("Search");
+        searchSubm.setMinHeight(30);
         HBox searchHBox = new HBox(searchField, searchSubm);
         searchHBox.setAlignment(Pos.CENTER);
 
@@ -326,7 +414,8 @@ public class MainPage extends Application {
         });
 
         /** Buttons **/
-        Button addNew = new Button("Add Item");
+        Button addNew = new Button("Add new Item");
+        addNew.setMinSize(120,45);
         Button refresh = new Button("Refresh");
         Button delete = new Button("Delete selected items");
 
@@ -346,13 +435,13 @@ public class MainPage extends Application {
                 deleteAct();
             }
         });
-        pane.setRight(new VBox(refresh, addNew));
+        pane.setRight(new VBox(8,refresh, addNew));
         pane.setLeft(delete);
 
 
 //        primaryStage.setScene(new Scene(root));
 //        primaryStage.show();
-        primaryStage.getIcons().add(new Image("file:src/intent_facebook_logo edited 2.png"));
+        primaryStage.getIcons().add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
         Scene scene = new Scene(pane, 1000, 700);
         primaryStage.setTitle("Intent - database tool");
         primaryStage.setScene(scene);
@@ -474,11 +563,12 @@ public class MainPage extends Application {
         TableColumn userCol = new TableColumn("User");
         TableColumn timeCol = new TableColumn("Date Created");
         TableColumn dateModifiedCol = new TableColumn("Date Modified");
-        TableColumn POnumCol = new TableColumn("PO number");
+        TableColumn POnumCol = new TableColumn("PO#");
         TableColumn specsCol = new TableColumn("Specs");
+        TableColumn othrecCol = new TableColumn("History");
 
         Item[] arr = extractItemsFromDb(
-            "SELECT * FROM items" + "\n" + "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime DESC"
+            "SELECT * FROM items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
         );
         ObservableList<Item> data = FXCollections.observableArrayList();
 //        System.out.println("printing items in extracting to array, from UPDATE :");
@@ -499,10 +589,11 @@ public class MainPage extends Application {
         dateModifiedCol.setCellValueFactory(new PropertyValueFactory<Item, Timestamp>("DateModified"));
         POnumCol.setCellValueFactory(new PropertyValueFactory<Item, String>("POnumber"));
         specsCol.setCellValueFactory(new PropertyValueFactory<Item, String>("Specs"));
+        othrecCol.setCellValueFactory(new PropertyValueFactory<Item, String>("OtherRecords"));
         table.setItems(data);
 
 //        table.getColumns().addAll(SKUCol,SNCol,PNCol,UPCCol,isPerfCol, imgCol);
-        return new TableColumn[] {SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol};
+        return new TableColumn[] {SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol, othrecCol};
     }
     public static void deleteAct(){
 
@@ -517,7 +608,7 @@ public class MainPage extends Application {
         itemsStr = itemsStr.substring(0, itemsStr.length()-2);
 
         if (itemsStr != "") {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Enter a 5-letter word maybe? LoL");
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Deletion Confirmation");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
             alert.setContentText("Are you sure you want to delete item" +(itemsSelect.size() == 1 ? " " : "s ") +itemsStr+ "?");

@@ -22,6 +22,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -65,8 +66,9 @@ public class ImportPreviewWindow  extends Application {
         TableColumn userCol = new TableColumn("User");
         TableColumn timeCol = new TableColumn("Date Created");
         TableColumn dateModifiedCol = new TableColumn("Date Modified");
-        TableColumn POnumCol = new TableColumn("PO number");
+        TableColumn POnumCol = new TableColumn("PO#");
         TableColumn specsCol = new TableColumn("Specs");
+        TableColumn historyCol = new TableColumn("History");
 
         SKUCol.setCellValueFactory(new PropertyValueFactory<Item, Integer>("SKU"));
         SNCol.setCellValueFactory(new PropertyValueFactory<Item, String>("SN"));
@@ -80,9 +82,10 @@ public class ImportPreviewWindow  extends Application {
         dateModifiedCol.setCellValueFactory(new PropertyValueFactory<Item, Timestamp>("DateModified"));
         POnumCol.setCellValueFactory(new PropertyValueFactory<Item, String>("POnumber"));
         specsCol.setCellValueFactory(new PropertyValueFactory<Item, String>("Specs"));
+        historyCol.setCellValueFactory(new PropertyValueFactory<Item, String>("OtherRecords"));
         tablePr.setItems(importData);
 
-        tablePr.getColumns().addAll(SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol);
+        tablePr.getColumns().addAll(SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol, historyCol);
 
 
         Button cancel = new Button("Cancel");
@@ -141,11 +144,11 @@ public class ImportPreviewWindow  extends Application {
                             (it.Grade == null ? null : "'" + it.Grade + "'") + "," +
                             (it.Location == null ? null : "'" + it.Location + "'") + "," +
                             (it.Notes == null ? null : "'" + it.Notes + "'") + "," +
-                            "'" + it.User + "'" + "," +
-                            "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
+                            (it.User == null ? null : "'" + it.User + "'") + "," +
+                            (it.time == null ? null : "'" + it.time + "'") + "," +
                             (it.Images == null ? null : "'" + it.Images + "'") + "," +
                             (it.OtherRecords == null ? null : "'" + it.OtherRecords + "'") + "," +
-                            "'" + new Timestamp(System.currentTimeMillis()) + "'" + "," +
+                            (it.DateModified == null ? null : "'" + it.DateModified + "'") + "," +
                             (it.POnumber == null ? null : "'" + it.POnumber + "'") + "," +
                             (it.Specs == null ? null : "'" + it.Specs + "'");
                     String sql = ("INSERT INTO items " +
@@ -176,9 +179,9 @@ public class ImportPreviewWindow  extends Application {
 
         //configuring file chooser
         importFileChooser.setTitle("Choose Excel File");
-        importFileChooser.setInitialDirectory(
-            new File("D:\\Download")
-        );
+//        importFileChooser.setInitialDirectory(
+//            new File("D:\\Download")
+//        );
         importFileChooser.getExtensionFilters().addAll(
 //            new FileChooser.ExtensionFilter("All Images", "*.*"),
             new FileChooser.ExtensionFilter("Microsoft Excel Worksheet", "*.xlsx")
@@ -213,21 +216,25 @@ public class ImportPreviewWindow  extends Application {
                 colsHashm.put("Notes", null);
                 colsHashm.put("User", null);
                 colsHashm.put("Images", null);
-                colsHashm.put("OtherRecords", null);
-                colsHashm.put("POnumber", null);
+                colsHashm.put("History", null);
+                colsHashm.put("PO#", null);
                 colsHashm.put("Specs", null);
+                colsHashm.put("Date Created", null);
+                colsHashm.put("Date Modified", null);
 
                 for (int i = 0; i < num_columns; i++) {
                     String colmnString = cellIterator.next().getStringCellValue();
                     if (colsHashm.containsKey(colmnString)){
                         colsHashm.put(colmnString, i);
                     } else{
-                        errorString = "Column \""+colmnString+"\" is not found in the database, make sure that the name of the columns of the table include " +
-                            "\"SKU\", " +
-                            "\"SN\", " +
-                            "\"POnumber\", " +
-                            "\"Specs\".\n";
+                        errorString += "\""+colmnString+"\", ";
                     }
+                }
+                if (!errorString.equals("")){
+                    errorString = errorString.substring(0,errorString.length()-2);
+                    errorString = "Column"+(errorString.contains(",")?"s ":" ")+errorString+(errorString.contains(",")?" are":" is")+" not found in the database, make sure that the columns are named " +
+                        "\"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"";
+
                 }
                 //now need to
                 Row currRow = null;
@@ -252,10 +259,14 @@ public class ImportPreviewWindow  extends Application {
                     String currPOnumber = null;
                     String currSpecs = null;
 
+                    Timestamp currDateCreated = null;
+                    Timestamp currDateModified = new Timestamp(System.currentTimeMillis());
+
                     currRow = rowIterator.next();
                     //now i go throw values in hashmap, and then get a cell with corresponding number; and then use
                     // algo to generate SKU, and then check by creating and deleting the item
 
+                    //1
                     boolean needGenerating = false;
                     if (colsHashm.get("SKU") != null){
                         Cell SKUcell = currRow.getCell(colsHashm.get("SKU"));
@@ -274,45 +285,173 @@ public class ImportPreviewWindow  extends Application {
                     }
 
                     if (needGenerating){
-                        Connection conn2 = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-                        Statement stmt2 = conn.createStatement();
-                        ResultSet rs2 = stmt2.executeQuery("SELECT SKUgenerated from addit_data");
-                        rs2.next();
-                        long lastSKU = rs2.getLong(1);
+                        ResultSet rs = stmt.executeQuery("SELECT SKUgenerated from addit_data");
+                        rs.next();
+                        long lastSKU = rs.getLong(1);
                         currSKU = lastSKU+1;
-                        System.out.println("execute update"+stmt2.executeUpdate("UPDATE addit_data SET SKUgenerated="+currSKU+" WHERE IDcolumn=1"));
-                        rs2.close();
-                        conn2.close();
-                        stmt2.close();
+                        System.out.println("execute update"+stmt.executeUpdate("UPDATE addit_data SET SKUgenerated="+currSKU+" WHERE IDcolumn=1"));
+                        rs.close();
                         generatedSKUcount++;
                         System.out.println("generating sku "+ currSKU);
                     }
                     System.out.println(rowNum + " "+ currSKU);
 
+                    //2
                     if (colsHashm.get("SN") != null){
                         Cell SNcell = currRow.getCell(colsHashm.get("SN"));
-                        currSN = (SNcell == null || readCell(SNcell)==null || readCell(SNcell).equals("")? null: readCell(SNcell));
+                        currSN = (SNcell == null? null: readCell(SNcell));
                     } else{
                         currSN = null;
                     }
 
-                    if (colsHashm.get("POnumber") != null){
-                        Cell POnumcell = currRow.getCell(colsHashm.get("POnumber"));
-                        currPOnumber = (POnumcell == null || readCell(POnumcell)==null? null: (readCell(POnumcell).equals("")?null: readCell(POnumcell)));
+                    //3
+                    if (colsHashm.get("PN") != null){
+                        Cell PNcell = currRow.getCell(colsHashm.get("PN"));
+                        currPN = (PNcell == null? null: readCell(PNcell));
+                    } else{
+                        currPN = null;
+                    }
+
+                    //4
+                    if (colsHashm.get("UPC") != null){
+                        Cell UPCcell = currRow.getCell(colsHashm.get("UPC"));
+                        currUPC = (UPCcell == null? null: readCell(UPCcell));
+                    } else{
+                        currUPC = null;
+                    }
+
+                    //5
+                    if (colsHashm.get("Grade") != null){
+                        Cell gradecell = currRow.getCell(colsHashm.get("Grade"));
+                        currGrade = (gradecell == null? null: readCell(gradecell));
+                    } else{
+                        currGrade = null;
+                    }
+
+                    //6
+                    if (colsHashm.get("Location") != null){
+                        Cell Locationcell = currRow.getCell(colsHashm.get("Location"));
+                        currLocation = (Locationcell == null? null: readCell(Locationcell));
+                    } else{
+                        currLocation = null;
+                    }
+
+                    //7
+                    if (colsHashm.get("Notes") != null){
+                        Cell Notescell = currRow.getCell(colsHashm.get("Notes"));
+                        currNotes = (Notescell == null? null: readCell(Notescell));
+                    } else{
+                        currNotes = null;
+                    }
+
+                    //8
+                    if (colsHashm.get("User") != null){
+                        Cell Usercell = currRow.getCell(colsHashm.get("User"));
+                        currUser = (Usercell == null? user: readCell(Usercell));
+                    } else{
+                        currUser = user;
+                    }
+
+                    //9
+                    if (colsHashm.get("Images") != null){
+                        Cell Imagescell = currRow.getCell(colsHashm.get("Images"));
+                        currImages = (Imagescell == null? null: readCell(Imagescell));
+                    } else{
+                        currImages = null;
+                    }
+
+                    //10
+                    if (colsHashm.get("History") != null){
+                        Cell Historycell = currRow.getCell(colsHashm.get("History"));
+                        currOtherRecords = (Historycell == null? null: readCell(Historycell));
+                    } else{
+                        currOtherRecords = null;
+                    }
+
+                    //11
+                    if (colsHashm.get("PO#") != null){
+                        Cell POnumcell = currRow.getCell(colsHashm.get("PO#"));
+                        currPOnumber = (POnumcell == null? null: readCell(POnumcell));
                     } else{
                         currPOnumber = null;
                     }
 
+                    //12
                     if (colsHashm.get("Specs") != null){
                         Cell specscell = currRow.getCell(colsHashm.get("Specs"));
-                        currSpecs = (specscell == null || readCell(specscell)==null? null: (readCell(specscell).equals("")?null: readCell(specscell)));
+                        currSpecs = (specscell == null? null: readCell(specscell));
                     } else{
                         currSpecs = null;
                     }
 
+                    //13
+                    if (colsHashm.get("Date Created") != null){
+                        Cell datecrcell = currRow.getCell(colsHashm.get("Date Created"));
+                        System.out.println("date cell "+datecrcell.getCellType());
+                        if (datecrcell == null){
+                            currDateCreated = currDateModified;
+                        } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
+                            System.out.println("getting data from ");
+                            try {
+                                currDateCreated = new Timestamp(datecrcell.getDateCellValue().getTime());
+                            } catch (Exception eee){
+                                currDateCreated = currDateModified;
+                                System.out.println("error reading DateCreated");
+                            }
+                        } else{
+                            System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
+                            currDateCreated = currDateModified;
+                        }
+                    } else{
+                        currDateCreated = currDateModified;
+                    }
+
+                    //14
+                    if (colsHashm.get("Date Modified") != null){
+                        Cell datecrcell = currRow.getCell(colsHashm.get("Date Modified"));
+                        System.out.println("date cell "+datecrcell.getCellType());
+                        if (datecrcell == null){
+                            currDateModified = null;
+                        } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
+                            try{
+                                currDateModified = new Timestamp(datecrcell.getDateCellValue().getTime());
+                            } catch (Exception eee){
+                                currDateModified = null;
+                                System.out.println("error reading DateModified");
+                            }
+                        } else{
+                            System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
+                            currDateModified = null;
+                        }
+                    } else{
+                        currDateModified = null;
+                    }
+
+                    System.out.println(currDateCreated);
+                    System.out.println(currDateModified);
+
                     rowNum++;
                     if (currSKU == 0) {
-                        System.out.println("lol breaked");
+                        System.out.println("WTF LOL BREAKED");
+                        errorString+="\nCATASTROPHIC FAILURE";
+                        continue;
+                    }
+
+
+                    if (needGenerating &&
+                        currSN==null &&
+                        currPN==null&&
+                        currUPC==null&&
+                        currGrade==null&&
+                        currLocation==null&&
+                        currNotes==null&&
+                        currUser==null&&
+                        currImages==null&&
+                        currOtherRecords==null&&
+                        currPOnumber==null&&
+                        currSpecs==null
+                    ){
+                        errorString += "\nThere was an empty item";
                         continue;
                     }
 
@@ -324,11 +463,11 @@ public class ImportPreviewWindow  extends Application {
                         currGrade,
                         currLocation,
                         currNotes,
-                        user,
-                        new Timestamp(System.currentTimeMillis()),
+                        currUser,
+                        currDateCreated,
                         currImages,
                         currOtherRecords,
-                        new Timestamp(System.currentTimeMillis()),
+                        currDateModified,
                         currPOnumber,
                         currSpecs
                     );
@@ -341,11 +480,11 @@ public class ImportPreviewWindow  extends Application {
                             (currItem.Grade == null ? null : "'" + currItem.Grade + "'") + "," +
                             (currItem.Location == null ? null : "'" + currItem.Location + "'") + "," +
                             (currItem.Notes == null ? null : "'" + currItem.Notes + "'") + "," +
-                            "'" + currItem.User + "'" + "," +
-                            "'" + currItem.time + "'" + "," +
+                            (currItem.User == null ? null : "'" + currItem.User + "'") + "," +
+                            (currItem.time == null ? null : "'" + currItem.time + "'") + "," +
                             (currItem.Images == null ? null : "'" + currItem.Images + "'") + "," +
                             (currItem.OtherRecords == null ? null : "'" + currItem.OtherRecords + "'") + "," +
-                            "'" + currItem.DateModified + "'" + "," +
+                            (currItem.DateModified == null ? null : "'" + currItem.DateModified + "'") + "," +
                             (currItem.POnumber == null ? null : "'" + currItem.POnumber + "'") + "," +
                             (currItem.Specs == null ? null : "'" + currItem.Specs + "'");
                     String sql = ("INSERT INTO items " +
@@ -360,14 +499,14 @@ public class ImportPreviewWindow  extends Application {
                         String message = ex.getMessage();
                         if (message.contains("Duplicate entry ") && message.contains(" for key 'items.PRIMARY'")) {
                             System.out.println("Duplicate entry for key 'items.PRIMARY'");
-                            errorString += "Error adding item "+currItem.SKU+": Duplicate SKU = "+currItem.SKU +";\n";
+                            errorString += "\nError adding item "+currItem.SKU+": Duplicate SKU = "+currItem.SKU +";";
 
                         } else if (message.contains("Duplicate entry ") && message.contains(" for key 'items.SN'")) {
                             System.out.println("Duplicate entry for key 'items.SN'");
-                            errorString += "\nError adding item "+currItem.SKU+": Duplicate SN = "+currItem.SN+";\n";
+                            errorString += "\nError adding item "+currItem.SKU+": Duplicate SN = "+currItem.SN+";";
 
                         } else{
-                            errorString += "\nError adding item "+currItem.SKU+": Uncatched error;\n";
+                            errorString += "\nError adding item "+currItem.SKU+": Uncatched error;";
                         }
                     }
 
@@ -380,10 +519,10 @@ public class ImportPreviewWindow  extends Application {
 
             }
         } catch (SQLException ex) {
-            errorString += "ERROR: uncatched database error;";
+            errorString += "\nERROR: uncatched database error;";
             MainPage.databaseErrorAlert(ex).showAndWait();
         } catch (IOException ioe){
-            errorString += "ERROR: uncatched IO Files error;";
+            errorString += "\nERROR: uncatched IO Files error;";
             for (int i=0; i<100; i++){
                 System.out.println("ААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА ОШИБКА");
             }
@@ -398,7 +537,7 @@ public class ImportPreviewWindow  extends Application {
     public String readCell(Cell cell){
         switch (cell.getCellType()){
         case STRING:
-            return cell.getStringCellValue();
+            return (cell.getStringCellValue().strip().equals("")?null:cell.getStringCellValue().strip());
         case NUMERIC:
             return Integer.toString((int) cell.getNumericCellValue());
         case FORMULA:
@@ -406,13 +545,13 @@ public class ImportPreviewWindow  extends Application {
             case NUMERIC:
                 return Integer.toString((int) cell.getNumericCellValue());
             case STRING:
-                return cell.getStringCellValue();
+                return (cell.getStringCellValue().strip().equals("")?null:cell.getStringCellValue().strip());
             default:
-                System.out.println("readCell() returned null,lol");
+//                System.out.println("readCell() returned null,lol");
                 return null;
             }
         default:
-            System.out.println("readCell() returned null,lol");
+//            System.out.println("readCell() returned null,lol");
             return null;
         }
     }

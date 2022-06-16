@@ -3,6 +3,7 @@ having duplicat SN
 
 java.sql.SQLIntegrityConstraintViolationException: Duplicate entry '17' for key 'items.PRIMARY'
 
+\\DESKTOP-E5VI6AD\application\Images
 
 
 
@@ -263,6 +264,17 @@ Platform.runLater(() -> {
 //                if (rs.getTimestamp(9) != null){
 //                    System.out.println(rs.getTimestamp(9).getClass());
 //                }
+
+
+java --module-path "C:\Program Files\Eclipse Adoptium\libsss\javafx-sdk-11.0.2\lib" --add-modules=javafx.controls,javafx.media,javafx.fxml -jar intent.jar
+
+java --module-path "C:\STUFF\prog\JAVA\intent\out\artifacts\intent_jar5\javafx-sdk-11.0.2\lib" --add-modules=javafx.controls,javafx.media,javafx.fxml -jar intent.jar
+
+java --module-path "C:\STUFF\prog\JAVA\intent\out\artifacts\intent_jar5\javafx-sdk-11.0.2\lib" --add-modules=javafx.controls,javafx.media,javafx.fxml -jar D:\Download\intent_jar5\intent.jar
+
+java -jar intent.jar
+
+C:\Windows\System32\cmd.exe /k java --module-path "C:\Program Files\Intent Database 1.0.0\javafx-sdk-11.0.2\lib" --add-modules=javafx.controls,javafx.media,javafx.fxml -jar "C:\Program Files\Intent Database 1.0.0\intent.jar" & exit
 
 
 
