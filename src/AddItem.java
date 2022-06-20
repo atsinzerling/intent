@@ -581,6 +581,9 @@ public class AddItem extends Application {
         ChoiceBox printerChoiceBox = new ChoiceBox(printersObsList);
         printerChoiceBox.setValue(defaultPr);
         VBox.setMargin(printerChoiceBox, new Insets(0, 0, 8, 0));
+        //
+        printerChoiceBox.setDisable(true);
+        //
 
         VBox printerVbox = new VBox(8, chosePrinLbl, printerChoiceBox);
         printerVbox.setAlignment(Pos.BOTTOM_LEFT);

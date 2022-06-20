@@ -277,6 +277,24 @@ java -jar intent.jar
 C:\Windows\System32\cmd.exe /k java --module-path "C:\Program Files\Intent Database 1.0.0\javafx-sdk-11.0.2\lib" --add-modules=javafx.controls,javafx.media,javafx.fxml -jar "C:\Program Files\Intent Database 1.0.0\intent.jar" & exit
 
 
++----------------------------------------------------------+
+|+--------------------------------------------------------+|
+||                                                        ||
+||  Don't close this command-line window!                 ||
+||  Closing it will exit the intent-database application  ||
+||                                                        ||
+|+--------------------------------------------------------+|
++----------------------------------------------------------+
 
++----------------------------------------------------------------+
+| +------------------------------------------------------------+ |
+| | +--------------------------------------------------------+ | |
+| | |                                                        | | |
+| | |  Don't close this command-line window!                 | | |
+| | |  Closing it will exit the intent-database application  | | |
+| | |                                                        | | |
+| | +--------------------------------------------------------+ | |
+| +------------------------------------------------------------+ |
++----------------------------------------------------------------+
 
 

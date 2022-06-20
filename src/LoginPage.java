@@ -45,6 +45,18 @@ public class LoginPage extends Application {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+        String initMessage =
+            "+----------------------------------------------------------------+\n" +
+            "| +------------------------------------------------------------+ |\n" +
+            "| | +--------------------------------------------------------+ | |\n" +
+            "| | |                                                        | | |\n" +
+            "| | |  Don't close this command-line window!                 | | |\n" +
+            "| | |  Closing it will exit the intent-database application  | | |\n" +
+            "| | |                                                        | | |\n" +
+            "| | +--------------------------------------------------------+ | |\n" +
+            "| +------------------------------------------------------------+ |\n" +
+            "+----------------------------------------------------------------+";
+        System.out.println(initMessage);
 
         Label signinLbl = new Label("Sign in");
         signinLbl.setMaxWidth(Double.MAX_VALUE);
@@ -195,9 +207,9 @@ public class LoginPage extends Application {
 
                 AddItem.setLblStatus(loginSuccessLbl, "Sign in successful!", 0, "green");
                 AddItem.setLblStatus(loginSuccessCommentLbl, "Launching the Main page.", 0, "");
-                Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1.2), ev -> {
+                Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0.4), ev -> {
 
-                    new MainPage("jdbc:"+connectionUrl, usern, passw, "\\\\DESKTOP-E5VI6AD\\application\\Images").start(primaryStage);
+                    new MainPage("jdbc:"+connectionUrl, usern, passw).start(primaryStage);
                     loginStage.close();
                 }));
                 timeline.setCycleCount(1);

@@ -71,6 +71,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -78,6 +81,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -114,11 +118,10 @@ public class MainPage extends Application {
 //        "\\\\DESKTOP-E5VI6AD\\application\\Images";
             "D:\\Mine stuff\\Compiling\\Images";
 
-    public MainPage(String urll, String user, String passw, String imagesPath) {
+    public MainPage(String urll, String user, String passw) {
         this.urll = urll;
         this.user = user;
         this.passw = passw;
-        this.imagesPath = imagesPath;
     }
     public MainPage() {}
 
@@ -147,15 +150,45 @@ public class MainPage extends Application {
             myReader.nextLine();
             String printEnabledStr = myReader.nextLine().split(",")[1].strip();
             boolean printEnabled = printEnabledStr.equalsIgnoreCase("true");
+            String nextLi = myReader.nextLine();
             if (printEnabled){
-                bartendPath = myReader.nextLine().split(",")[1].strip();
+                bartendPath = nextLi.split(",")[1].strip();
             }
+            String imgPathStr = myReader.nextLine().split(",")[1].strip();
+            boolean imgPath = imgPathStr.equalsIgnoreCase("true");
+            nextLi = myReader.nextLine();
+            if (printEnabled){
+                imagesPath = nextLi.split(",")[1].strip();
+            }
+
             myReader.close();
         } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
+            System.out.println("Error reading configuration file");
             e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Config file error");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+            alert.setContentText("An error reading configuration file at \"C:\\Program Files Intent\\configg.csv\" occurred.");
+            alert.showAndWait();
         }
         System.out.println("path to bartend "+bartendPath);
+
+        String version = "version ";
+        try {
+//            File fl = new File("C:\\Program Files Intent\\Intent Database 1.0.0\\intent.jar");
+//            String datime = Files.readAttributes(Paths.get("C:\\Program Files Intent\\Intent Database 1.0.0\\intent.jar"),
+//                BasicFileAttributes.class).lastModifiedTime();
+
+
+            File file = new File("C:\\Program Files Intent\\Intent Database 1.0.0\\intent.jar");
+            SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy-HH:mm");
+            String datime = sdf.format(file.lastModified());
+            System.out.println("Date Modified Format : " + datime);
+            version += datime;
+        } catch (Exception e) {
+            version += "---";
+            e.printStackTrace();
+        }
 
         table = new TableView<Item>();
 
@@ -164,7 +197,7 @@ public class MainPage extends Application {
 
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         TableColumn[] tablArr = updateTable();
-        BorderPane.setMargin(table,new Insets(14,9,12,9));
+        BorderPane.setMargin(table,new Insets(14,9,12,0));
 
         table.getColumns()
             .addAll(tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7], tablArr[9],
@@ -180,6 +213,12 @@ public class MainPage extends Application {
             }
         });
         pane.setCenter(table);
+
+        Label versionLbl = new Label(version);
+        HBox bottomHbox = new HBox(5, versionLbl);
+        bottomHbox.setAlignment(Pos.BOTTOM_RIGHT);
+        HBox.setMargin(versionLbl, new Insets(0,130,0,0));
+        pane.setBottom(bottomHbox);
 
         /** admin block */
 
@@ -442,7 +481,7 @@ public class MainPage extends Application {
 //        primaryStage.setScene(new Scene(root));
 //        primaryStage.show();
         primaryStage.getIcons().add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
-        Scene scene = new Scene(pane, 1000, 700);
+        Scene scene = new Scene(pane, 950, 700);
         primaryStage.setTitle("Intent - database tool");
         primaryStage.setScene(scene);
         primaryStage.setResizable(true);
