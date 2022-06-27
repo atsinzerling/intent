@@ -1,25 +1,19 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -27,53 +21,31 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
-import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.awt.Desktop;
-import java.awt.font.TextAttribute;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -84,19 +56,13 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Scanner;
 
 //import com.fasterxml.jackson.*;
 //import com.fasterxml.jackson.map.JsonMappingException;
 //import com.fasterxml.jackson.map.ObjectMapper;
 
-import static javafx.stage.Modality.APPLICATION_MODAL;
 
 public class MainPage extends Application {
 
@@ -117,6 +83,10 @@ public class MainPage extends Application {
     static String imagesPath =
 //        "\\\\DESKTOP-E5VI6AD\\application\\Images";
             "D:\\Mine stuff\\Compiling\\Images";
+
+    static Label importLoadLbl;
+    static BorderPane loadingPane;
+    static BorderPane pane;
 
     public MainPage(String urll, String user, String passw) {
         this.urll = urll;
@@ -168,7 +138,7 @@ public class MainPage extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Config file error");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText("An error reading configuration file at \"C:\\Program Files Intent\\configg.csv\" occurred.");
+            alert.setContentText(Methods.wrap("An error reading configuration file at \"C:\\Program Files Intent\\configg.csv\" occurred."));
             alert.showAndWait();
         }
         System.out.println("path to bartend "+bartendPath);
@@ -183,16 +153,23 @@ public class MainPage extends Application {
             File file = new File("C:\\Program Files Intent\\Intent Database 1.0.0\\intent.jar");
             SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy-HH:mm");
             String datime = sdf.format(file.lastModified());
-            System.out.println("Date Modified Format : " + datime);
             version += datime;
         } catch (Exception e) {
             version += "---";
             e.printStackTrace();
         }
 
+        Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread th, Throwable ex) {
+                System.out.println("\n\n\nUncaught Thread exception: \n" + ex+"\n\n\n");
+            }
+        };
+        Thread.currentThread().setUncaughtExceptionHandler(h);
+
         table = new TableView<Item>();
 
-        BorderPane pane = new BorderPane();
+        pane = new BorderPane();
         pane.setPadding(new Insets(8));
 
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -203,10 +180,8 @@ public class MainPage extends Application {
             .addAll(tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7], tablArr[9],
                 tablArr[8], tablArr[6],tablArr[11], tablArr[10],tablArr[12]);
         table.setOnMouseClicked((MouseEvent event) -> {
-            System.out.println("smth pressed");
-//            System.out.println();
             if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2){
-                System.out.println(table.getSelectionModel().getSelectedItem());
+//                System.out.println(table.getSelectionModel().getSelectedItem());
                 if (table.getSelectionModel().getSelectedItem()!= null){
                     new AddItem("previewing", table.getSelectionModel().getSelectedItem(), user).start(primaryStage);
                 }
@@ -219,6 +194,17 @@ public class MainPage extends Application {
         bottomHbox.setAlignment(Pos.BOTTOM_RIGHT);
         HBox.setMargin(versionLbl, new Insets(0,130,0,0));
         pane.setBottom(bottomHbox);
+
+        /** loading animation for import */ //creating new node
+
+        importLoadLbl = new Label("processing import file");
+        importLoadLbl.setFont(Font.font(null, 35));
+        BorderPane.setAlignment(importLoadLbl, Pos.CENTER);
+
+        loadingPane = new BorderPane(importLoadLbl);
+        loadingPane.setVisible(true);
+
+        StackPane root = new StackPane(loadingPane, pane);
 
         /** admin block */
 
@@ -236,7 +222,7 @@ public class MainPage extends Application {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Information for importing");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText("The columns in the imported xlsx file should be named \"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\".");
+            alert.setContentText(Methods.wrap("The columns in the imported xlsx file should be named \"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"."));
 
             alert.showAndWait();
         });
@@ -276,7 +262,7 @@ public class MainPage extends Application {
 
                 int columnCount = metadata.getColumnCount();
 
-                System.out.println("test_table columns : ");
+                System.out.print("test_table columns : ");
 
                 for (int i=0; i<columnCount; i++) {
 
@@ -295,10 +281,11 @@ public class MainPage extends Application {
                         columnName="PO#";
                         break;
                     }
-                    System.out.println(columnName);
+                    System.out.print(columnName + " ");
 
                     row.createCell(i).setCellValue(columnName);
                 }
+                System.out.println("");
 
                 int rowCounter = 1;
 
@@ -447,7 +434,6 @@ public class MainPage extends Application {
         });
         searchField.setOnKeyPressed((KeyEvent e) -> {
             if (e.getCode().getCode() == 10) {
-                System.out.println("eter pressed");
                 Search.executeSearch(searchField.getText().strip());
             }
         });
@@ -470,7 +456,6 @@ public class MainPage extends Application {
         });
         table.setOnKeyPressed((KeyEvent e) -> {
             if (e.getCode() == KeyCode.DELETE) {
-                System.out.println("delete pressed");
                 deleteAct();
             }
         });
@@ -480,8 +465,18 @@ public class MainPage extends Application {
 
 //        primaryStage.setScene(new Scene(root));
 //        primaryStage.show();
+
+
+        //importLoadLbl, loadingPane, pane
+//        loadingPane.toFront();
+//        pane.setDisable(true);
+////
+//        pane.toFront();
+//        pane.setDisable(false);
+
+
         primaryStage.getIcons().add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
-        Scene scene = new Scene(pane, 950, 700);
+        Scene scene = new Scene(root, 950, 700);
         primaryStage.setTitle("Intent - database tool");
         primaryStage.setScene(scene);
         primaryStage.setResizable(true);
@@ -489,7 +484,7 @@ public class MainPage extends Application {
     }
 
     public static Item[] extractItemsFromDb(String query) {
-        System.out.println("*** extracting   " + query.replace("\n", "\t\t") + " ***");
+        System.out.println("\t SQL extracting  " + query.replace("\n", "\t"));
 
         /** just copy of convResultSetToItem(getResultSet(query)) but closing connection */
 
@@ -606,16 +601,15 @@ public class MainPage extends Application {
         TableColumn specsCol = new TableColumn("Specs");
         TableColumn othrecCol = new TableColumn("History");
 
+        othrecCol.setStyle( "-fx-alignment: CENTER-LEFT;");
+
         Item[] arr = extractItemsFromDb(
             "SELECT * FROM items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
         );
         ObservableList<Item> data = FXCollections.observableArrayList();
-//        System.out.println("printing items in extracting to array, from UPDATE :");
         for (Item ite : arr) {
-//            System.out.println(ite);
             data.add(ite);
         }
-//        System.out.println("end");
         SKUCol.setCellValueFactory(new PropertyValueFactory<Item, Integer>("SKU"));
         SNCol.setCellValueFactory(new PropertyValueFactory<Item, String>("SN"));
         PNCol.setCellValueFactory(new PropertyValueFactory<Item, String>("PN"));
@@ -641,8 +635,14 @@ public class MainPage extends Application {
             return;
         }
         String itemsStr = "";
+        int count = 0;
         for (Item it : itemsSelect){
             itemsStr += it.SKU + ", ";
+            count++;
+            if (count == 100){
+                itemsStr += "..., ";
+                break;
+            }
         }
         itemsStr = itemsStr.substring(0, itemsStr.length()-2);
 
@@ -650,7 +650,7 @@ public class MainPage extends Application {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Deletion Confirmation");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText("Are you sure you want to delete item" +(itemsSelect.size() == 1 ? " " : "s ") +itemsStr+ "?");
+            alert.setContentText(Methods.wrap("Are you sure you want to delete item" +(itemsSelect.size() == 1 ? " " : "s ") +itemsStr+ "?"));
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.get() == ButtonType.OK) {
@@ -664,8 +664,8 @@ public class MainPage extends Application {
                             failed += ite.SKU + ", ";
                             continue;
                         }
-                        System.out.println("*** deleting item SKU "+ ite.SKU+" *** - " +"DELETE from items WHERE SKU=" + ite.SKU);
-                        stmt.executeUpdate("DELETE from items WHERE SKU=" + ite.SKU);
+                        System.out.println("\tSQL   DELETE from items WHERE SKU=" + ite.SKU);
+                        stmt.executeUpdate("DELETE from products.items WHERE SKU=" + ite.SKU);
                     }
                     conn.close();
                     stmt.close();
@@ -677,7 +677,7 @@ public class MainPage extends Application {
                         alert2.setTitle("Deletion Confirmation");
 //                      alert.setHeaderText("Look, a Confirmation Dialog");
                         failed = failed.substring(0,failed.length()-2);
-                        alert2.setContentText("User "+user+" is not allowed to delete elements "+ (failed.length()>12?"\n"+failed:failed)+"\ncreated by other users.");
+                        alert2.setContentText(Methods.wrap("User "+user+" is not allowed to delete elements "+ failed+"created by other users."));
                         alert2.showAndWait();
                     }
                 } catch (SQLException ex) {
@@ -701,6 +701,13 @@ public class MainPage extends Application {
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("IO File Error");
+        alert.setContentText(e.getMessage());
+        return alert;
+    }
+    public static Alert unknownErrorAlert(Exception e){
+        e.printStackTrace();
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Unknown error occured");
         alert.setContentText(e.getMessage());
         return alert;
     }

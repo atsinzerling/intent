@@ -1,6 +1,7 @@
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
@@ -62,14 +63,11 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javafx.util.Duration;
-import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.io.FileUtils;
 
 import javax.imageio.ImageIO;
@@ -82,7 +80,7 @@ public class AddItem extends Application {
     Label imageStatus = new Label("");
     String windowMode = "adding";
     Item currItem = null;
-    ArrayList<Image> images = new ArrayList<>();
+    ArrayList<Image> images = new ArrayList<Image>();
 //    String initDirectory =
 //        "\\\\DESKTOP-E5VI6AD\\application\\Images";
     //        "D:\\Mine stuff\\Compiling\\Images";
@@ -228,7 +226,9 @@ public class AddItem extends Application {
         newWindow.show();
 
 
-        /** imagepane */
+
+
+        /** imagepane image block*/
 
         BorderPane imageBlockPane = new BorderPane();
 
@@ -278,7 +278,7 @@ public class AddItem extends Application {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Folder unavailable");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-                    alert.setContentText("Folder " + MainPage.imagesPath + " is unavailable");
+                    alert.setContentText(Methods.wrap("Folder " + MainPage.imagesPath + " is unavailable"));
 
                     alert.showAndWait();
 
@@ -287,6 +287,21 @@ public class AddItem extends Application {
         imageBlockPane.setTop(new VBox(10, dragHbox, directr));
         imageBlockPane.setMargin(dragDropLbl, new Insets(10, 10, 10, 10));
 
+        Label load = new Label("");
+        load.setMinSize(425,310);
+        load.setAlignment(Pos.CENTER);
+        load.setBorder(
+            new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, null,
+                new BorderWidths(0.3))));
+
+
+        AtomicBoolean otherFiles = new AtomicBoolean(false);
+        Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread th, Throwable ex) {
+                System.out.println("\n\n\nUncaught Thread exception: \n" + ex+"\n\n\n");
+            }
+        };
 
         class imageAdditMethods {
             private void configureFileChooser(
@@ -315,6 +330,7 @@ public class AddItem extends Application {
                 scrollPane.setMaxWidth(425);
                 scrollPane.setPrefHeight(310);
                 scrollPane.setMaxHeight(310);
+                int counter = 0;
                 if (images != null) {
                     for (Image imgg : images) {
                         if (imgg == null) {
@@ -361,15 +377,25 @@ public class AddItem extends Application {
                                 del.setCursor(Cursor.HAND);
                             });
                         }
+                        counter++;
 
                         vbox.getChildren().add(imgWrap);
                         FlowPane.setMargin(imgWrap, new Insets(6));
                     }
+                    scrollPane.setContent(vbox);
                 }
-                scrollPane.setContent(vbox);
+                if(counter == 0){
+                    Label noimgLbl = new Label(
+                        otherFiles.get() ?"no images found, but there are other files in the folder":"no images yet");
+                    noimgLbl.setMinSize(425,300);
+                    noimgLbl.setAlignment(Pos.CENTER);
+                    scrollPane.setContent(noimgLbl);
+                }
                 BorderPane.setAlignment(scrollPane, Pos.TOP_CENTER);
                 return scrollPane;
             }
+
+
 
             /** methods for save button, only in editing and adding*/
 
@@ -378,93 +404,152 @@ public class AddItem extends Application {
                     return;
                 }
 
-
-                int count = 1;
-                Thread[] thrds = new Thread[images.size()];
                 AtomicBoolean allSaved = new AtomicBoolean(true);
 
-                String directory = MainPage.imagesPath + "\\" + currItem.SKU;
-                try {
-                    Files.createDirectories(Paths.get(directory));
-                    FileUtils.cleanDirectory(new File(directory));
-                } catch (IOException e) {
-                    MainPage.ioErrorAlert(e).showAndWait();
-                    return;
-                }
+                Thread newThr = new Thread(()->{
+                    Platform.runLater(() -> {
+                        setImageStatus("saving images...", 0, "");
+                    });
 
-                for (Image imgg : images) {
-                    int finalCount = count;
-                    Thread newThread = new Thread(() -> {
-                        try {
-                            System.out.println("started " + finalCount);
+                    int count = 1;
+                    Thread[] thrds = new Thread[images.size()];
+
+                    String directory = MainPage.imagesPath + "\\" + currItem.SKU;
+                    try {
+                        Files.createDirectories(Paths.get(directory));
+                        FileUtils.cleanDirectory(new File(directory));
+                    } catch (IOException e) {
+                        MainPage.ioErrorAlert(e).showAndWait();
+                        return;
+                    }
+
+                    for (Image imgg : images) {
+                        int finalCount = count;
+                        Thread newThread = new Thread(() -> {
+                            try {
+                                System.out.println("saving image " + finalCount);
 //                            File directoryFile = new File(directory);
 //                            if (directoryFile.exists()){
 //                                FileUtils.cleanDirectory(directoryFile);
 //                            } else {
 //                                Files.createDirectories(Paths.get(directory));
 //                            }
-                            File saveTo = new File(directory + "\\"
-                                + currItem.SKU + "_" + String.format("%02d", finalCount) + ".jpg"
-                            );
-                            BufferedImage buffImg = SwingFXUtils.fromFXImage(imgg, null);
-                            ImageIO.write(buffImg, "jpg", saveTo);
-                            System.out.println(finalCount + " saved");
+                                File saveTo = new File(directory + "\\"
+                                    + currItem.SKU + "_" + String.format("%02d", finalCount) + ".jpg"
+                                );
+                                BufferedImage buffImg = SwingFXUtils.fromFXImage(imgg, null);
+                                ImageIO.write(buffImg, "jpg", saveTo);
+                                System.out.println("image "+finalCount + " successfully saved");
 
 
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                            allSaved.set(false);
-                        }
-                    });
-                    thrds[count - 1] = newThread;
-                    newThread.start();
-                    count++;
-                }
-
-                try {
-                    for (Thread thr : thrds) {
-                        thr.join();
-                    }
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
-                    allSaved.set(false);
-                }
-                if (allSaved.get()) {
-                    setImageStatus("Images saved!", 3, "green");
-                } else {
-                    setImageStatus("There was an error saving images", 3, "red");
-                }
-
-            }
-
-            void loadImagesFromDir() {
-                File dir = new File(MainPage.imagesPath + "\\" + currItem.SKU);
-                if (dir.exists()) {
-                    File[] fls = dir.listFiles();
-                    Thread[] thrds = new Thread[fls.length];
-                    images = new ArrayList<Image>();
-                    for (int i = 0; i < fls.length; i++) {
-
-
-                        int finalI = i;
-                        Thread newThread = new Thread(() -> {
-                            images.add(new Image(fls[finalI].toURI().toString()));
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                                allSaved.set(false);
+                            }
                         });
-                        thrds[i] = newThread;
+                        newThread.setUncaughtExceptionHandler(h);
+                        thrds[count - 1] = newThread;
                         newThread.start();
-
-//                        images.add(new Image(fls[i].toURI().toString()));
+                        count++;
                     }
 
                     try {
                         for (Thread thr : thrds) {
                             thr.join();
                         }
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                        allSaved.set(false);
+                    }
+
+                    Platform.runLater(() -> {
+                        if (allSaved.get()) {
+                            setImageStatus("Images saved!", 3, "green");
+                        } else {
+                            setImageStatus("There was an error saving images", 3, "red");
+                        }
+                    });
+                });
+                newThr.setUncaughtExceptionHandler(h);
+                newThr.start();
+
+
+            }
+
+            void loadImagesFromDir() {
+
+                Thread newThr = new Thread(()->{
+                    try {
+                        Platform.runLater(() -> {
+                            load.setText("loading images");
+                            dotAnim(load);
+                            imageBlockPane.setCenter(load);
+                        });
+
+                        File dir = new File(MainPage.imagesPath + "\\" + currItem.SKU);
+                        if (dir.exists()) {
+                            File[] fls = dir.listFiles();
+                            Thread[] thrds = new Thread[fls.length];
+                            System.out.println("files length "+fls.length);
+                            images.clear();
+                            for (int i = 0; i < fls.length; i++) {
+                                System.out.println(fls[i].toURI().toString());
+
+
+                                int finalI = i;
+                                Thread newThread = new Thread(() -> {
+                                    try {
+                                        if(isImage(fls[finalI])) {
+                                            images.add(new Image(fls[finalI].toURI().toString()));
+                                        } else{
+                                            System.out.println(fls[finalI].toURI().toString()+" not an image");
+                                            otherFiles.set(true);
+                                        }
+                                    } catch (Exception e) {
+                                        System.out.println("exception loading image "+fls[finalI].toURI().toString());
+                                    }
+                                });
+                                newThread.setUncaughtExceptionHandler(h);
+                                thrds[i] = newThread;
+                                newThread.start();
+
+//                        images.add(new Image(fls[i].toURI().toString()));
+                            }
+
+                            try {
+                                for (Thread thr : thrds) {
+                                    thr.join();
+                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        Platform.runLater(() -> {
+
+                            try {
+                                if (imageBlockPane!= null) {
+                                    imageBlockPane.setCenter(new imageAdditMethods().generateImages());
+                                }
+                            }
+                            catch (Exception e){
+                                System.out.println("runlater exc catched");
+                                e.printStackTrace();
+                            }
+
+//                            for (Image i: images){
+//                                System.out.println(i!=null);
+//                            }
+                        });
+                    }
+                    catch (Exception e){
+                        System.out.println("some runlater exception");
                         e.printStackTrace();
                     }
-                    imageBlockPane.setCenter(new imageAdditMethods().generateImages());
-                }
+                    });
+                    newThr.setUncaughtExceptionHandler(h);
+                    newThr.start();
+
+
             }
 
         }
@@ -483,8 +568,7 @@ public class AddItem extends Application {
             }
         });
         dragDropLbl.setOnDragDropped((EventHandler) e -> {
-            System.out.println("dropped");
-            System.out.println(e instanceof DragEvent);
+            System.out.println("dragdrop event started");
             if (e instanceof DragEvent) {
                 DragEvent event = (DragEvent) e;
                 for (File fl : event.getDragboard().getFiles()) {
@@ -499,10 +583,10 @@ public class AddItem extends Application {
                             }
                         }
                     } catch (Exception exc){
-                        System.out.println("There was an error processing file");
+                        System.out.println("There was an error processing file "+fl.toURI());
                     }
                 }
-                System.out.println("Got " + images.size() + " files");
+                System.out.println("Got " + images.size() + " images");
                 imageBlockPane.setCenter(new imageAdditMethods().generateImages());
 //                newWindow.setHeight(secondScene.getHeight()+200);
                 event.consume();
@@ -514,9 +598,21 @@ public class AddItem extends Application {
             List<File> files = fil_chooser.showOpenMultipleDialog(newWindow);
             if (files != null) {
                 for (File fl : files) {
-                    images.add(new Image(fl.toURI().toString()));
+                    try {
+                        if (fl.isFile()){
+                            String[] star = fl.toString().split("\\.");
+                            if (star.length>1 && (star[star.length-1].equals("jpg")||star[star.length-1].equals("png")||star[star.length-1].equals("bmp"))){
+                                Image img = (new Image(fl.toURI().toString()));
+                                if (img != null){
+                                    images.add(img);
+                                }
+                            }
+                        }
+                    } catch (Exception exc){
+                        System.out.println("There was an error processing file "+fl.toURI());
+                    }
                 }
-                System.out.println("Got " + images.size() + " files");
+                System.out.println("Got " + images.size() + " images");
 
                 imageBlockPane.setCenter(new imageAdditMethods().generateImages());
             }
@@ -537,7 +633,7 @@ public class AddItem extends Application {
             otherRecs = otherRecs + ";<<<:::===" + (currItem.OtherRecords == null ? "" : currItem.OtherRecords);
 
             String sqll = "UPDATE items SET OtherRecords='" + otherRecs + "' WHERE SKU=" + currItem.SKU;
-            System.out.println(sqll);
+            System.out.println("\tSQL "+sqll);
 
             try {
                 Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
@@ -617,14 +713,13 @@ public class AddItem extends Application {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error location \"bartend.exe\" file");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-                alert.setContentText(
-                    "Make sure that \"bartend.exe\" exists at the directory\n\"" + MainPage.bartendPath +
-                        "\", \nspecified in the configg.csv file");
+                alert.setContentText(Methods.wrap(
+                    "Make sure that \"bartend.exe\" exists at the directory\"" + MainPage.bartendPath +
+                        "\", specified in the configg.csv file"));
                 alert.showAndWait();
                 return;
             }
             String printer = (String) printerChoiceBox.getValue();
-            System.out.println(printer + " " + printer.contains(" (default)"));
             if (printer.contains(" (default)")) {
                 printer = printer.replace(" (default)", "");
             }
@@ -773,7 +868,7 @@ public class AddItem extends Application {
                 //add field that was created by user
                 createdBy.setText("Item created by " + currItem.User);
 
-                System.out.println(currItem);
+                System.out.println("previewing item "+currItem);
                 updateFields();
 
 //                dragDropLbl.setVisible(false);
@@ -869,13 +964,12 @@ public class AddItem extends Application {
 
 //                        "\n"+
 //                        "UPDATE items SET DateTime='" + new Timestamp(System.currentTimeMillis()) + "' WHERE SKU=" + SKU);
-                    System.out.println(sql);
+                    System.out.println("\tSQl "+sql);
 
                     try {
                         stmt.executeUpdate(sql);
                     } catch (SQLIntegrityConstraintViolationException ex) {
                         String message = ex.getMessage();
-                        System.out.println("another error - " + message);
 
                         if (message.contains("Duplicate entry ") && message.contains(" for key 'items.PRIMARY'")) {
                             System.out.println("Duplicate entry for key 'items.PRIMARY'");
@@ -889,10 +983,12 @@ public class AddItem extends Application {
                             setImageStatus("", 0, "");
 
                             return;
+                        } else{
+                            System.out.println("some other error - " + message);
                         }
 
                     } finally {
-                        System.out.println("finally reached");
+//                        System.out.println("finally reached");
                         stmt.close();
                         conn.close();
                     }
@@ -980,7 +1076,7 @@ public class AddItem extends Application {
                             sqll = sqll.replace(" WHERE SKU=" + currItem.SKU, ", OtherRecords='" + otherRecs + "', " +
                                 "DateModified='" + new Timestamp(System.currentTimeMillis()) + "' WHERE SKU=" +
                                 currItem.SKU);
-                            System.out.println(sqll);
+                            System.out.println("\tSQL "+sqll);
 
                             stmt.executeUpdate(sqll);
                             currItem.OtherRecords = otherRecs;
@@ -1130,7 +1226,11 @@ public class AddItem extends Application {
             }
         });
         updateImages.setOnMousePressed(e -> {
-            setImageStatus("saving images...", 0, "");
+//            setImageLoadingStatus("saving images", "");
+//            setImageStatus("saving images...", 0, "");
+        });
+        newWindow.setOnCloseRequest(e->{
+            cancel.fire();
         });
 
         switch (windowMode) {
@@ -1181,7 +1281,15 @@ public class AddItem extends Application {
             }));
             timeline.setCycleCount(1);
             timeline.play();
+        }  else{
+
         }
+    }
+    public void setImageLoadingStatus(String message, String color) {
+        imageStatus.setText(message);
+        imageStatus.setTextFill(
+            (color.equals("red") ? Color.RED : (color.equals("green") ? Color.GREEN : Color.BLACK)));
+        dotAnim(imageStatus);
     }
 
     public static void setLblStatus(Label labl, String message, double seconds, String color) {
@@ -1205,6 +1313,9 @@ public class AddItem extends Application {
         if (grade == null) {
             grade = "-";
         } else {
+            if (!grade.equals("")){
+                grade = String.valueOf(grade.charAt(0));
+            }
             switch (grade.toUpperCase()) {
             case "A":
                 grade = "";
@@ -1270,6 +1381,7 @@ public class AddItem extends Application {
             e.printStackTrace();
             MainPage.ioErrorAlert(e);
         }
+//        System.out.println("printing script "+scriptShit);
 
         //print this shit     .bat file will be stored in the folder, and i will manually adjust where the crack of the program is stored
         //xml file is stored at the same folder
@@ -1299,5 +1411,41 @@ public class AddItem extends Application {
         return allout;
     }
 
+    public static void dotAnim(Label lbl){
+        Timeline timeline = new Timeline(Timeline.INDEFINITE, new KeyFrame(Duration.seconds(1), ev -> {
+            if (numOfDots(lbl.getText()) < 3){
+                lbl.setText(lbl.getText()+".");
+            } else{
+                lbl.setText(lbl.getText().substring(0,lbl.getText().length() - numOfDots(lbl.getText())));
+            }
+        }));
+        timeline.setCycleCount(100);
+        timeline.play();
+    }
+    public static int numOfDots(String str){
+        int num = 0;
+        for (char ch: str.toCharArray()){
+            if (ch == '.'){
+                num++;
+            }
+        }
+        return num;
+    }
+    public static boolean isImage(File file) {
+    /*
+    // Solution 1
+    String mimeType = new MimetypesFileTypeMap().getContentType(file);
+    log.info("MimeType Type = " + mimeType);
+    String type = mimeType.split("/")[0].toLowerCase();
+    log.info("File Type = " + type);
+    return type.equals("image");
+    */
+        boolean b = false;
+        try {
+            b = (ImageIO.read(file) != null);
+        } catch (IOException e) {
+        }
+        return b;
+    }
 
 }

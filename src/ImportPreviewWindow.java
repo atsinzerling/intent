@@ -1,4 +1,5 @@
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -44,9 +45,10 @@ public class ImportPreviewWindow  extends Application {
 
     ObservableList<Item> importData;
     String errorString = "";
+    int itemCount = 0;
 
-    public ImportPreviewWindow(ObservableList<Item> importData, String errorString) {
-        this.importData = importData; this.errorString = errorString;
+    public ImportPreviewWindow(ObservableList<Item> importData, String errorString, int itemCount) {
+        this.importData = importData; this.errorString = errorString; this.itemCount = itemCount;
     }
     public ImportPreviewWindow() {}
 
@@ -100,7 +102,7 @@ public class ImportPreviewWindow  extends Application {
         errorsArea.setWrapText(true);
         errorsArea.setText(errorString);
 
-        Label previewLbl = new Label("Preview Items that will be added:");
+        Label previewLbl = new Label("Preview Items that will be added: (total "+itemCount+" items)");
 
         VBox mainVbox = new VBox(8,previewLbl,tablePr, errorsLbl,errorsArea);
         HBox buttonsHbox = new HBox(10, cancel, addItems);
@@ -129,49 +131,71 @@ public class ImportPreviewWindow  extends Application {
         });
         addItems.setOnAction(e->{
 
-            try {
-                Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-                Statement stmt = conn.createStatement();
+            new Thread(()->{
+                Platform.runLater(() -> {
+                    MainPage.importLoadLbl.setText("adding items");
+                    AddItem.dotAnim(MainPage.importLoadLbl);
+                    MainPage.loadingPane.toFront();
+                    MainPage.pane.setDisable(true);
+                    importPreviewStage.hide();
+                });
 
                 int countAdded = 0;
 
-                for (Item it: importData){
-                    String values =
-                        "'" + it.SKU + "'" + "," +
-                            (it.SN == null ? null : "'" + it.SN + "'") + "," +
-                            (it.PN == null ? null : "'" + it.PN + "'") + "," +
-                            (it.UPC == null ? null : "'" + it.UPC + "'") + "," +
-                            (it.Grade == null ? null : "'" + it.Grade + "'") + "," +
-                            (it.Location == null ? null : "'" + it.Location + "'") + "," +
-                            (it.Notes == null ? null : "'" + it.Notes + "'") + "," +
-                            (it.User == null ? null : "'" + it.User + "'") + "," +
-                            (it.time == null ? null : "'" + it.time + "'") + "," +
-                            (it.Images == null ? null : "'" + it.Images + "'") + "," +
-                            (it.OtherRecords == null ? null : "'" + it.OtherRecords + "'") + "," +
-                            (it.DateModified == null ? null : "'" + it.DateModified + "'") + "," +
-                            (it.POnumber == null ? null : "'" + it.POnumber + "'") + "," +
-                            (it.Specs == null ? null : "'" + it.Specs + "'");
-                    String sql = ("INSERT INTO items " +
-                        "VALUES (" + values + ")");
-                    countAdded += stmt.executeUpdate(sql);
-                    System.out.println("added elm "+it.SKU);
+                try {
+                    Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                    Statement stmt = conn.createStatement();
+
+
+                    for (Item it: importData){
+                        String values =
+                            "'" + it.SKU + "'" + "," +
+                                (it.SN == null ? null : "'" + it.SN + "'") + "," +
+                                (it.PN == null ? null : "'" + it.PN + "'") + "," +
+                                (it.UPC == null ? null : "'" + it.UPC + "'") + "," +
+                                (it.Grade == null ? null : "'" + it.Grade + "'") + "," +
+                                (it.Location == null ? null : "'" + it.Location + "'") + "," +
+                                (it.Notes == null ? null : "'" + it.Notes + "'") + "," +
+                                (it.User == null ? null : "'" + it.User + "'") + "," +
+                                (it.time == null ? null : "'" + it.time + "'") + "," +
+                                (it.Images == null ? null : "'" + it.Images + "'") + "," +
+                                (it.OtherRecords == null ? null : "'" + it.OtherRecords + "'") + "," +
+                                (it.DateModified == null ? null : "'" + it.DateModified + "'") + "," +
+                                (it.POnumber == null ? null : "'" + it.POnumber + "'") + "," +
+                                (it.Specs == null ? null : "'" + it.Specs + "'");
+                        String sql = ("INSERT INTO items " +
+                            "VALUES (" + values + ")");
+                        countAdded += stmt.executeUpdate(sql);
+                        System.out.println("added element "+it.SKU);
+                    }
+
+                    stmt.close();
+                    conn.close();
+
+
+
+                } catch (SQLException ex) {
+                    MainPage.databaseErrorAlert(ex).showAndWait();
                 }
 
-                stmt.close();
-                conn.close();
+                int finalCountAdded = countAdded;
+                Platform.runLater(() -> {
+                    MainPage.pane.toFront();
+                    MainPage.pane.setDisable(false);
 
-                MainPage.updateTable();
-                importPreviewStage.close();
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Import Successful!");
+                    MainPage.updateTable();
+                    importPreviewStage.close();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Import Successful!");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-                alert.setContentText("Successfully added "+countAdded+" items.");
+                    alert.setContentText("Successfully added "+ finalCountAdded +" items.");
 
-                alert.showAndWait();
+                    alert.showAndWait();
 
-            } catch (SQLException ex) {
-                MainPage.databaseErrorAlert(ex).showAndWait();
-            }
+                });
+            }).start();
+
+
         });
     }
 
@@ -195,343 +219,365 @@ public class ImportPreviewWindow  extends Application {
             return;
         }
         ObservableList<Item> importDataMethod = FXCollections.observableArrayList();
-        try {
-            FileInputStream fis = new FileInputStream(importFile);
-            XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(importFile));
-            XSSFSheet sheet = workbook.getSheetAt(0);
-            Iterator<Row> rowIterator = sheet.iterator();
-            if (rowIterator.hasNext()) { //just the first column
-                Row firstRow = rowIterator.next();
-                int num_columns = firstRow.getLastCellNum();
-                String[] columns = new String[num_columns];
-                Iterator<Cell> cellIterator = firstRow.cellIterator();
 
-                HashMap<String, Integer> colsHashm = new HashMap<>();
-                colsHashm.put("SKU", null);
-                colsHashm.put("SN", null);
-                colsHashm.put("PN", null);
-                colsHashm.put("UPC", null);
-                colsHashm.put("Grade", null);
-                colsHashm.put("Location", null);
-                colsHashm.put("Notes", null);
-                colsHashm.put("User", null);
-                colsHashm.put("Images", null);
-                colsHashm.put("History", null);
-                colsHashm.put("PO#", null);
-                colsHashm.put("Specs", null);
-                colsHashm.put("Date Created", null);
-                colsHashm.put("Date Modified", null);
+        new Thread(()->{
+            Platform.runLater(() -> {
+                MainPage.importLoadLbl.setText("processing import file");
+                AddItem.dotAnim(MainPage.importLoadLbl);
+                MainPage.loadingPane.toFront();
+                MainPage.pane.setDisable(true);
+            });
+            int itemCountMethod = 0;
 
-                for (int i = 0; i < num_columns; i++) {
-                    String colmnString = cellIterator.next().getStringCellValue();
-                    if (colsHashm.containsKey(colmnString)){
-                        colsHashm.put(colmnString, i);
-                    } else{
-                        errorString += "\""+colmnString+"\", ";
-                    }
-                }
-                if (!errorString.equals("")){
-                    errorString = errorString.substring(0,errorString.length()-2);
-                    errorString = "Column"+(errorString.contains(",")?"s ":" ")+errorString+(errorString.contains(",")?" are":" is")+" not found in the database, make sure that the columns are named " +
-                        "\"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"";
+//            StringBuffer errorStringBuff = new StringBuffer(errorString);
 
-                }
-                //now need to
-                Row currRow = null;
+            try {
 
 
-                Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-                Statement stmt = conn.createStatement();
-                int generatedSKUcount = 0;
-                int rowNum = 2;
+                FileInputStream fis = new FileInputStream(importFile);
+                XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(importFile));
+                XSSFSheet sheet = workbook.getSheetAt(0);
+                Iterator<Row> rowIterator = sheet.iterator();
+                if (rowIterator.hasNext()) { //just the first column
+                    Row firstRow = rowIterator.next();
+                    int num_columns = firstRow.getLastCellNum();
+                    String[] columns = new String[num_columns];
+                    Iterator<Cell> cellIterator = firstRow.cellIterator();
 
-                while (rowIterator.hasNext()){
-                    long currSKU = 0;
-                    String currSN = null;
-                    String currPN = null;
-                    String currUPC = null;
-                    String currGrade = null;
-                    String currLocation = null;
-                    String currNotes = null;
-                    String currUser = null;
-                    String currImages = null;
-                    String currOtherRecords = null;
-                    String currPOnumber = null;
-                    String currSpecs = null;
+                    HashMap<String, Integer> colsHashm = new HashMap<>();
+                    colsHashm.put("SKU", null);
+                    colsHashm.put("SN", null);
+                    colsHashm.put("PN", null);
+                    colsHashm.put("UPC", null);
+                    colsHashm.put("Grade", null);
+                    colsHashm.put("Location", null);
+                    colsHashm.put("Notes", null);
+                    colsHashm.put("User", null);
+                    colsHashm.put("Images", null);
+                    colsHashm.put("History", null);
+                    colsHashm.put("PO#", null);
+                    colsHashm.put("Specs", null);
+                    colsHashm.put("Date Created", null);
+                    colsHashm.put("Date Modified", null);
 
-                    Timestamp currDateCreated = null;
-                    Timestamp currDateModified = new Timestamp(System.currentTimeMillis());
-
-                    currRow = rowIterator.next();
-                    //now i go throw values in hashmap, and then get a cell with corresponding number; and then use
-                    // algo to generate SKU, and then check by creating and deleting the item
-
-                    //1
-                    boolean needGenerating = false;
-                    if (colsHashm.get("SKU") != null){
-                        Cell SKUcell = currRow.getCell(colsHashm.get("SKU"));
-                        if (SKUcell == null){
-                            needGenerating = true;
-                        } else if (SKUcell.getCellType() == CellType.NUMERIC || (SKUcell.getCellType() == CellType.FORMULA && SKUcell.getCachedFormulaResultType() == CellType.NUMERIC)) {
-                            currSKU = (long) SKUcell.getNumericCellValue();
-                        } else {
-                            System.out.println(SKUcell.getCellType());
-                            errorString += "Error in row "+rowNum+": couldn't retrieve SKU number from a cell;\n";
+                    for (int i = 0; i < num_columns; i++) {
+                        String colmnString = cellIterator.next().getStringCellValue();
+                        if (colsHashm.containsKey(colmnString)){
+                            colsHashm.put(colmnString, i);
+                        } else{
+                            errorString += "\""+colmnString+"\", ";
                         }
-                    } else{
-                        //generate SKU
+                    }
+                    if (!errorString.equals("")){
+                        errorString = errorString.substring(0,errorString.length()-2);
+                        errorString = "Column"+(errorString.contains(",")?"s ":" ")+errorString+(errorString.contains(",")?" are":" is")+" not found in the database, make sure that the columns are named " +
+                            "\"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"";
+
+                    }
+                    //now need to
+                    Row currRow = null;
+
+
+                    Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                    Statement stmt = conn.createStatement();
+                    int generatedSKUcount = 0;
+                    int rowNum = 2;
+
+                    while (rowIterator.hasNext()){
+                        long currSKU = 0;
+                        String currSN = null;
+                        String currPN = null;
+                        String currUPC = null;
+                        String currGrade = null;
+                        String currLocation = null;
+                        String currNotes = null;
+                        String currUser = null;
+                        String currImages = null;
+                        String currOtherRecords = null;
+                        String currPOnumber = null;
+                        String currSpecs = null;
+
+                        Timestamp currDateCreated = null;
+                        Timestamp currDateModified = new Timestamp(System.currentTimeMillis());
+
+                        currRow = rowIterator.next();
+                        //now i go throw values in hashmap, and then get a cell with corresponding number; and then use
+                        // algo to generate SKU, and then check by creating and deleting the item
+
+                        //1
+                        boolean needGenerating = false;
+                        if (colsHashm.get("SKU") != null){
+                            Cell SKUcell = currRow.getCell(colsHashm.get("SKU"));
+                            if (SKUcell == null){
+                                needGenerating = true;
+                            } else if (SKUcell.getCellType() == CellType.NUMERIC || (SKUcell.getCellType() == CellType.FORMULA && SKUcell.getCachedFormulaResultType() == CellType.NUMERIC)) {
+                                currSKU = (long) SKUcell.getNumericCellValue();
+                            } else {
+//                                System.out.println(SKUcell.getCellType());
+                                errorString += "Error in row "+rowNum+": couldn't retrieve SKU number from a cell;\n";
+                            }
+                        } else{
+                            //generate SKU
 //                            currSKU =
-                        needGenerating = true;
-                    }
+                            needGenerating = true;
+                        }
 
-                    if (needGenerating){
-                        ResultSet rs = stmt.executeQuery("SELECT SKUgenerated from addit_data");
-                        rs.next();
-                        long lastSKU = rs.getLong(1);
-                        currSKU = lastSKU+1;
-                        System.out.println("execute update"+stmt.executeUpdate("UPDATE addit_data SET SKUgenerated="+currSKU+" WHERE IDcolumn=1"));
-                        rs.close();
-                        generatedSKUcount++;
-                        System.out.println("generating sku "+ currSKU);
-                    }
-                    System.out.println(rowNum + " "+ currSKU);
+                        if (needGenerating){
+                            ResultSet rs = stmt.executeQuery("SELECT SKUgenerated from addit_data");
+                            rs.next();
+                            long lastSKU = rs.getLong(1);
+                            currSKU = lastSKU+1;
+                            System.out.println("generated sku "+ currSKU+ "; execute update - "+stmt.executeUpdate("UPDATE addit_data SET SKUgenerated="+currSKU+" WHERE IDcolumn=1"));
+                            rs.close();
+                            generatedSKUcount++;
+                        }
+                        System.out.println(rowNum + " "+ currSKU);
 
-                    //2
-                    if (colsHashm.get("SN") != null){
-                        Cell SNcell = currRow.getCell(colsHashm.get("SN"));
-                        currSN = (SNcell == null? null: readCell(SNcell));
-                    } else{
-                        currSN = null;
-                    }
+                        //2
+                        if (colsHashm.get("SN") != null){
+                            Cell SNcell = currRow.getCell(colsHashm.get("SN"));
+                            currSN = (SNcell == null? null: readCell(SNcell));
+                        } else{
+                            currSN = null;
+                        }
 
-                    //3
-                    if (colsHashm.get("PN") != null){
-                        Cell PNcell = currRow.getCell(colsHashm.get("PN"));
-                        currPN = (PNcell == null? null: readCell(PNcell));
-                    } else{
-                        currPN = null;
-                    }
+                        //3
+                        if (colsHashm.get("PN") != null){
+                            Cell PNcell = currRow.getCell(colsHashm.get("PN"));
+                            currPN = (PNcell == null? null: readCell(PNcell));
+                        } else{
+                            currPN = null;
+                        }
 
-                    //4
-                    if (colsHashm.get("UPC") != null){
-                        Cell UPCcell = currRow.getCell(colsHashm.get("UPC"));
-                        currUPC = (UPCcell == null? null: readCell(UPCcell));
-                    } else{
-                        currUPC = null;
-                    }
+                        //4
+                        if (colsHashm.get("UPC") != null){
+                            Cell UPCcell = currRow.getCell(colsHashm.get("UPC"));
+                            currUPC = (UPCcell == null? null: readCell(UPCcell));
+                        } else{
+                            currUPC = null;
+                        }
 
-                    //5
-                    if (colsHashm.get("Grade") != null){
-                        Cell gradecell = currRow.getCell(colsHashm.get("Grade"));
-                        currGrade = (gradecell == null? null: readCell(gradecell));
-                    } else{
-                        currGrade = null;
-                    }
+                        //5
+                        if (colsHashm.get("Grade") != null){
+                            Cell gradecell = currRow.getCell(colsHashm.get("Grade"));
+                            currGrade = (gradecell == null? null: readCell(gradecell));
+                        } else{
+                            currGrade = null;
+                        }
 
-                    //6
-                    if (colsHashm.get("Location") != null){
-                        Cell Locationcell = currRow.getCell(colsHashm.get("Location"));
-                        currLocation = (Locationcell == null? null: readCell(Locationcell));
-                    } else{
-                        currLocation = null;
-                    }
+                        //6
+                        if (colsHashm.get("Location") != null){
+                            Cell Locationcell = currRow.getCell(colsHashm.get("Location"));
+                            currLocation = (Locationcell == null? null: readCell(Locationcell));
+                        } else{
+                            currLocation = null;
+                        }
 
-                    //7
-                    if (colsHashm.get("Notes") != null){
-                        Cell Notescell = currRow.getCell(colsHashm.get("Notes"));
-                        currNotes = (Notescell == null? null: readCell(Notescell));
-                    } else{
-                        currNotes = null;
-                    }
+                        //7
+                        if (colsHashm.get("Notes") != null){
+                            Cell Notescell = currRow.getCell(colsHashm.get("Notes"));
+                            currNotes = (Notescell == null? null: readCell(Notescell));
+                        } else{
+                            currNotes = null;
+                        }
 
-                    //8
-                    if (colsHashm.get("User") != null){
-                        Cell Usercell = currRow.getCell(colsHashm.get("User"));
-                        currUser = (Usercell == null? user: readCell(Usercell));
-                    } else{
-                        currUser = user;
-                    }
+                        //8
+                        if (colsHashm.get("User") != null){
+                            Cell Usercell = currRow.getCell(colsHashm.get("User"));
+                            currUser = (Usercell == null? user: readCell(Usercell));
+                        } else{
+                            currUser = user;
+                        }
 
-                    //9
-                    if (colsHashm.get("Images") != null){
-                        Cell Imagescell = currRow.getCell(colsHashm.get("Images"));
-                        currImages = (Imagescell == null? null: readCell(Imagescell));
-                    } else{
-                        currImages = null;
-                    }
+                        //9
+                        if (colsHashm.get("Images") != null){
+                            Cell Imagescell = currRow.getCell(colsHashm.get("Images"));
+                            currImages = (Imagescell == null? null: readCell(Imagescell));
+                        } else{
+                            currImages = null;
+                        }
 
-                    //10
-                    if (colsHashm.get("History") != null){
-                        Cell Historycell = currRow.getCell(colsHashm.get("History"));
-                        currOtherRecords = (Historycell == null? null: readCell(Historycell));
-                    } else{
-                        currOtherRecords = null;
-                    }
+                        //10
+                        if (colsHashm.get("History") != null){
+                            Cell Historycell = currRow.getCell(colsHashm.get("History"));
+                            currOtherRecords = (Historycell == null? null: readCell(Historycell));
+                        } else{
+                            currOtherRecords = null;
+                        }
 
-                    //11
-                    if (colsHashm.get("PO#") != null){
-                        Cell POnumcell = currRow.getCell(colsHashm.get("PO#"));
-                        currPOnumber = (POnumcell == null? null: readCell(POnumcell));
-                    } else{
-                        currPOnumber = null;
-                    }
+                        //11
+                        if (colsHashm.get("PO#") != null){
+                            Cell POnumcell = currRow.getCell(colsHashm.get("PO#"));
+                            currPOnumber = (POnumcell == null? null: readCell(POnumcell));
+                        } else{
+                            currPOnumber = null;
+                        }
 
-                    //12
-                    if (colsHashm.get("Specs") != null){
-                        Cell specscell = currRow.getCell(colsHashm.get("Specs"));
-                        currSpecs = (specscell == null? null: readCell(specscell));
-                    } else{
-                        currSpecs = null;
-                    }
+                        //12
+                        if (colsHashm.get("Specs") != null){
+                            Cell specscell = currRow.getCell(colsHashm.get("Specs"));
+                            currSpecs = (specscell == null? null: readCell(specscell));
+                        } else{
+                            currSpecs = null;
+                        }
 
-                    //13
-                    if (colsHashm.get("Date Created") != null){
-                        Cell datecrcell = currRow.getCell(colsHashm.get("Date Created"));
-                        System.out.println("date cell "+datecrcell.getCellType());
-                        if (datecrcell == null){
-                            currDateCreated = currDateModified;
-                        } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
-                            System.out.println("getting data from ");
-                            try {
-                                currDateCreated = new Timestamp(datecrcell.getDateCellValue().getTime());
-                            } catch (Exception eee){
+                        //13
+                        if (colsHashm.get("Date Created") != null){
+                            Cell datecrcell = currRow.getCell(colsHashm.get("Date Created"));
+                            System.out.println("date cell "+datecrcell.getCellType());
+                            if (datecrcell == null){
                                 currDateCreated = currDateModified;
-                                System.out.println("error reading DateCreated");
+                            } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
+                                System.out.println("getting data from ");
+                                try {
+                                    currDateCreated = new Timestamp(datecrcell.getDateCellValue().getTime());
+                                } catch (Exception eee){
+                                    currDateCreated = currDateModified;
+                                    System.out.println("error reading DateCreated");
+                                }
+                            } else{
+                                System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
+                                currDateCreated = currDateModified;
                             }
                         } else{
-                            System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
                             currDateCreated = currDateModified;
                         }
-                    } else{
-                        currDateCreated = currDateModified;
-                    }
 
-                    //14
-                    if (colsHashm.get("Date Modified") != null){
-                        Cell datecrcell = currRow.getCell(colsHashm.get("Date Modified"));
-                        System.out.println("date cell "+datecrcell.getCellType());
-                        if (datecrcell == null){
-                            currDateModified = null;
-                        } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
-                            try{
-                                currDateModified = new Timestamp(datecrcell.getDateCellValue().getTime());
-                            } catch (Exception eee){
+                        //14
+                        if (colsHashm.get("Date Modified") != null){
+                            Cell datecrcell = currRow.getCell(colsHashm.get("Date Modified"));
+                            System.out.println("date cell "+datecrcell.getCellType());
+                            if (datecrcell == null){
                                 currDateModified = null;
-                                System.out.println("error reading DateModified");
+                            } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
+                                try{
+                                    currDateModified = new Timestamp(datecrcell.getDateCellValue().getTime());
+                                } catch (Exception eee){
+                                    currDateModified = null;
+                                    System.out.println("error reading DateModified");
+                                }
+                            } else{
+                                System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
+                                currDateModified = null;
                             }
                         } else{
-                            System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
                             currDateModified = null;
                         }
-                    } else{
-                        currDateModified = null;
-                    }
 
-                    System.out.println(currDateCreated);
-                    System.out.println(currDateModified);
+                        System.out.println(currDateCreated);
+                        System.out.println(currDateModified);
 
-                    rowNum++;
-                    if (currSKU == 0) {
-                        System.out.println("WTF LOL BREAKED");
-                        errorString+="\nCATASTROPHIC FAILURE";
-                        continue;
-                    }
-
-
-                    if (needGenerating &&
-                        currSN==null &&
-                        currPN==null&&
-                        currUPC==null&&
-                        currGrade==null&&
-                        currLocation==null&&
-                        currNotes==null&&
-                        currUser==null&&
-                        currImages==null&&
-                        currOtherRecords==null&&
-                        currPOnumber==null&&
-                        currSpecs==null
-                    ){
-                        errorString += "\nThere was an empty item";
-                        continue;
-                    }
-
-                    Item currItem = new Item(
-                        currSKU,
-                        currSN,
-                        currPN,
-                        currUPC,
-                        currGrade,
-                        currLocation,
-                        currNotes,
-                        currUser,
-                        currDateCreated,
-                        currImages,
-                        currOtherRecords,
-                        currDateModified,
-                        currPOnumber,
-                        currSpecs
-                    );
-
-                    String values =
-                        "'" + currItem.SKU + "'" + "," +
-                            (currItem.SN == null ? null : "'" + currItem.SN + "'") + "," +
-                            (currItem.PN == null ? null : "'" + currItem.PN + "'") + "," +
-                            (currItem.UPC == null ? null : "'" + currItem.UPC + "'") + "," +
-                            (currItem.Grade == null ? null : "'" + currItem.Grade + "'") + "," +
-                            (currItem.Location == null ? null : "'" + currItem.Location + "'") + "," +
-                            (currItem.Notes == null ? null : "'" + currItem.Notes + "'") + "," +
-                            (currItem.User == null ? null : "'" + currItem.User + "'") + "," +
-                            (currItem.time == null ? null : "'" + currItem.time + "'") + "," +
-                            (currItem.Images == null ? null : "'" + currItem.Images + "'") + "," +
-                            (currItem.OtherRecords == null ? null : "'" + currItem.OtherRecords + "'") + "," +
-                            (currItem.DateModified == null ? null : "'" + currItem.DateModified + "'") + "," +
-                            (currItem.POnumber == null ? null : "'" + currItem.POnumber + "'") + "," +
-                            (currItem.Specs == null ? null : "'" + currItem.Specs + "'");
-                    String sql = ("INSERT INTO items " +
-                        "VALUES (" + values + ")");
-                    try {
-                        int addingResult = stmt.executeUpdate(sql);
-                        int deleteResult = stmt.executeUpdate("DELETE from items WHERE SKU=" + currItem.SKU);
-
-                        importDataMethod.add(currItem);
-                    } catch (SQLIntegrityConstraintViolationException ex) {
-                        //possible errors: duplicate SKU, duplicate SN, other error
-                        String message = ex.getMessage();
-                        if (message.contains("Duplicate entry ") && message.contains(" for key 'items.PRIMARY'")) {
-                            System.out.println("Duplicate entry for key 'items.PRIMARY'");
-                            errorString += "\nError adding item "+currItem.SKU+": Duplicate SKU = "+currItem.SKU +";";
-
-                        } else if (message.contains("Duplicate entry ") && message.contains(" for key 'items.SN'")) {
-                            System.out.println("Duplicate entry for key 'items.SN'");
-                            errorString += "\nError adding item "+currItem.SKU+": Duplicate SN = "+currItem.SN+";";
-
-                        } else{
-                            errorString += "\nError adding item "+currItem.SKU+": Uncatched error;";
+                        rowNum++;
+                        if (currSKU == 0) {
+                            System.out.println("WTF LOL BREAKED");
+                            errorString+="\nCATASTROPHIC FAILURE";
+                            continue;
                         }
+
+
+                        if (needGenerating &&
+                            currSN==null &&
+                            currPN==null&&
+                            currUPC==null&&
+                            currGrade==null&&
+                            currLocation==null&&
+                            currNotes==null&&
+                            currUser==null&&
+                            currImages==null&&
+                            currOtherRecords==null&&
+                            currPOnumber==null&&
+                            currSpecs==null
+                        ){
+                            errorString += "\nThere was an empty item";
+                            continue;
+                        }
+
+                        Item currItem = new Item(
+                            currSKU,
+                            currSN,
+                            currPN,
+                            currUPC,
+                            currGrade,
+                            currLocation,
+                            currNotes,
+                            currUser,
+                            currDateCreated,
+                            currImages,
+                            currOtherRecords,
+                            currDateModified,
+                            currPOnumber,
+                            currSpecs
+                        );
+
+                        String values =
+                            "'" + currItem.SKU + "'" + "," +
+                                (currItem.SN == null ? null : "'" + currItem.SN + "'") + "," +
+                                (currItem.PN == null ? null : "'" + currItem.PN + "'") + "," +
+                                (currItem.UPC == null ? null : "'" + currItem.UPC + "'") + "," +
+                                (currItem.Grade == null ? null : "'" + currItem.Grade + "'") + "," +
+                                (currItem.Location == null ? null : "'" + currItem.Location + "'") + "," +
+                                (currItem.Notes == null ? null : "'" + currItem.Notes + "'") + "," +
+                                (currItem.User == null ? null : "'" + currItem.User + "'") + "," +
+                                (currItem.time == null ? null : "'" + currItem.time + "'") + "," +
+                                (currItem.Images == null ? null : "'" + currItem.Images + "'") + "," +
+                                (currItem.OtherRecords == null ? null : "'" + currItem.OtherRecords + "'") + "," +
+                                (currItem.DateModified == null ? null : "'" + currItem.DateModified + "'") + "," +
+                                (currItem.POnumber == null ? null : "'" + currItem.POnumber + "'") + "," +
+                                (currItem.Specs == null ? null : "'" + currItem.Specs + "'");
+                        String sql = ("INSERT INTO items " +
+                            "VALUES (" + values + ")");
+                        try {
+                            int addingResult = stmt.executeUpdate(sql);
+                            int deleteResult = stmt.executeUpdate("DELETE from items WHERE SKU=" + currItem.SKU);
+
+                            importDataMethod.add(currItem);
+                            itemCountMethod++;
+                        } catch (SQLIntegrityConstraintViolationException ex) {
+                            //possible errors: duplicate SKU, duplicate SN, other error
+                            String message = ex.getMessage();
+                            if (message.contains("Duplicate entry ") && message.contains(" for key 'items.PRIMARY'")) {
+                                System.out.println("Duplicate entry for key 'items.PRIMARY'");
+                                errorString += "\nError adding item "+currItem.SKU+": Duplicate SKU = "+currItem.SKU +";";
+
+                            } else if (message.contains("Duplicate entry ") && message.contains(" for key 'items.SN'")) {
+                                System.out.println("Duplicate entry for key 'items.SN'");
+                                errorString += "\nError adding item "+currItem.SKU+": Duplicate SN = "+currItem.SN+";";
+
+                            } else{
+                                errorString += "\nError adding item "+currItem.SKU+": Uncatched error;";
+                            }
+                        }
+
                     }
+                    fis.close();
+                    workbook.close();
+                    stmt.close();
+                    conn.close();
+                    System.out.println("num of rows "+ rowNum);
 
                 }
-                fis.close();
-                workbook.close();
-                stmt.close();
-                conn.close();
-                System.out.println("num of rows "+ rowNum);
+            } catch (SQLException ex) {
+                errorString += "\nERROR: uncatched database error;";
+                MainPage.databaseErrorAlert(ex).showAndWait();
+            } catch (IOException ioe){
+                errorString += "\nERROR: uncatched IO Files error;";
 
+                MainPage.ioErrorAlert(ioe).showAndWait();
+
+            } catch (Exception eeee){
+                MainPage.unknownErrorAlert(eeee).showAndWait();
             }
-        } catch (SQLException ex) {
-            errorString += "\nERROR: uncatched database error;";
-            MainPage.databaseErrorAlert(ex).showAndWait();
-        } catch (IOException ioe){
-            errorString += "\nERROR: uncatched IO Files error;";
-            for (int i=0; i<100; i++){
-                System.out.println("ААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА ОШИБКА");
-            }
-            MainPage.ioErrorAlert(ioe).showAndWait();
-            for (int i=0; i<100; i++){
-                System.out.println("ААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА ОШИБКА");
-            }
-        }
-        new ImportPreviewWindow(importDataMethod, errorString).start(primaryStage);
+
+
+            int finalItemCountMethod = itemCountMethod;
+            Platform.runLater(() -> {
+                MainPage.pane.toFront();
+                MainPage.pane.setDisable(false);
+                new ImportPreviewWindow(importDataMethod, errorString, finalItemCountMethod).start(primaryStage);
+            });
+        }).start();
+
+
 
     }
     public String readCell(Cell cell){

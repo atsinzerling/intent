@@ -298,3 +298,30 @@ C:\Windows\System32\cmd.exe /k java --module-path "C:\Program Files\Intent Datab
 +----------------------------------------------------------------+
 
 
+
+
+
+
+
+
+
+=IMPORTXML("https://en.wikipedia.org/wiki/Moon_landing", "//title")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

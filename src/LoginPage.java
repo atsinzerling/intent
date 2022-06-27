@@ -30,6 +30,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+
 public class LoginPage extends Application {
 //    private String locUser = "localuser";
 //    private String locPass = "intentgroup";
@@ -226,11 +227,6 @@ public class LoginPage extends Application {
 //        username.setText("admin");
 //        passwordHid.setText("newpass");
         loginStage.getIcons().add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
-        class addMethod{
-            void onEnter(){
-
-            }
-        }
 
     }
     public static boolean checkCredetials(String connUrl, String user, String passw){
@@ -240,8 +236,8 @@ public class LoginPage extends Application {
             conn.close();
             return validd;
         } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("checkCreds exception catched");
+//            e.printStackTrace();
+            System.out.println("checking credentials failed");
             return false;
         }
     }

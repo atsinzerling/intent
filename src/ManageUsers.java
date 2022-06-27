@@ -73,16 +73,15 @@ public class ManageUsers extends Application {
         manageUsersStage.show();
 
         addUserBtn.setOnAction(e->{
-            System.out.println("addUser btn pressed");
             User newwUser = new User("","", false);
             users.add(0, newwUser);
             usersVbox.getChildren().add(0,generateUserBox(newwUser));
 //            setUsersBox();
 //            scrollPane.setContent(new HBox(20, usersVbox, addUserBtn));
 //            pane.setLeft(scrollPane);
-            for(User us: users){
-                System.out.println((us==null?"null":us));
-            }
+//            for(User us: users){
+//                System.out.println((us==null?"null":us));
+//            }
         });
 //        scene.setOnKeyPressed((KeyEvent e) -> {
 //            if (e.getCode() == KeyCode.ESCAPE) {
@@ -97,7 +96,7 @@ public class ManageUsers extends Application {
         VBox vbox = new VBox();
         for (User user: users){
             vbox.getChildren().add(generateUserBox(user));
-            System.out.println("added userbox for "+(user==null?"null":user));
+//            System.out.println("added userbox for "+(user==null?"null":user));
         }
 
         return vbox;
@@ -139,7 +138,6 @@ public class ManageUsers extends Application {
         StackPane.setMargin(userLbl, new Insets(0,0,0,8));
         StackPane userStackPane = new StackPane(userLbl,userTextF);
         userStackPane.setAlignment(Pos.TOP_LEFT);
-//        System.out.println(userTextF.getMinHeight());
 
         ObservableList<String> userTypes = FXCollections.observableArrayList();
         userTypes.addAll("worker","admin","customer");
@@ -206,7 +204,6 @@ public class ManageUsers extends Application {
         edit.setOnAction(e->{
             passwPassF.setOnMousePressed((eee) -> {
 
-                System.out.println("smth pressed");
                 showPass.setDisable(false);
                 passwPassF.setText("");
                 passwTextF.setText("");
@@ -227,7 +224,7 @@ public class ManageUsers extends Application {
             userTextF.setVisible(true);
         });
         save.setOnAction(e->{
-            System.out.println(userObj);
+
             //when saved need to check if smth changed, then update user, password and role in sql, then update in arraylist,
             // then update this user obj
             String newPassw = (showPass.getText().equals("show")?passwPassF.getText():passwTextF.getText()).strip();
@@ -266,9 +263,11 @@ public class ManageUsers extends Application {
 
                     stmt.executeUpdate(sqlCreate);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
-                    stmt.executeUpdate("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
+                    String granttt = "GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';";
+                    stmt.executeUpdate(granttt);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
 
+                    System.out.println("\t SQL "+sqlCreate+" | "+granttt);
                     stmt.close();
                     conn.close();
                     userObj.setWasCreated(true);
@@ -296,16 +295,18 @@ public class ManageUsers extends Application {
                         " IDENTIFIED WITH mysql_native_password" +
                         " BY '"+ newPassw+"';";
 
-//                    System.out.println(sqlUpdate+" ------ "+);
                     if (!userObj.getUsername().equals(newUsern)){
                         stmt.execute(sqlUpdate);
                         stmt.execute(new String("FLUSH PRIVILEGES;"));
+                        System.out.println("\tSQL "+ sqlUpdate);
                     }
                     stmt.execute(sqlOAOA);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
-//                    System.out.println("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
-                    stmt.executeUpdate("GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';");
+                    String grantt = "GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';";
+                    stmt.executeUpdate(grantt);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
+
+                    System.out.println("\tSQL "+sqlOAOA+" | "+grantt);
 
                     stmt.close();
                     conn.close();
@@ -382,11 +383,6 @@ public class ManageUsers extends Application {
         });
         cancel.setOnAction(e->{
 
-
-            passwPassF.setOnMousePressed((ee) -> {
-
-            });
-
             cancel.setVisible(false);
             passwPassF.toFront();
             showPass.setText("show");
@@ -398,6 +394,10 @@ public class ManageUsers extends Application {
             passwTextF.setEditable(false);
             save.setDisable(true);
             userTextF.setVisible(false);
+            if (userObj.wasCreated == false){
+                usersVbox.getChildren().remove(users.indexOf(userObj));
+                users.remove(userObj);
+            }
         });
 
         VBox passwVbox = new VBox(3,passwStackPane, showPass);
