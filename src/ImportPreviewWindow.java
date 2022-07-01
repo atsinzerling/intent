@@ -41,6 +41,8 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 
+//import com.monitorjbl.xlsx.StreamingReader;
+
 public class ImportPreviewWindow  extends Application {
 
     ObservableList<Item> importData;
@@ -179,6 +181,7 @@ public class ImportPreviewWindow  extends Application {
                 }
 
                 int finalCountAdded = countAdded;
+                Methods.updateUserLog(MainPage.user,"imported "+(finalCountAdded == 1 ? "1 item" :finalCountAdded + " items"));
                 Platform.runLater(() -> {
                     MainPage.pane.toFront();
                     MainPage.pane.setDisable(false);
@@ -561,11 +564,15 @@ public class ImportPreviewWindow  extends Application {
                 MainPage.databaseErrorAlert(ex).showAndWait();
             } catch (IOException ioe){
                 errorString += "\nERROR: uncatched IO Files error;";
-
-                MainPage.ioErrorAlert(ioe).showAndWait();
+                Platform.runLater(() -> {
+                    MainPage.ioErrorAlert(ioe).showAndWait();
+                });
 
             } catch (Exception eeee){
-                MainPage.unknownErrorAlert(eeee).showAndWait();
+                Platform.runLater(() -> {
+                    MainPage.unknownErrorAlert(eeee).showAndWait();
+
+                });
             }
 
 

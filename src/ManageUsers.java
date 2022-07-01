@@ -38,6 +38,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ManageUsers extends Application {
+    Stage manageUsersStage;
     ArrayList<User> users = new ArrayList<>();
     VBox usersVbox = null;
 
@@ -64,7 +65,7 @@ public class ManageUsers extends Application {
         pane.setLeft(scrollPane);
 
         Scene scene = new Scene(pane, 700, 500);
-        Stage manageUsersStage = new Stage();
+        manageUsersStage = new Stage();
         manageUsersStage.setTitle("Manage Users Window");
         manageUsersStage.setScene(scene);
         manageUsersStage.initOwner(secondStage);
@@ -273,6 +274,7 @@ public class ManageUsers extends Application {
                     userObj.setWasCreated(true);
                     userObj.setUsername(newUsern);
                     userObj.setPassword(newPassw);
+                    Methods.updateUserLog(MainPage.user,"created user "+newUsern);
 
                 } catch (SQLException ex) {
                     MainPage.databaseErrorAlert(ex).showAndWait();
@@ -299,14 +301,20 @@ public class ManageUsers extends Application {
                         stmt.execute(sqlUpdate);
                         stmt.execute(new String("FLUSH PRIVILEGES;"));
                         System.out.println("\tSQL "+ sqlUpdate);
+                        Methods.updateUserLog(MainPage.user,"changed username for user "+userObj.getUsername());
                     }
-                    stmt.execute(sqlOAOA);
-                    stmt.execute(new String("FLUSH PRIVILEGES;"));
+                    if (!userObj.getPassword().equals(newPassw)){
+                        stmt.execute(sqlOAOA);
+                        stmt.execute(new String("FLUSH PRIVILEGES;"));
+                        System.out.println("\tSQL "+ sqlOAOA);
+                        Methods.updateUserLog(MainPage.user,"changed password for user "+newUsern);
+                    }
+
                     String grantt = "GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';";
                     stmt.executeUpdate(grantt);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
 
-                    System.out.println("\tSQL "+sqlOAOA+" | "+grantt);
+                    System.out.println("\tSQL "+grantt);
 
                     stmt.close();
                     conn.close();
@@ -365,6 +373,7 @@ public class ManageUsers extends Application {
                     usersVbox.getChildren().remove(users.indexOf(userObj));
                     users.remove(userObj);
 
+                    Methods.updateUserLog(MainPage.user,"deleted user "+userObj.getUsername());
 
 //                setUsersBox();
 //                scrollPane.setContent(new HBox(20, usersVbox, addUserBtn));
@@ -405,7 +414,24 @@ public class ManageUsers extends Application {
         passwVbox.setAlignment(Pos.TOP_RIGHT);
 
         Label seeActivity = new Label("see user activity");
-        seeActivity.setDisable(true);
+        seeActivity.setOnMouseEntered(e -> {
+            seeActivity.setCursor(Cursor.HAND);
+//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
+            seeActivity.setUnderline(true);
+            seeActivity.setTextFill(Color.web("#0089CCFF"));
+//            signOut.setStyle("-fx-background-color: #0089cc;");
+        });
+        seeActivity.setOnMouseExited(e -> {
+//            signOut.setCursor(Cursor.HAND);
+//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
+            seeActivity.setUnderline(false);
+            seeActivity.setTextFill(Color.BLACK);
+//            signOut.setStyle("-fx-background-color: #0089cc;");
+        });
+        seeActivity.setOnMouseClicked(e->{
+            new UserActivity(userObj.getUsername()).start(manageUsersStage);
+        });
+//        seeActivity.setDisable(true);
 
         VBox leftVbox = new VBox(8, new HBox(20,userStackPane, rightsVbox), passwVbox, seeActivity);
         BorderPane.setMargin(leftVbox, new Insets(10));

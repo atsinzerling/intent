@@ -128,8 +128,11 @@ public class AddItem extends Application {
 
         notesArea.setPrefWidth(250);
         notesArea.setPrefRowCount(5);
+        notesArea.setWrapText(true);
         specsArea.setPrefWidth(250);
-        specsArea.setPrefRowCount(2);
+        specsArea.setPrefRowCount(3);
+        specsArea.setWrapText(true);
+
 
 //        notesArea.setPrefColumnCount(15);
 
@@ -646,6 +649,8 @@ public class AddItem extends Application {
                 ee.printStackTrace();
                 MainPage.databaseErrorAlert(ee).showAndWait();
             }
+            Methods.updateUserLog(user,"uploaded "+(images.size() == 1 ? "1 image" : images.size() + " images")+" for item SKU=\""+currItem.SKU+"\"");
+
         });
 
         pane.setRight(imageBlockPane);
@@ -997,6 +1002,7 @@ public class AddItem extends Application {
                     new imageAdditMethods().saveOnActionImages();
                     MainPage.updateTable();
                     new additMethods().setPreviewing();
+                    Methods.updateUserLog(user,"created item SKU=\""+currItem.SKU+"\"");
                 } catch (SQLException ex) {
                     System.out.println("some big unhandled error");
                     MainPage.databaseErrorAlert(ex).showAndWait();
@@ -1093,6 +1099,7 @@ public class AddItem extends Application {
                             conn.close();
                         }
                         setStatus("Changes successfully saved!", 3, "green");
+                        Methods.updateUserLog(user,"edited item SKU=\""+currItem.SKU+"\"");
                         updateCurItem();
                         MainPage.updateTable();
 
@@ -1225,10 +1232,10 @@ public class AddItem extends Application {
                 setImageStatus("saving images...", 0, "");
             }
         });
-        updateImages.setOnMousePressed(e -> {
-//            setImageLoadingStatus("saving images", "");
-//            setImageStatus("saving images...", 0, "");
-        });
+//        updateImages.setOnMousePressed(e -> {
+////            setImageLoadingStatus("saving images", "");
+////            setImageStatus("saving images...", 0, "");
+//        });
         newWindow.setOnCloseRequest(e->{
             cancel.fire();
         });

@@ -40,6 +40,7 @@ public class LoginPage extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        System.out.println("Number of active threads from the given thread: " + Thread.activeCount());
         try {
             Class.forName("org.apache.poi.ss.usermodel.Cell");
 //            Class.forName("com.mysql.cj.jdbc.com.mysql.cj.jdbc.Driver");

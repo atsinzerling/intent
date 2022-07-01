@@ -35,6 +35,7 @@ import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -46,6 +47,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -68,17 +73,17 @@ public class MainPage extends Application {
 
     static TableView<Item> table = new TableView<Item>();
     static String urll =
-//        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
 //        "";
-        "jdbc:mysql://localhost:3306/products";
+//        "jdbc:mysql://localhost:3306/products";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
     static String user =
         "admin";
 //        "";
     static String passw =
-//        "658etra";
+        "658etra";
 //        "";
-    "newpass";
+//    "newpass";
     static String bartendPath = null;
     static String imagesPath =
 //        "\\\\DESKTOP-E5VI6AD\\application\\Images";
@@ -156,6 +161,13 @@ public class MainPage extends Application {
             version += datime;
         } catch (Exception e) {
             version += "---";
+            e.printStackTrace();
+        }
+
+        String deskto = "---";
+        try {
+            deskto = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
             e.printStackTrace();
         }
 
@@ -238,7 +250,7 @@ public class MainPage extends Application {
         Button exportBtn = new Button("Export");
         exportBtn.setOnAction(e->{
             DirectoryChooser exportDirChooser = new DirectoryChooser();
-            exportDirChooser.setTitle("Choose the destination for the export");
+            exportDirChooser.setTitle("Choose the destination for the export file");
 //            exportDirChooser.setInitialDirectory(
 //                new File("D:\\Download")
 //            );
@@ -249,101 +261,30 @@ public class MainPage extends Application {
             }
             System.out.println(exportFile.getAbsolutePath().toString());
 
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet spreadsheet = workbook.createSheet("Intent Data");
-            XSSFRow row = spreadsheet.createRow(0);
+            SimpleDateFormat sdf = new SimpleDateFormat("MM_dd_yyyy-HH-mm");
+            String dateeime = sdf.format(new Timestamp(System.currentTimeMillis()));
 
-            try {
-                Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-                Statement stmt = conn.createStatement();
+            String fullpath = exportFile.getAbsolutePath().toString() + "\\Intent_db_export_"+dateeime+".xlsx";
 
-                ResultSet rs = stmt.executeQuery("SELECT * FROM items");
-                ResultSetMetaData metadata = rs.getMetaData();
+            Methods.export_func(fullpath);
+            Methods.updateUserLog(user,"created new export");
 
-                int columnCount = metadata.getColumnCount();
-
-                System.out.print("test_table columns : ");
-
-                for (int i=0; i<columnCount; i++) {
-
-                    String columnName = metadata.getColumnName(i+1);
-                    switch (columnName){
-                    case "DateTime":
-                        columnName="Date Created";
-                        break;
-                    case "DateModified":
-                        columnName="Date Modified";
-                        break;
-                    case "OtherRecords":
-                        columnName="History";
-                        break;
-                    case "POnumber":
-                        columnName="PO#";
-                        break;
-                    }
-                    System.out.print(columnName + " ");
-
-                    row.createCell(i).setCellValue(columnName);
+            File file = new File (fullpath);
+            if (file.exists()){
+                try {
+                    Desktop desktop = Desktop.getDesktop();
+                    desktop.open(file);
+                } catch (IOException exxxx) {
+                    exxxx.printStackTrace();
                 }
-                System.out.println("");
-
-                int rowCounter = 1;
-
-                while(rs.next()){
-                    row = spreadsheet.createRow(rowCounter);
-                    for (int i = 0; i<columnCount; i++){
-                        switch (i){
-                        case 0:
-                            row.createCell(i).setCellValue(rs.getLong(0+1));
-                            break;
-                        case 8:
-
-                        case 11:
-                            Cell timecell = row.createCell(i);
-                            CellStyle timestyle = workbook.createCellStyle();
-                            timestyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("d/m/yy h:mm"));
-                            timecell.setCellStyle(timestyle);
-
-                            if (rs.getTimestamp(i+1) != null) {
-                                timecell.setCellValue(new Date(rs.getTimestamp(i + 1).getTime()));
-                            }
-                            break;
-                        default:
-                            row.createCell(i).setCellValue(rs.getString(i+1));
-                            break;
-                        }
-                    }
-                    rowCounter++;
-                }
-
-                String fullpath = exportFile.getAbsolutePath().toString() + "\\Database_export.xlsx";
-                FileOutputStream out = new FileOutputStream(new File(fullpath));
-
-                workbook.write(out);
-                out.close();
-                workbook.close();
-
-                stmt.close();
-                conn.close();
-                rs.close();
-
-
-                File file = new File (exportFile.getAbsolutePath() + "\\Database_export.xlsx");
-                if (file.exists()){
-                    try {
-                        Desktop desktop = Desktop.getDesktop();
-                        desktop.open(file);
-                    } catch (IOException exxxx) {
-                        exxxx.printStackTrace();
-                    }
-                } else{
+            } else{
 //                    Alert alert = new Alert(Alert.AlertType.ERROR);
 //                    alert.setTitle("Folder unavailable");
 ////            alert.setHeaderText("Look, a Confirmation Dialog");
 //                    alert.setContentText("Folder "+initDirectory+" is unavailable");
 //
 //                    alert.showAndWait();
-                }
+            }
 
 //                Alert alert = new Alert(Alert.AlertType.INFORMATION);
 //                alert.setTitle("Export Successful!");
@@ -351,13 +292,6 @@ public class MainPage extends Application {
 //                alert.setContentText("Successfully exported to\n"+fullpath);
 //
 //                alert.showAndWait();
-            } catch (SQLException ex) {
-                MainPage.databaseErrorAlert(ex).showAndWait();
-                ex.printStackTrace();
-            } catch (IOException iox){
-                MainPage.ioErrorAlert(iox).showAndWait();
-                iox.printStackTrace();
-            }
         });
 
         Button manageUsersBtn = new Button("Manage Users");
@@ -399,17 +333,40 @@ public class MainPage extends Application {
             signOut.setTextFill(Color.BLACK);
 //            signOut.setStyle("-fx-background-color: #0089cc;");
         });
+        String finalDeskto = deskto;
         signOut.setOnMouseClicked(e->{
             new LoginPage().start(primaryStage);
             primaryStage.close();
+            Methods.updateUserLog(user,"signed out on "+ finalDeskto);
         });
+
+        Label seeActivity = new Label("See my activity");
+        seeActivity.setOnMouseEntered(e -> {
+            seeActivity.setCursor(Cursor.HAND);
+//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
+            seeActivity.setUnderline(true);
+            seeActivity.setTextFill(Color.web("#0089CCFF"));
+//            signOut.setStyle("-fx-background-color: #0089cc;");
+        });
+        seeActivity.setOnMouseExited(e -> {
+//            signOut.setCursor(Cursor.HAND);
+//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
+            seeActivity.setUnderline(false);
+            seeActivity.setTextFill(Color.BLACK);
+//            signOut.setStyle("-fx-background-color: #0089cc;");
+        });
+        seeActivity.setOnMouseClicked(e->{
+            new UserActivity(user).start(primaryStage);
+        });
+
+
 
 
         VBox.setMargin(loggedInLbl, new Insets(5,0,0,0));
         ImageView profilePic = new ImageView("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\profile_icon.png");
         profilePic.setFitHeight(40);
         profilePic.setPreserveRatio(true);
-        VBox profileTextVbox = new VBox(0,loggedInLbl, signOut);
+        VBox profileTextVbox = new VBox(0,loggedInLbl, signOut, seeActivity);
         profileTextVbox.setAlignment(Pos.TOP_RIGHT);
         HBox profileHbox = new HBox(10, adminOptVbox, profileTextVbox, profilePic);
         profileHbox.setAlignment(Pos.TOP_RIGHT);
@@ -481,6 +438,13 @@ public class MainPage extends Application {
         primaryStage.setScene(scene);
         primaryStage.setResizable(true);
         primaryStage.show();
+
+        Methods.updateUserLog(user,"logged in on "+deskto);
+        primaryStage.setOnCloseRequest(e->{
+            primaryStage.close();
+            Methods.updateUserLog(user,"signed out on "+finalDeskto);
+        });
+
     }
 
     public static Item[] extractItemsFromDb(String query) {
@@ -494,7 +458,6 @@ public class MainPage extends Application {
         try {
             conn = DriverManager.getConnection(urll,user,passw);
             stmt = conn.createStatement();
-//            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
             rs = stmt.executeQuery(query);
         } catch (SQLException e) {
             MainPage.databaseErrorAlert(e).showAndWait();
@@ -601,10 +564,10 @@ public class MainPage extends Application {
         TableColumn specsCol = new TableColumn("Specs");
         TableColumn othrecCol = new TableColumn("History");
 
-        othrecCol.setStyle( "-fx-alignment: CENTER-LEFT;");
+//        othrecCol.setStyle( "-fx-alignment: CENTER-LEFT;");
 
         Item[] arr = extractItemsFromDb(
-            "SELECT * FROM items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
+            "SELECT * FROM products.items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
         );
         ObservableList<Item> data = FXCollections.observableArrayList();
         for (Item ite : arr) {
@@ -630,6 +593,28 @@ public class MainPage extends Application {
     }
     public static void deleteAct(){
 
+//        new Thread(()->{
+//            Platform.runLater(() -> {
+//                MainPage.importLoadLbl.setText("processing");
+//                AddItem.dotAnim(MainPage.importLoadLbl);
+//                MainPage.loadingPane.toFront();
+//                MainPage.pane.setDisable(true);
+//            });
+//
+//            Platform.runLater(() -> {
+//                MainPage.pane.toFront();
+//                MainPage.pane.setDisable(false);
+//
+//            });
+//        }).start();
+
+
+        MainPage.importLoadLbl.setText("processing");
+        AddItem.dotAnim(MainPage.importLoadLbl);
+        MainPage.loadingPane.toFront();
+        MainPage.pane.setDisable(true);
+
+
         ArrayList<Item> itemsSelect = new ArrayList<>(table.getSelectionModel().getSelectedItems());
         if (itemsSelect.isEmpty()){
             return;
@@ -650,40 +635,84 @@ public class MainPage extends Application {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Deletion Confirmation");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText(Methods.wrap("Are you sure you want to delete item" +(itemsSelect.size() == 1 ? " " : "s ") +itemsStr+ "?"));
+            alert.setContentText(Methods.wrap("Are you sure you want to delete " +(itemsSelect.size() == 1 ? "this item: " : "these "+itemsSelect.size()+" items: ") +itemsStr+ "?"));
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.get() == ButtonType.OK) {
-                try {
-                    Connection conn = DriverManager.getConnection(urll,user,passw);
-                    Statement stmt = conn.createStatement();
-                    String failed = "";
+                new Thread(()->{
 
-                    for (Item ite: itemsSelect){
-                        if (!user.equals("admin") && !user.equals(ite.User)){
-                            failed += ite.SKU + ", ";
-                            continue;
+                    Platform.runLater(() -> {
+                        MainPage.importLoadLbl.setText("deleting");
+                        AddItem.dotAnim(MainPage.importLoadLbl);
+                        MainPage.loadingPane.toFront();
+                        MainPage.pane.setDisable(true);
+                    });
+                    int itemsDeleted = 0;
+
+
+                    try {
+                        Connection conn = DriverManager.getConnection(urll,user,passw);
+                        Statement stmt = conn.createStatement();
+                        String failed = "";
+
+
+                        //automatic backup
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("MM_dd_yyyy-HH-mm");
+                        String dateeime = sdf.format(new Timestamp(System.currentTimeMillis()));
+
+                        String folderpath = System.getProperty("user.home") +"\\Downloads\\Intent_automatic_export";
+                        System.out.println(folderpath);
+                        try {
+                            Files.createDirectories(Paths.get(folderpath));
+                        } catch (IOException e) {
+                            MainPage.ioErrorAlert(e).showAndWait();
+                            return;
                         }
-                        System.out.println("\tSQL   DELETE from items WHERE SKU=" + ite.SKU);
-                        stmt.executeUpdate("DELETE from products.items WHERE SKU=" + ite.SKU);
-                    }
-                    conn.close();
-                    stmt.close();
-                    updateTable();
-                    if (failed.equals("")){
-                        return;
-                    } else{
-                        Alert alert2 = new Alert(Alert.AlertType.INFORMATION, "Enter a 5-letter word maybe? LoL");
-                        alert2.setTitle("Deletion Confirmation");
-//                      alert.setHeaderText("Look, a Confirmation Dialog");
-                        failed = failed.substring(0,failed.length()-2);
-                        alert2.setContentText(Methods.wrap("User "+user+" is not allowed to delete elements "+ failed+"created by other users."));
-                        alert2.showAndWait();
-                    }
-                } catch (SQLException ex) {
-                    MainPage.databaseErrorAlert(ex).showAndWait();
-                }
+                        Methods.export_func(folderpath + "\\Intent_automatic_export_"+dateeime+".xlsx");
 
+
+
+                        for (Item ite: itemsSelect){
+                            if (!user.equals("admin") && !user.equals(ite.User)){
+                                failed += ite.SKU + ", ";
+                                continue;
+                            }
+                            itemsDeleted++;
+                            System.out.println("\tSQL   DELETE from products.items WHERE SKU=" + ite.SKU);
+                            stmt.executeUpdate("DELETE from products.items WHERE SKU=" + ite.SKU);
+                        }
+                        conn.close();
+                        stmt.close();
+                        System.out.println("deleted");
+
+
+                        if (!failed.equals("")){
+                            Alert alert2 = new Alert(Alert.AlertType.INFORMATION);
+                            alert2.setTitle("Deletion Confirmation");
+    //                      alert.setHeaderText("Look, a Confirmation Dialog");
+                            failed = failed.substring(0,failed.length()-2);
+                            alert2.setContentText(Methods.wrap("User "+user+" is not allowed to delete elements "+ failed+"created by other users."));
+                            alert2.showAndWait();
+                        }
+
+                    } catch (SQLException ex) {
+                        MainPage.databaseErrorAlert(ex).showAndWait();
+                    }
+                    Methods.updateUserLog(user,"deleted "+(itemsDeleted == 1 ? "1 item" :itemsDeleted + " items"));
+
+                    Platform.runLater(() -> {
+                        updateTable();
+                        MainPage.pane.toFront();
+                        MainPage.pane.setDisable(false);
+                    });
+
+                }).start();
+
+            }
+            else{
+                MainPage.pane.toFront();
+                MainPage.pane.setDisable(false);
             }
         }
 
@@ -693,7 +722,7 @@ public class MainPage extends Application {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Database Error");
 //                    alert2.setHeaderText("Look, a Confirmation Dialog");
-        alert.setContentText(e.getMessage());
+        alert.setContentText(Methods.wrap(e.getMessage()));
 
         return alert;
     }
@@ -701,14 +730,14 @@ public class MainPage extends Application {
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("IO File Error");
-        alert.setContentText(e.getMessage());
+        alert.setContentText(Methods.wrap(e.getMessage()));
         return alert;
     }
     public static Alert unknownErrorAlert(Exception e){
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Unknown error occured");
-        alert.setContentText(e.getMessage());
+        alert.setContentText(Methods.wrap(e.getMessage()));
         return alert;
     }
 }

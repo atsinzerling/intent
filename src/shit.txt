@@ -308,9 +308,52 @@ C:\Windows\System32\cmd.exe /k java --module-path "C:\Program Files\Intent Datab
 =IMPORTXML("https://en.wikipedia.org/wiki/Moon_landing", "//title")
 
 
+java.io.IOException: Zip bomb detected! The file would exceed the max. ratio of compressed file size to the size of the expanded data.
+This may indicate that the file is used to inflate memory usage and thus could pose a security risk.
+You can adjust this limit via ZipSecureFile.setMinInflateRatio() if you need to work with files which exceed this limit.
+Uncompressed size: 104589, Raw/compressed size: 1041, ratio: 0.009953
+Limits: MIN_INFLATE_RATIO: 0.010000, Entry: xl/styles.xml
+	at org.apache.poi.openxml4j.util.ZipArchiveThresholdInputStream.checkThreshold(ZipArchiveThresholdInputStream.java:143)
+	at org.apache.poi.openxml4j.util.ZipArchiveThresholdInputStream.read(ZipArchiveThresholdInputStream.java:82)
+	at org.apache.poi.util.IOUtils.toByteArray(IOUtils.java:240)
+	at org.apache.poi.util.IOUtils.toByteArray(IOUtils.java:203)
+	at org.apache.poi.openxml4j.util.ZipArchiveFakeEntry.<init>(ZipArchiveFakeEntry.java:82)
+	at org.apache.poi.openxml4j.util.ZipInputStreamZipEntrySource.<init>(ZipInputStreamZipEntrySource.java:98)
+	at org.apache.poi.openxml4j.opc.ZipPackage.<init>(ZipPackage.java:132)
+	at org.apache.poi.openxml4j.opc.OPCPackage.open(OPCPackage.java:312)
+	at org.apache.poi.ooxml.util.PackageHelper.open(PackageHelper.java:59)
+	at org.apache.poi.xssf.usermodel.XSSFWorkbook.<init>(XSSFWorkbook.java:289)
+	at org.apache.poi.xssf.usermodel.XSSFWorkbook.<init>(XSSFWorkbook.java:285)
+	at ImportPreviewWindow.lambda$importBtnAction$7(ImportPreviewWindow.java:240)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+Exception in thread "Thread-5" java.lang.IllegalStateException: Not on FX application thread; currentThread = Thread-5
+	at javafx.graphics/com.sun.javafx.tk.Toolkit.checkFxUserThread(Toolkit.java:291)
+	at javafx.graphics/com.sun.javafx.tk.quantum.QuantumToolkit.checkFxUserThread(QuantumToolkit.java:424)
+	at javafx.graphics/javafx.stage.Stage.<init>(Stage.java:254)
+	at javafx.graphics/javafx.stage.Stage.<init>(Stage.java:240)
+	at javafx.controls/javafx.scene.control.HeavyweightDialog$1.<init>(HeavyweightDialog.java:52)
+	at javafx.controls/javafx.scene.control.HeavyweightDialog.<init>(HeavyweightDialog.java:52)
+	at javafx.controls/javafx.scene.control.Dialog.<init>(Dialog.java:267)
+	at javafx.controls/javafx.scene.control.Alert.<init>(Alert.java:245)
+	at javafx.controls/javafx.scene.control.Alert.<init>(Alert.java:220)
+	at MainPage.ioErrorAlert(MainPage.java:680)
+	at ImportPreviewWindow.lambda$importBtnAction$7(ImportPreviewWindow.java:567)
+	at java.base/java.lang.Thread.run(Thread.java:834)
 
+CREATE TABLE `actions` (
+  `User` varchar(50) NOT NULL,
+  `Date` date NOT NULL,
+  `Log` varchar(3000) DEFAULT NULL,
+  CONSTRAINT `User_Date` PRIMARY KEY (`User`,`Date`),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
+CREATE TABLE `products`.`useractions` (
+  `User` varchar(50) NOT NULL,
+  `Date` date NOT NULL,
+  `Log` varchar(3000) DEFAULT NULL,
+  CONSTRAINT `User_Date` PRIMARY KEY (`User`,`Date`));
 
+  SET GLOBAL authentication_policy='mysql_native_password';
 
 
 
