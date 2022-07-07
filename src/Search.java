@@ -82,18 +82,18 @@ public class Search {
                 System.out.println(ite.Location == null);
                 if (
                     Long.toString(ite.SKU).contains(searchText) ||
-                        ite.SN != null && ite.SN.contains(searchText) ||
-                        ite.PN != null && ite.PN.contains(searchText) ||
-                        ite.UPC != null && ite.UPC.contains(searchText) ||
-                        ite.Grade != null && ite.Grade.contains(searchText) ||
-                        ite.Location != null && ite.Location.contains(searchText) ||
-                        ite.Notes != null && ite.Notes.contains(searchText) ||
-                        ite.User != null && ite.User.contains(searchText) ||
-                        ite.time!=null && ite.time.toString().contains(searchText) ||
-                        ite.DateModified!=null && ite.DateModified.toString().contains(searchText) ||
-                        ite.POnumber != null && ite.POnumber.contains(searchText)||
-                        ite.Specs != null && ite.Specs.contains(searchText)||
-                        ite.OtherRecords != null && ite.OtherRecords.contains(searchText)
+                        ite.SN != null && ite.SN.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.PN != null && ite.PN.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.UPC != null && ite.UPC.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.Grade != null && ite.Grade.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.Location != null && ite.Location.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.Notes != null && ite.Notes.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.User != null && ite.User.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.time!=null && ite.time.toString().toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.DateModified!=null && ite.DateModified.toString().toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.POnumber != null && ite.POnumber.toLowerCase().contains(searchText.toLowerCase())||
+                        ite.Specs != null && ite.Specs.toLowerCase().contains(searchText.toLowerCase())||
+                        ite.OtherRecords != null && ite.OtherRecords.toLowerCase().contains(searchText.toLowerCase())
                 ) {
                     data.add(ite);
                     System.out.println("ADDED!!!!!!!!!!");

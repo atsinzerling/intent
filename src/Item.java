@@ -101,6 +101,26 @@ public class Item {
             "DateModified:"+time;
     }
 
+    public String excelFormat(){
+        return
+            (SKU)+"\t"+
+            (SN==null?"":SN)+"\t"+
+            (PN==null?"":PN)+"\t"+
+            (UPC==null?"":UPC)+"\t"+
+            (Grade==null?"":Grade)+"\t"+
+            (Location==null?"":Location)+"\t"+
+            (Notes==null?"":Notes.replaceAll("\t", "   ").replaceAll("\n", "   "))+"\t"+
+            (User==null?"":User)+"\t"+
+            (time==null?"":time)+"\t"+
+            "\t"+
+            (OtherRecords==null?"":OtherRecords.replaceAll("\t", "   ").replaceAll("\n", "   "))+"\t"+
+            (DateModified==null?"":DateModified)+"\t"+
+            (POnumber==null?"":POnumber)+"\t"+
+            (Specs==null?"":Specs.replaceAll("\t", "   ").replaceAll("\n", "   "))
+                +"\n"
+            ;
+    }
+
     public long getSKU() {
         return SKU;
     }

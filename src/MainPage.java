@@ -9,7 +9,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -17,7 +19,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -35,17 +41,10 @@ import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -54,15 +53,15 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 //import com.fasterxml.jackson.*;
 //import com.fasterxml.jackson.map.JsonMappingException;
@@ -189,7 +188,7 @@ public class MainPage extends Application {
         BorderPane.setMargin(table,new Insets(14,9,12,0));
 
         table.getColumns()
-            .addAll(tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7], tablArr[9],
+            .addAll(tablArr[13], tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7], tablArr[9],
                 tablArr[8], tablArr[6],tablArr[11], tablArr[10],tablArr[12]);
         table.setOnMouseClicked((MouseEvent event) -> {
             if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2){
@@ -199,6 +198,19 @@ public class MainPage extends Application {
                 }
             }
         });
+
+        MenuItem itemCopy = new MenuItem("Copy");
+        itemCopy.setOnAction(e-> {
+            Methods.copyAct(new ArrayList<>(table.getSelectionModel().getSelectedItems()));
+        });
+        MenuItem itemDel = new MenuItem("Delete");
+        itemDel.setOnAction(e-> {
+            deleteAct();
+        });
+        ContextMenu menu = new ContextMenu();
+        menu.getItems().addAll(itemCopy, itemDel);
+        table.setContextMenu(menu);
+
         pane.setCenter(table);
 
         Label versionLbl = new Label(version);
@@ -411,10 +423,14 @@ public class MainPage extends Application {
         delete.setOnAction(e -> {
             deleteAct();
         });
+        final KeyCodeCombination keyCodeCopy = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
         table.setOnKeyPressed((KeyEvent e) -> {
             if (e.getCode() == KeyCode.DELETE) {
                 deleteAct();
+            } else if (keyCodeCopy.match(e)) {
+                Methods.copyAct(new ArrayList<>(table.getSelectionModel().getSelectedItems()));
             }
+
         });
         pane.setRight(new VBox(8,refresh, addNew));
         pane.setLeft(delete);
@@ -563,6 +579,11 @@ public class MainPage extends Application {
         TableColumn POnumCol = new TableColumn("PO#");
         TableColumn specsCol = new TableColumn("Specs");
         TableColumn othrecCol = new TableColumn("History");
+        TableColumn numCol = new TableColumn("#");
+
+        othrecCol.setPrefWidth(500);
+        notesCol.setPrefWidth(250);
+        numCol.setPrefWidth(40);
 
 //        othrecCol.setStyle( "-fx-alignment: CENTER-LEFT;");
 
@@ -573,6 +594,9 @@ public class MainPage extends Application {
         for (Item ite : arr) {
             data.add(ite);
         }
+
+        AtomicInteger rowNum = new AtomicInteger(1);
+
         SKUCol.setCellValueFactory(new PropertyValueFactory<Item, Integer>("SKU"));
         SNCol.setCellValueFactory(new PropertyValueFactory<Item, String>("SN"));
         PNCol.setCellValueFactory(new PropertyValueFactory<Item, String>("PN"));
@@ -586,10 +610,13 @@ public class MainPage extends Application {
         POnumCol.setCellValueFactory(new PropertyValueFactory<Item, String>("POnumber"));
         specsCol.setCellValueFactory(new PropertyValueFactory<Item, String>("Specs"));
         othrecCol.setCellValueFactory(new PropertyValueFactory<Item, String>("OtherRecords"));
+
+        numCol.setCellFactory(new LineNumbersCellFactory<>());
+
         table.setItems(data);
 
 //        table.getColumns().addAll(SKUCol,SNCol,PNCol,UPCCol,isPerfCol, imgCol);
-        return new TableColumn[] {SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol, othrecCol};
+        return new TableColumn[] {SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol, othrecCol, numCol};
     }
     public static void deleteAct(){
 
@@ -609,33 +636,34 @@ public class MainPage extends Application {
 //        }).start();
 
 
-        MainPage.importLoadLbl.setText("processing");
-        AddItem.dotAnim(MainPage.importLoadLbl);
-        MainPage.loadingPane.toFront();
-        MainPage.pane.setDisable(true);
 
 
         ArrayList<Item> itemsSelect = new ArrayList<>(table.getSelectionModel().getSelectedItems());
         if (itemsSelect.isEmpty()){
             return;
         }
-        String itemsStr = "";
+
+        MainPage.importLoadLbl.setText("processing");
+        AddItem.dotAnim(MainPage.importLoadLbl);
+        MainPage.loadingPane.toFront();
+        MainPage.pane.setDisable(true);
+        StringBuilder itemsStr = new StringBuilder("");
         int count = 0;
         for (Item it : itemsSelect){
-            itemsStr += it.SKU + ", ";
+            itemsStr.append(it.SKU + ", ");
             count++;
             if (count == 100){
-                itemsStr += "..., ";
+                itemsStr.append("..., ");
                 break;
             }
         }
-        itemsStr = itemsStr.substring(0, itemsStr.length()-2);
+        String itemsStrrr = itemsStr.toString().substring(0, itemsStr.length()-2);
 
-        if (itemsStr != "") {
+        if (itemsStrrr != "") {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Deletion Confirmation");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText(Methods.wrap("Are you sure you want to delete " +(itemsSelect.size() == 1 ? "this item: " : "these "+itemsSelect.size()+" items: ") +itemsStr+ "?"));
+            alert.setContentText(Methods.wrap("Are you sure you want to delete " +(itemsSelect.size() == 1 ? "this item: " : "these "+itemsSelect.size()+" items: ") +itemsStrrr+ "?"));
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.get() == ButtonType.OK) {
@@ -653,7 +681,7 @@ public class MainPage extends Application {
                     try {
                         Connection conn = DriverManager.getConnection(urll,user,passw);
                         Statement stmt = conn.createStatement();
-                        String failed = "";
+                        StringBuilder failed = new StringBuilder("");
 
 
                         //automatic backup
@@ -675,7 +703,7 @@ public class MainPage extends Application {
 
                         for (Item ite: itemsSelect){
                             if (!user.equals("admin") && !user.equals(ite.User)){
-                                failed += ite.SKU + ", ";
+                                failed.append(ite.SKU + ", ");
                                 continue;
                             }
                             itemsDeleted++;
@@ -688,12 +716,19 @@ public class MainPage extends Application {
 
 
                         if (!failed.equals("")){
-                            Alert alert2 = new Alert(Alert.AlertType.INFORMATION);
-                            alert2.setTitle("Deletion Confirmation");
-    //                      alert.setHeaderText("Look, a Confirmation Dialog");
-                            failed = failed.substring(0,failed.length()-2);
-                            alert2.setContentText(Methods.wrap("User "+user+" is not allowed to delete elements "+ failed+"created by other users."));
-                            alert2.showAndWait();
+                            String finalFailed = failed.toString();
+                            Platform.runLater(() -> {
+                                Alert alert2 = new Alert(Alert.AlertType.ERROR);
+                                alert2.setTitle("Delete failed");
+                                //                      alert.setHeaderText("Look, a Confirmation Dialog");
+                                String failedStr = finalFailed.substring(0, finalFailed.length()-2);
+                                alert2.setContentText(Methods.wrap("User "+user+" is not allowed to delete elements "+
+                                    failedStr +" created by other users."));
+                                alert2.showAndWait();
+
+                                MainPage.pane.toFront();
+                                MainPage.pane.setDisable(false);
+                            });
                         }
 
                     } catch (SQLException ex) {

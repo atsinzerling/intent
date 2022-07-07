@@ -1,4 +1,6 @@
 import javafx.application.Platform;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -17,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Methods {
@@ -163,6 +166,29 @@ public class Methods {
                 MainPage.ioErrorAlert(iox).showAndWait();
             });
             iox.printStackTrace();
+        }
+    }
+
+    public static void copyAct(ArrayList<Item> itemsSelect){
+
+        if (itemsSelect!=null && itemsSelect.size()>0){
+            StringBuilder clipboardString = new StringBuilder();
+
+            for (Item it: itemsSelect) {
+                clipboardString.append(it.excelFormat());
+            }
+            final ClipboardContent content = new ClipboardContent();
+
+            try{
+                content.putString(clipboardString.toString());
+                Clipboard.getSystemClipboard().setContent(content);
+                System.out.println("text copied:\n"+clipboardString);
+            } catch (Exception e){
+                System.out.println("copy failed");
+                e.printStackTrace();
+            }
+        } else{
+            System.out.println("nothing to copy");
         }
     }
 }
