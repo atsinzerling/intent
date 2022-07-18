@@ -5,7 +5,9 @@ java.sql.SQLIntegrityConstraintViolationException: Duplicate entry '17' for key 
 
 \\DESKTOP-E5VI6AD\application\Images
 
-
+"jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+//        "jdbc:mysql://localhost:3306/products";
+    //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
 
 //            ImageView imgview = new ImageView("...");
 //            imgview.setFitWidth(200);

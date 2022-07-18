@@ -858,7 +858,7 @@ public class AddItem extends Application {
                 cancel.setText("Exit");
                 cancel.setOnAction(e -> {
                     newWindow.close();
-                    setSelectionOfCurrItem();
+//                    setSelectionOfCurrItem();
                     //write some code to saving changes lol
                 });
 
@@ -1157,7 +1157,7 @@ public class AddItem extends Application {
                         switch (typeOfAction) {
                         case "exit":
                             newWindow.close();
-                            setSelectionOfCurrItem();
+//                            setSelectionOfCurrItem();
                             break;
                         case "preview":
                             setPreviewing();
@@ -1169,7 +1169,7 @@ public class AddItem extends Application {
                     switch (typeOfAction) {
                     case "exit":
                         newWindow.close();
-                        setSelectionOfCurrItem();
+//                        setSelectionOfCurrItem();
                         break;
                     case "preview":
                         setPreviewing();
@@ -1222,7 +1222,7 @@ public class AddItem extends Application {
 
         cancel.setOnAction(e -> {
             newWindow.close();
-            new additMethods().setSelectionOfCurrItem();
+//            new additMethods().setSelectionOfCurrItem();
         });
         save.setOnAction(e -> {
             new additMethods().addItemAction();

@@ -19,8 +19,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -58,7 +56,6 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,17 +69,14 @@ public class MainPage extends Application {
 
     static TableView<Item> table = new TableView<Item>();
     static String urll =
-        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
-//        "";
-//        "jdbc:mysql://localhost:3306/products";
+//        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+        "jdbc:mysql://localhost:3306/products";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
     static String user =
         "admin";
-//        "";
     static String passw =
-        "658etra";
-//        "";
-//    "newpass";
+//        "658etra";
+    "newpass";
     static String bartendPath = null;
     static String imagesPath =
 //        "\\\\DESKTOP-E5VI6AD\\application\\Images";
