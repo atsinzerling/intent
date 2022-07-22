@@ -357,8 +357,23 @@ CREATE TABLE `products`.`useractions` (
 
   SET GLOBAL authentication_policy='mysql_native_password';
 
+- Generating SKU for custom items
+- esc button exits editing or previewing of elements
+- hide history column for users
+- create admin and user role lol
+- Changes are saved with old value record for Pn, location, grade, po#
+- Changing location for many elements functionality for admin
+- Location confirmation on saving changes
+- Showing errors while import
+- buttons allocation UI
 
+- create sql script for initial creation of users
+- script to delete empty folders
 
+More advanced:
+- excel problems
+- clean code
+- editing of images
 
 
 

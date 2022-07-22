@@ -264,7 +264,7 @@ public class ManageUsers extends Application {
 
                     stmt.executeUpdate(sqlCreate);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
-                    String granttt = "GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';";
+                    String granttt = "GRANT SELECT, INSERT, DELETE,UPDATE ON "+MainPage.schema+".* TO '"+newUsern+"'@'%';";
                     stmt.executeUpdate(granttt);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
 
@@ -301,6 +301,18 @@ public class ManageUsers extends Application {
                         stmt.execute(sqlUpdate);
                         stmt.execute(new String("FLUSH PRIVILEGES;"));
                         System.out.println("\tSQL "+ sqlUpdate);
+
+                        ResultSet rs = stmt.executeQuery("SELECT * FROM "+MainPage.schema+".useractions WHERE User='"+userObj.getUsername()+"'");
+                        int coun = 0;
+                        while(rs.next()) {
+                            stmt.addBatch(
+                                "UPDATE "+MainPage.schema+".useractions SET User='" + newUsern + "' WHERE (User, Date) = ('" +
+                                    userObj.getUsername() + "','" + rs.getDate("Date") + "')");
+                            coun++;
+                        }
+                        stmt.executeBatch();
+                        System.out.println("updated "+coun+" records in .useractions");
+
                         Methods.updateUserLog(MainPage.user,"changed username for user "+userObj.getUsername());
                     }
                     if (!userObj.getPassword().equals(newPassw)){
@@ -310,7 +322,7 @@ public class ManageUsers extends Application {
                         Methods.updateUserLog(MainPage.user,"changed password for user "+newUsern);
                     }
 
-                    String grantt = "GRANT SELECT, INSERT, DELETE,UPDATE ON products.* TO '"+newUsern+"'@'%';";
+                    String grantt = "GRANT SELECT, INSERT, DELETE,UPDATE ON "+MainPage.schema+".* TO '"+newUsern+"'@'%';";
                     stmt.executeUpdate(grantt);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
 

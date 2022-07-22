@@ -71,7 +71,7 @@ public class UserActivity extends Application {
 //            String sqlCreate = "CREATE USER '"+usern+"'@'%' IDENTIFIED WITH mysql_native_password BY '"+password+"'";
 //            String sqlUpdate = "UPDATE `mysql`.`user` SET `authentication_string` = '"+password+"' WHERE `User` = '"+usern+"';";
 
-            ResultSet rs = stmt.executeQuery("SELECT * from products.useractions WHERE User = '"+user+"' order by Date desc");
+            ResultSet rs = stmt.executeQuery("SELECT * from "+MainPage.schema+".useractions WHERE User = '"+user+"' order by Date desc");
             while (rs.next()){
                 BorderPane dayBorderPane = new BorderPane();
                 dayBorderPane.setMinWidth(520);

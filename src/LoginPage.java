@@ -5,6 +5,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -23,9 +24,12 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Scanner;
 
 
 public class LoginPage extends Application {
@@ -34,6 +38,7 @@ public class LoginPage extends Application {
     String connectionUrl =
     "mysql://DESKTOP-E5VI6AD:3306/products";
 //    "mysql://localhost:3306/products";
+    String schema = "products";
 
     @Override
     public void start(Stage primaryStage) {
@@ -56,6 +61,27 @@ public class LoginPage extends Application {
             "| +------------------------------------------------------------+ |\n" +
             "+----------------------------------------------------------------+";
         System.out.println(initMessage);
+
+        try {
+            File fl = new File("C:\\Program Files Intent\\configg.csv");
+
+            Scanner myReader = new Scanner(fl);
+            myReader.nextLine();
+            connectionUrl = myReader.nextLine().split(",")[1].strip();
+            schema = connectionUrl.split("/")[connectionUrl.split("/").length-1];
+
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("Error reading configuration file");
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Config file error");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+            alert.setContentText(Methods.wrap("An error reading configuration file at \"C:\\Program Files Intent\\configg.csv\" occurred."));
+            alert.showAndWait();
+        }
+
+
 
         Label signinLbl = new Label("Sign in");
         signinLbl.setMaxWidth(Double.MAX_VALUE);
@@ -159,36 +185,20 @@ public class LoginPage extends Application {
         Label connectUrlLbl = new Label("connection URL:");
         TextField connectUrlField = new TextField(connectionUrl);
         connectUrlField.setPromptText("put your connection url here");
-        connectUrlField.setDisable(true);
+        connectUrlField.setEditable(false);
+        connectUrlField.setText(connectionUrl);
 
-        Button editConn = new Button("Edit");
-
-        Button saveConn = new Button("Save");
-        editConn.setOnAction(e->{
-            connectUrlField.setDisable(false);
-            connectUrlField.requestFocus();
-            connectUrlField.positionCaret(connectUrlField.getText().length());
-            saveConn.setDisable(false);
-        });
-        saveConn.setOnAction(e->{
-            connectionUrl = connectUrlField.getText().strip();
-            connectUrlField.setDisable(true);
-            saveConn.setDisable(true);
-            signinLbl.requestFocus();
-        });
-        saveConn.setDisable(true);
-        HBox editSaveHbox = new HBox(7,editConn,saveConn);
-        editSaveHbox.setAlignment(Pos.CENTER);
-
-        VBox connUrlVbox = new VBox(3,connectUrlLbl, connectUrlField, editSaveHbox);
+        VBox connUrlVbox = new VBox(3,connectUrlLbl, connectUrlField);
         connUrlVbox.setMaxWidth(260);
         BorderPane.setAlignment(connUrlVbox, Pos.CENTER);
-        BorderPane.setMargin(connUrlVbox, new Insets(10,0,10,0));
+        BorderPane.setMargin(connUrlVbox, new Insets(10,0,15,0));
 
         pane.setBottom(connUrlVbox);
         /** connect url ended */
 
-        Scene scene = new Scene(pane, 400, 400);
+
+
+        Scene scene = new Scene(pane, 400, 380);
         Stage loginStage = new Stage();
         loginStage.setTitle("Sign in");
         loginStage.setScene(scene);
@@ -208,7 +218,7 @@ public class LoginPage extends Application {
                 AddItem.setLblStatus(loginSuccessCommentLbl, "Launching the Main page.", 0, "");
                 Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(0.4), ev -> {
 
-                    new MainPage("jdbc:"+connectionUrl, usern, passw).start(primaryStage);
+                    new MainPage("jdbc:"+connectionUrl, schema, usern, passw).start(primaryStage);
                     loginStage.close();
                 }));
                 timeline.setCycleCount(1);

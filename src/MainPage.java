@@ -1,5 +1,7 @@
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -32,6 +34,7 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -70,8 +73,10 @@ public class MainPage extends Application {
     static TableView<Item> table = new TableView<Item>();
     static String urll =
 //        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
-        "jdbc:mysql://localhost:3306/products";
+        "jdbc:mysql://localhost:3306/products2";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
+    static String schema =
+        "products2";
     static String user =
         "admin";
     static String passw =
@@ -86,10 +91,11 @@ public class MainPage extends Application {
     static BorderPane loadingPane;
     static BorderPane pane;
 
-    public MainPage(String urll, String user, String passw) {
+    public MainPage(String urll, String schema, String user, String passw) {
         this.urll = urll;
         this.user = user;
         this.passw = passw;
+        this.schema = schema;
     }
     public MainPage() {}
 
@@ -116,6 +122,7 @@ public class MainPage extends Application {
 
             Scanner myReader = new Scanner(fl);
             myReader.nextLine();
+            myReader.nextLine();
             String printEnabledStr = myReader.nextLine().split(",")[1].strip();
             boolean printEnabled = printEnabledStr.equalsIgnoreCase("true");
             String nextLi = myReader.nextLine();
@@ -123,9 +130,9 @@ public class MainPage extends Application {
                 bartendPath = nextLi.split(",")[1].strip();
             }
             String imgPathStr = myReader.nextLine().split(",")[1].strip();
-            boolean imgPath = imgPathStr.equalsIgnoreCase("true");
+            boolean imgPathBool = imgPathStr.equalsIgnoreCase("true");
             nextLi = myReader.nextLine();
-            if (printEnabled){
+            if (imgPathBool){
                 imagesPath = nextLi.split(",")[1].strip();
             }
 
@@ -238,7 +245,7 @@ public class MainPage extends Application {
         });
         infoWrap.setOnMouseClicked(e->{
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Information for importing");
+            alert.setTitle("Import Info");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
             alert.setContentText(Methods.wrap("The columns in the imported xlsx file should be named \"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"."));
 
@@ -383,11 +390,13 @@ public class MainPage extends Application {
         TextField searchField = new TextField();
         searchField.setPromptText("Search");
         searchField.setPrefWidth(300);
+        searchField.setMinWidth(80);
         searchField.setMinHeight(30);
         Button searchSubm = new Button("Search");
         searchSubm.setMinHeight(30);
         HBox searchHBox = new HBox(searchField, searchSubm);
         searchHBox.setAlignment(Pos.CENTER);
+//        searchHBox.setHgrow(searchField, Priority.ALWAYS);
 
         VBox topVbox = new VBox(0,profileHbox, searchHBox);
         pane.setTop(topVbox);
@@ -400,6 +409,17 @@ public class MainPage extends Application {
                 Search.executeSearch(searchField.getText().strip());
             }
         });
+
+        table.widthProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                if (newValue.floatValue()!=oldValue.floatValue() && oldValue.floatValue() > 1){
+                    searchField.setPrefWidth(newValue.floatValue()*0.45);
+                };
+//                System.out.println(oldValue + ", " + newValue + ";");
+            }
+        });
+
 
         /** Buttons **/
         Button addNew = new Button("Add new Item");
@@ -582,7 +602,7 @@ public class MainPage extends Application {
 //        othrecCol.setStyle( "-fx-alignment: CENTER-LEFT;");
 
         Item[] arr = extractItemsFromDb(
-            "SELECT * FROM products.items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
+            "SELECT * FROM "+schema+".items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
         );
         ObservableList<Item> data = FXCollections.observableArrayList();
         for (Item ite : arr) {
@@ -701,8 +721,8 @@ public class MainPage extends Application {
                                 continue;
                             }
                             itemsDeleted++;
-                            System.out.println("\tSQL   DELETE from products.items WHERE SKU=" + ite.SKU);
-                            stmt.executeUpdate("DELETE from products.items WHERE SKU=" + ite.SKU);
+                            System.out.println("\tSQL   DELETE from "+schema+".items WHERE SKU=" + ite.SKU);
+                            stmt.executeUpdate("DELETE from "+schema+".items WHERE SKU=" + ite.SKU);
                         }
                         conn.close();
                         stmt.close();

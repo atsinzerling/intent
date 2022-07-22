@@ -48,7 +48,7 @@ public class Methods {
             Statement stmt = conn.createStatement();
 
 
-            String selectsql = "SELECT * from products.useractions WHERE (User, Date) = ('"+user+"','"+date+"')";
+            String selectsql = "SELECT * from "+MainPage.schema+".useractions WHERE (User, Date) = ('"+user+"','"+date+"')";
             ResultSet rs = stmt.executeQuery(selectsql);
 
             SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
@@ -56,12 +56,12 @@ public class Methods {
 
             if (rs.next()){
                 System.out.println(rs.getString("User") + " " + rs.getDate("Date") + " " + rs.getString("Log"));
-                String updsql = "UPDATE products.useractions SET Log='"+ dateeime+" "+log+";<<<:::==="+rs.getString("Log")   +"' WHERE (User, Date) = ('"+user+"','"+date+"')";
+                String updsql = "UPDATE "+MainPage.schema+".useractions SET Log='"+ dateeime+" "+log+";<<<:::==="+rs.getString("Log")   +"' WHERE (User, Date) = ('"+user+"','"+date+"')";
                 System.out.println(stmt.executeUpdate(updsql));
 
             } else{
                 System.out.println("no record");
-                String sqll = "INSERT INTO products.useractions "+"VALUES ('" + user+"','" +date+"','"+dateeime+" "+log+ "')";
+                String sqll = "INSERT INTO "+MainPage.schema+".useractions "+"VALUES ('" + user+"','" +date+"','"+dateeime+" "+log+ "')";
                 System.out.println(stmt.executeUpdate(sqll));
             }
 //            System.out.println(stmt.executeUpdate(sqll));
@@ -80,7 +80,7 @@ public class Methods {
             Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
             Statement stmt = conn.createStatement();
 
-            ResultSet rs = stmt.executeQuery("SELECT * FROM products.items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC");
+            ResultSet rs = stmt.executeQuery("SELECT * FROM "+MainPage.schema+".items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC");
             ResultSetMetaData metadata = rs.getMetaData();
 
             int columnCount = metadata.getColumnCount();
