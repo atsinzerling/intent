@@ -21,6 +21,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.input.DragEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -67,6 +69,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 
@@ -792,11 +795,13 @@ public class AddItem extends Application {
                 cancel.setVisible(true);
                 cancel.setText("Exit");
                 cancel.setOnAction(e -> {
+                    System.out.println("firing exit from cancel button");
                     exitConfirmAction("exit");
                 });
                 edit.setVisible(true);
                 edit.setText("Back to Preview");
                 edit.setOnAction(e -> {
+                    System.out.println("firing exit from edit button");
                     exitConfirmAction("preview");
                 });
 
@@ -1164,6 +1169,8 @@ public class AddItem extends Application {
                             new imageAdditMethods().loadImagesFromDir();
                             break;
                         }
+                    } else{
+                        System.out.println("cancel presed");
                     }
                 } else {
                     switch (typeOfAction) {
@@ -1237,7 +1244,14 @@ public class AddItem extends Application {
 ////            setImageStatus("saving images...", 0, "");
 //        });
         newWindow.setOnCloseRequest(e->{
-            cancel.fire();
+            new additMethods().exitConfirmAction("exit");
+            e.consume();
+        });
+        secondScene.setOnKeyReleased((KeyEvent e) -> {
+            if (e.getCode() == KeyCode.ESCAPE) {
+//                System.out.println("firing exit from setonkeypressed\t\tfocus: "+ secondScene.focusOwnerProperty().get().getClass());
+                new additMethods().exitConfirmAction("exit");
+            }
         });
 
         switch (windowMode) {
