@@ -81,7 +81,7 @@ public class AddItem extends Application {
 
     Label status = new Label("");
     Label imageStatus = new Label("");
-    String windowMode = "adding";
+    String windowMode = "adding"; //can be "editing" "previewing", "adding"
     Item currItem = null;
     ArrayList<Image> images = new ArrayList<Image>();
 //    String initDirectory =
@@ -1070,13 +1070,13 @@ public class AddItem extends Application {
                             String otherRecs =
                                 MainPage.user + " on " + timm+ " : " +
                                     (sqll.contains("Notes=") ? "updated Notes to \"" + Notesnew + "\", " : "") +
-                                    (sqll.contains("SN=") ? "updated SN to \"" + SNnew + "\", " : "") +
-                                    (sqll.contains("PN=") ? "updated PN to \"" + PNnew + "\", " : "") +
-                                    (sqll.contains("UPC=") ? "updated UPC to \"" + UPCnew + "\", " : "") +
-                                    (sqll.contains("Grade=") ? "updated Grade to \"" + Gradenew + "\", " : "") +
-                                    (sqll.contains("Location=") ? "updated Location to \"" + Locationnew + "\", " :
+                                    (sqll.contains("SN=") ? "updated SN from \""+(currItem.SN==null?"":currItem.SN)+"\" to \"" + SNnew + "\", " : "") +
+                                    (sqll.contains("PN=") ? "updated PN from \""+(currItem.PN==null?"":currItem.PN)+"\" to \"" + PNnew + "\", " : "") +
+                                    (sqll.contains("UPC=") ? "updated UPC from \""+(currItem.UPC==null?"":currItem.UPC)+"\" to \"" + UPCnew + "\", " : "") +
+                                    (sqll.contains("Grade=") ? "updated Grade from \""+(currItem.Grade==null?"":currItem.Grade)+"\" to \"" + Gradenew + "\", " : "") +
+                                    (sqll.contains("Location=") ? "updated Location from \""+(currItem.Location==null?"":currItem.Location)+"\" to \"" + Locationnew + "\", " :
                                         "") +
-                                    (sqll.contains("POnumber=") ? "updated POnumber to \"" + POnumnew + "\", " : "") +
+                                    (sqll.contains("POnumber=") ? "updated PO# from \""+(currItem.POnumber==null?"":currItem.POnumber)+"\" to \"" + POnumnew + "\", " : "") +
                                     (sqll.contains("Specs=") ? "updated Specs to \"" + Specsnew + "\"" : "");
                             if (otherRecs.length() > 2 &&
                                 otherRecs.substring(otherRecs.length() - 2, otherRecs.length()).equals(", ")) {
@@ -1139,16 +1139,28 @@ public class AddItem extends Application {
                     (POnumField.getText() != null && POnumField.getText().equals("") ? null : POnumField.getText());
                 String Specsnew =
                     (specsArea.getText() != null && specsArea.getText().equals("") ? null : specsArea.getText());
+                //given null or actual text
 
-                boolean unsavedChanges = needReplacement(SNnew, currItem.SN) ||
-                    needReplacement(PNnew, currItem.PN) ||
-                    needReplacement(UPCnew, currItem.UPC) ||
-                    needReplacement(Gradenew, currItem.Grade) ||
-                    needReplacement(Locationnew, currItem.Location) ||
-                    needReplacement(Notesnew, currItem.Notes) ||
-                    needReplacement(POnumnew, currItem.POnumber) ||
-                    needReplacement(Specsnew, currItem.Specs);
-
+                boolean unsavedChanges = false;
+                if (windowMode.equals("adding")){
+                    unsavedChanges = needReplacement(SNnew, null) ||
+                        needReplacement(UPCnew, null) ||
+                        needReplacement(PNnew, null) ||
+                        needReplacement(Gradenew, null) ||
+                        needReplacement(Locationnew, null) ||
+                        needReplacement(Notesnew, null) ||
+                        needReplacement(POnumnew, null) ||
+                        needReplacement(Specsnew, null);
+                } else if (windowMode.equals("editing")){
+                    unsavedChanges = needReplacement(SNnew, currItem.SN) ||
+                        needReplacement(PNnew, currItem.PN) ||
+                        needReplacement(UPCnew, currItem.UPC) ||
+                        needReplacement(Gradenew, currItem.Grade) ||
+                        needReplacement(Locationnew, currItem.Location) ||
+                        needReplacement(Notesnew, currItem.Notes) ||
+                        needReplacement(POnumnew, currItem.POnumber) ||
+                        needReplacement(Specsnew, currItem.Specs);
+                }
 
                 if (unsavedChanges) {
                     Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1228,7 +1240,7 @@ public class AddItem extends Application {
         }
 
         cancel.setOnAction(e -> {
-            newWindow.close();
+            new additMethods().exitConfirmAction("exit");
 //            new additMethods().setSelectionOfCurrItem();
         });
         save.setOnAction(e -> {

@@ -174,7 +174,8 @@ public class MainPage extends Application {
         Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread th, Throwable ex) {
-                System.out.println("\n\n\nUncaught Thread exception: \n" + ex+"\n\n\n");
+                System.out.println("\nUncaught Thread exception: \n" + ex+"\n\n");
+                ex.printStackTrace();
             }
         };
         Thread.currentThread().setUncaughtExceptionHandler(h);
@@ -596,6 +597,7 @@ public class MainPage extends Application {
         TableColumn numCol = new TableColumn("#");
 
         othrecCol.setPrefWidth(500);
+        specsCol.setPrefWidth(400);
         notesCol.setPrefWidth(250);
         numCol.setPrefWidth(40);
 

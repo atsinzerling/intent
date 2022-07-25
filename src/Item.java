@@ -170,7 +170,7 @@ public class Item {
     }
 
     public String getNotes() {
-        return Notes;
+        return (Notes!=null?Notes.replaceAll("\n"," ").replaceAll("\t"," "):null);
     }
 
     public void setNotes(String notes) {
@@ -202,7 +202,7 @@ public class Item {
     }
 
     public String getOtherRecords() {
-        return OtherRecords;
+        return (OtherRecords!=null?OtherRecords.replaceAll("\n"," ").replaceAll("\t"," "):null);
     }
 
     public void setOtherRecords(String otherRecords) {
@@ -222,7 +222,7 @@ public class Item {
     }
 
     public String getSpecs() {
-        return Specs;
+        return (Specs!=null?Specs.replaceAll("\n"," ").replaceAll("\t"," "):null);
     }
 
     public void setSpecs(String specs) {
