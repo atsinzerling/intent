@@ -1,4 +1,5 @@
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import org.apache.poi.ss.usermodel.Cell;
@@ -37,6 +38,17 @@ public class Methods {
             }
         }
         return new String(charArr).substring(0, charArr.length-1);
+    }
+
+    public static void errorAlert(String title, String content){
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    public static boolean isAdmin(String username){
+        return (username.length() > 1 && username.substring(username.length() - 2).equals("/A")) || username.equals("admin");
     }
 
     public static void updateUserLog(String user, String log){

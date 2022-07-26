@@ -1,5 +1,4 @@
 import javafx.application.Application;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -38,7 +37,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ManageUsers extends Application {
+public class ManageUserssss extends Application {
     Stage manageUsersStage;
     ArrayList<User> users = new ArrayList<>();
     VBox usersVbox = null;
@@ -142,16 +141,15 @@ public class ManageUsers extends Application {
         userStackPane.setAlignment(Pos.TOP_LEFT);
 
         ObservableList<String> userTypes = FXCollections.observableArrayList();
-        userTypes.addAll("admin","default");
+        userTypes.addAll("worker","admin","customer");
 
         Label rightsLbl = new Label("user privileges");
-        ChoiceBox<String> choicebox = new ChoiceBox<String>(userTypes);
-        choicebox.setValue(Methods.isAdmin(userObj.getUsername())?"admin":"default");
+        ChoiceBox choicebox = new ChoiceBox(userTypes);
+        choicebox.setValue("worker");
         choicebox.setMinHeight(22);
         choicebox.setPrefHeight(20);
 //        choicebox.setDisable(true);
         choicebox.setMaxWidth(80);
-
 
         VBox rightsVbox = new VBox(2,rightsLbl, choicebox);
         rightsVbox.setDisable(true);
@@ -174,53 +172,6 @@ public class ManageUsers extends Application {
         VBox.setMargin(showPass,new Insets(0,5,0,0));
 
 
-        VBox passwVbox = new VBox(3,passwStackPane, showPass);
-        passwVbox.setMaxWidth(170);
-        passwVbox.setAlignment(Pos.TOP_RIGHT);
-
-        Label seeActivity = new Label("see user activity");
-
-
-        VBox leftVbox = new VBox(8, new HBox(20,userStackPane, rightsVbox), passwVbox, seeActivity);
-        BorderPane.setMargin(leftVbox, new Insets(10));
-
-        VBox rightVbox = new VBox(5,edit, delete, saveCancelHbox);
-        rightVbox.setAlignment(Pos.TOP_RIGHT);
-        BorderPane.setMargin(rightVbox, new Insets(10));
-
-
-        BorderPane pane = new BorderPane();
-//        pane.setStyle("-fx-background-color: #e8e8e8;"); //this is for the background copy color
-        pane.setBackground(new Background(new BackgroundFill(Color.web("#e8e8e8"), new CornerRadii(5), Insets.EMPTY)));
-        pane.setBorder(new Border(new BorderStroke(Color.web("#b4b4b4"), BorderStrokeStyle.SOLID, new CornerRadii(5),
-            new BorderWidths(2))));
-        VBox.setMargin(pane,new Insets(12));
-
-        pane.setLeft(leftVbox);
-        pane.setRight(rightVbox);
-        pane.setMinSize(350, 135);
-
-
-
-
-
-        seeActivity.setOnMouseEntered(e -> {
-            seeActivity.setCursor(Cursor.HAND);
-//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
-            seeActivity.setUnderline(true);
-            seeActivity.setTextFill(Color.web("#0089CCFF"));
-//            signOut.setStyle("-fx-background-color: #0089cc;");
-        });
-        seeActivity.setOnMouseExited(e -> {
-//            signOut.setCursor(Cursor.HAND);
-//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
-            seeActivity.setUnderline(false);
-            seeActivity.setTextFill(Color.BLACK);
-//            signOut.setStyle("-fx-background-color: #0089cc;");
-        });
-        seeActivity.setOnMouseClicked(e->{
-            new UserActivity(userObj.getUsername()).start(manageUsersStage);
-        });
 
         /** password functionality*/
         showPass.setOnMouseEntered(e -> {
@@ -272,9 +223,7 @@ public class ManageUsers extends Application {
             passwTextF.setEditable(true);
             save.setDisable(false);
             userTextF.setVisible(true);
-            rightsVbox.setDisable(false);
         });
-
         save.setOnAction(e->{
 
             //when saved need to check if smth changed, then update user, password and role in sql, then update in arraylist,
@@ -283,26 +232,29 @@ public class ManageUsers extends Application {
             String newUsern = userTextF.getText().strip();
 
             if (newUsern.equals("")){
-                Methods.errorAlert("Empty username", "Cannot "+(userObj.wasCreated?"save changes to":"create")+" user with empty username.");
+
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Empty username");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                alert.setContentText("Cannot "+(userObj.wasCreated?"save changes to":"create")+" user with empty username.");
+
+                alert.showAndWait();
+
                 return;
             }
-            if (choicebox.getValue().equals("admin")){
-                if (!Methods.isAdmin(newUsern)){
-                    Methods.errorAlert("Username format error", "Username of admin must end with \"/A\".");
-                    return;
-                }
-            } else{
-                if (newUsern.toLowerCase().contains("/a")){
-                    Methods.errorAlert("Username format error", "Username of default user must not contain \"/A\".");
-                    return;
-                }
-            }
             if (newPassw.equals("")){
-                Methods.errorAlert("Empty password", "Cannot "+(userObj.wasCreated?"save changes to":"create")+" user with empty password.");
+
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Empty password");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                alert.setContentText("Cannot "+(userObj.wasCreated?"save changes to":"create")+" user with empty password.");
+
+                alert.showAndWait();
+
                 return;
             }
             //errors in updating passw or username
-            if (!userObj.wasCreated){
+            if (userObj.wasCreated == false){
                 //create in sql, then update obj
                 try{
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
@@ -312,12 +264,7 @@ public class ManageUsers extends Application {
 
                     stmt.executeUpdate(sqlCreate);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
-                    String granttt;
-                    if (!choicebox.getValue().equals("admin")){
-                        granttt = "GRANT SELECT, INSERT, DELETE, UPDATE ON "+MainPage.schema+".* TO '"+newUsern+"'@'%';";
-                    } else{
-                        granttt = "GRANT SELECT,INSERT, DELETE, UPDATE, CREATE USER, ALTER, RELOAD ON *.* TO '"+newUsern+"'@'%' WITH GRANT OPTION;";
-                    }
+                    String granttt = "GRANT SELECT, INSERT, DELETE,UPDATE ON "+MainPage.schema+".* TO '"+newUsern+"'@'%';";
                     stmt.executeUpdate(granttt);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
 
@@ -329,9 +276,6 @@ public class ManageUsers extends Application {
                     userObj.setPassword(newPassw);
                     Methods.updateUserLog(MainPage.user,"created user "+newUsern);
 
-                    edit.setDisable(false);
-                    delete.setDisable(false);
-
                 } catch (SQLException ex) {
                     MainPage.databaseErrorAlert(ex).showAndWait();
                     return;
@@ -339,87 +283,63 @@ public class ManageUsers extends Application {
 
             } else
             /** updating password and username */
-                if (!userObj.getPassword().equals(newPassw) || !userObj.getUsername().equals(newUsern)) {
-                    try {
-                        Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-                        Statement stmt = conn.createStatement();
-                        String sqlUpdate =
-                            "RENAME USER '"+userObj.getUsername()+"'@'%' TO '"+ newUsern+"'@'%';";
+            if (!userObj.getPassword().equals(newPassw) || !userObj.getUsername().equals(newUsern)) {
+                try {
+                    Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                    Statement stmt = conn.createStatement();
+                    String sqlUpdate =
+                        "RENAME USER '"+userObj.getUsername()+"'@'%' TO '"+ newUsern+"'@'%';";
 //                        "UPDATE mysql.user SET " +
 //                            "user = '"+ newUsern+"'"+
 //                            "WHERE (User = '" + userObj.getUsername() + "') and (host='%')";
 
-                        String sqlOAOA = "ALTER USER '"+ newUsern+"'@'%'" +
-                            " IDENTIFIED WITH mysql_native_password" +
-                            " BY '"+ newPassw+"';";
+                    String sqlOAOA = "ALTER USER '"+ newUsern+"'@'%'" +
+                        " IDENTIFIED WITH mysql_native_password" +
+                        " BY '"+ newPassw+"';";
 
-                        if (!userObj.getUsername().equals(newUsern)){
-                            stmt.execute(sqlUpdate);
-                            stmt.execute(new String("FLUSH PRIVILEGES;"));
-                            System.out.println("\tSQL "+ sqlUpdate);
+                    if (!userObj.getUsername().equals(newUsern)){
+                        stmt.execute(sqlUpdate);
+                        stmt.execute(new String("FLUSH PRIVILEGES;"));
+                        System.out.println("\tSQL "+ sqlUpdate);
 
-                            ResultSet rs = stmt.executeQuery("SELECT * FROM "+MainPage.schema+".useractions WHERE User='"+userObj.getUsername()+"'");
-                            int coun = 0;
-                            while(rs.next()) {
-                                stmt.addBatch(
-                                    "UPDATE "+MainPage.schema+".useractions SET User='" + newUsern + "' WHERE (User, Date) = ('" +
-                                        userObj.getUsername() + "','" + rs.getDate("Date") + "')");
-                                coun++;
-                            }
-                            stmt.executeBatch();
-                            if (userObj.getUsername().equals(MainPage.user)){
-                                MainPage.user = newUsern;
-                                MainPage.loggedInLbl.setText("logged in as "+MainPage.user);
-                            }
-                            System.out.println("updated "+coun+" records in .useractions");
-
-                            Methods.updateUserLog(MainPage.user,"changed username for user "+userObj.getUsername());
+                        ResultSet rs = stmt.executeQuery("SELECT * FROM "+MainPage.schema+".useractions WHERE User='"+userObj.getUsername()+"'");
+                        int coun = 0;
+                        while(rs.next()) {
+                            stmt.addBatch(
+                                "UPDATE "+MainPage.schema+".useractions SET User='" + newUsern + "' WHERE (User, Date) = ('" +
+                                    userObj.getUsername() + "','" + rs.getDate("Date") + "')");
+                            coun++;
                         }
-                        if (!userObj.getPassword().equals(newPassw)){
-                            stmt.execute(sqlOAOA);
-                            stmt.execute(new String("FLUSH PRIVILEGES;"));
-                            if (userObj.getUsername().equals(MainPage.user)){
-                                MainPage.passw = newPassw;
-                            }
-                            System.out.println("\tSQL "+ sqlOAOA);
-                            Methods.updateUserLog(MainPage.user,"changed password for user "+newUsern);
-                        }
+                        stmt.executeBatch();
+                        System.out.println("updated "+coun+" records in .useractions");
 
-
-                        if (Methods.isAdmin(userObj.getUsername())&&!Methods.isAdmin(newUsern)){
-                            String granttt = "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '"+newUsern+"'@'%';";
-                            stmt.execute(granttt);
-                            stmt.execute(new String("FLUSH PRIVILEGES;"));
-
-                            String grantt = "GRANT SELECT, INSERT, DELETE,UPDATE ON "+MainPage.schema+".* TO '"+newUsern+"'@'%';";
-                            stmt.executeUpdate(grantt);
-                            stmt.execute(new String("FLUSH PRIVILEGES;"));
-
-                        } else if(!Methods.isAdmin(userObj.getUsername())&&Methods.isAdmin(newUsern)){
-                            String granttt = "GRANT SELECT,INSERT, DELETE, UPDATE, CREATE USER, ALTER, RELOAD ON *.* TO '"+newUsern+"'@'%' WITH GRANT OPTION;";
-                            stmt.executeUpdate(granttt);
-                            stmt.execute(new String("FLUSH PRIVILEGES;"));
-                        }
-
-//                        System.out.println("\tSQL "+grantt);
-
-                        stmt.close();
-                        conn.close();
-
-//                        if (userObj.getUsername().equals(MainPage.user)){
-//                            MainPage.user = newUsern;
-//                            MainPage.passw = newPassw;
-//                        }
-
-                        userObj.setUsername(newUsern);
-                        userObj.setPassword(newPassw);
-                    } catch (SQLException exx) {
-                        MainPage.databaseErrorAlert(exx).showAndWait();
-                        return;
+                        Methods.updateUserLog(MainPage.user,"changed username for user "+userObj.getUsername());
                     }
-                } else{
-                    //no changes were made
+                    if (!userObj.getPassword().equals(newPassw)){
+                        stmt.execute(sqlOAOA);
+                        stmt.execute(new String("FLUSH PRIVILEGES;"));
+                        System.out.println("\tSQL "+ sqlOAOA);
+                        Methods.updateUserLog(MainPage.user,"changed password for user "+newUsern);
+                    }
+
+                    String grantt = "GRANT SELECT, INSERT, DELETE,UPDATE ON "+MainPage.schema+".* TO '"+newUsern+"'@'%';";
+                    stmt.executeUpdate(grantt);
+                    stmt.execute(new String("FLUSH PRIVILEGES;"));
+
+                    System.out.println("\tSQL "+grantt);
+
+                    stmt.close();
+                    conn.close();
+
+                    userObj.setUsername(newUsern);
+                    userObj.setPassword(newPassw);
+                } catch (SQLException exx) {
+                    MainPage.databaseErrorAlert(exx).showAndWait();
+                    return;
                 }
+            } else{
+                //no changes were made
+            }
 //            user = newUsern;
 
 
@@ -438,7 +358,6 @@ public class ManageUsers extends Application {
             passwTextF.setEditable(false);
             save.setDisable(true);
             userTextF.setVisible(false);
-            rightsVbox.setDisable(true);
 
             System.out.println(userObj);
 
@@ -491,8 +410,6 @@ public class ManageUsers extends Application {
             showPass.setDisable(true);
             userLbl.setText(userObj.getUsername());
             passwPassF.setText(userObj.getPassword());
-            rightsVbox.setDisable(true);
-
 
             passwPassF.setEditable(false);
             passwTextF.setEditable(false);
@@ -504,32 +421,50 @@ public class ManageUsers extends Application {
             }
         });
 
-        choicebox.getSelectionModel().selectedIndexProperty().addListener(
-            (ObservableValue<? extends Number> ov, Number old_val, Number new_val) -> {
-                System.out.println(userTypes.get((int) new_val)+" "+new_val);
-                System.out.println(userTextF.getText());
-                String textt = userTextF.getText();
-                if ((int) new_val == 0){ //admin
-                    if(!textt.contains("/")){
-                        userTextF.setText(textt+"/A");
-                    }
-                } else{
-                    if(Methods.isAdmin(textt)){
-                        userTextF.setText(textt.substring(0,textt.length()-2));
-                    }
-                }
-            });
+        VBox passwVbox = new VBox(3,passwStackPane, showPass);
+        passwVbox.setMaxWidth(170);
+        passwVbox.setAlignment(Pos.TOP_RIGHT);
 
-        if (!userObj.wasCreated){
+        Label seeActivity = new Label("see user activity");
+        seeActivity.setOnMouseEntered(e -> {
+            seeActivity.setCursor(Cursor.HAND);
+//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
+            seeActivity.setUnderline(true);
+            seeActivity.setTextFill(Color.web("#0089CCFF"));
+//            signOut.setStyle("-fx-background-color: #0089cc;");
+        });
+        seeActivity.setOnMouseExited(e -> {
+//            signOut.setCursor(Cursor.HAND);
+//            signOut.setFont(Font.font("Verdana", FontWeight.NORMAL, FontPosture.ITALIC, signOut.getFont().getSize()));
+            seeActivity.setUnderline(false);
+            seeActivity.setTextFill(Color.BLACK);
+//            signOut.setStyle("-fx-background-color: #0089cc;");
+        });
+        seeActivity.setOnMouseClicked(e->{
+            new UserActivity(userObj.getUsername()).start(manageUsersStage);
+        });
+//        seeActivity.setDisable(true);
+
+        VBox leftVbox = new VBox(8, new HBox(20,userStackPane, rightsVbox), passwVbox, seeActivity);
+        BorderPane.setMargin(leftVbox, new Insets(10));
+
+        VBox rightVbox = new VBox(5,edit, delete, saveCancelHbox);
+        rightVbox.setAlignment(Pos.TOP_RIGHT);
+        BorderPane.setMargin(rightVbox, new Insets(10));
+
+
+        BorderPane pane = new BorderPane();
+//        pane.setStyle("-fx-background-color: #e8e8e8;"); //this is for the background copy color
+        pane.setBackground(new Background(new BackgroundFill(Color.web("#e8e8e8"), new CornerRadii(5), Insets.EMPTY)));
+        pane.setBorder(new Border(new BorderStroke(Color.web("#b4b4b4"), BorderStrokeStyle.SOLID, new CornerRadii(5),
+            new BorderWidths(2))));
+        VBox.setMargin(pane,new Insets(12));
+
+        pane.setLeft(leftVbox);
+        pane.setRight(rightVbox);
+        pane.setMinSize(350, 135);
+        if (userObj.wasCreated == false){
             edit.fire();
-            edit.setDisable(true);
-            delete.setDisable(true);
-        }
-        if (userObj.getUsername().equals("admin")
-//            || userObj.getUsername().equals(MainPage.user)
-        ){
-            edit.setDisable(true);
-            delete.setDisable(true);
         }
 
 
@@ -543,9 +478,7 @@ public class ManageUsers extends Application {
 //            String sqlCreate = "CREATE USER '"+usern+"'@'%' IDENTIFIED WITH mysql_native_password BY '"+password+"'";
 //            String sqlUpdate = "UPDATE `mysql`.`user` SET `authentication_string` = '"+password+"' WHERE `User` = '"+usern+"';";
 
-            ResultSet rs = stmt.executeQuery("select user,host,authentication_string from mysql.user where (host = '%')" +
-//                " and (user != 'admin')" +
-                "  order by password_last_changed desc;");
+            ResultSet rs = stmt.executeQuery("select user,host,authentication_string from mysql.user where (host = '%') and (user != 'admin')  order by password_last_changed desc;");
             while (rs.next()){
                 users.add(new User(rs.getString("user"), rs.getString("authentication_string"), true));
             }

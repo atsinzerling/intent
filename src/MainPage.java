@@ -34,7 +34,6 @@ import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -90,6 +89,7 @@ public class MainPage extends Application {
     static Label importLoadLbl;
     static BorderPane loadingPane;
     static BorderPane pane;
+    static Label loggedInLbl;
 
     public MainPage(String urll, String schema, String user, String passw) {
         this.urll = urll;
@@ -322,14 +322,14 @@ public class MainPage extends Application {
         HBox.setMargin(adminOptVbox, new Insets(0, 50,0,0));
         adminOptVbox.setBorder(new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, new CornerRadii(3),
             new BorderWidths(0.5))));
-        if (!user.equals("admin")){
+        if (!Methods.isAdmin(user)){
             adminOptVbox.setVisible(false);
         }
 
 
         /** profile */
 
-        Label loggedInLbl = new Label("logged in as "+user.toUpperCase());
+        loggedInLbl = new Label("logged in as "+user);
 //        loggedInLbl.setPrefHeight(30);
         loggedInLbl.setAlignment(Pos.CENTER);
         Label signOut = new Label("Sign out");
@@ -718,7 +718,7 @@ public class MainPage extends Application {
 
 
                         for (Item ite: itemsSelect){
-                            if (!user.equals("admin") && !user.equals(ite.User)){
+                            if (!Methods.isAdmin(user) && !user.equals(ite.User)){
                                 failed.append(ite.SKU + ", ");
                                 continue;
                             }

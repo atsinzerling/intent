@@ -372,15 +372,18 @@ List of tasks:
 - Location confirmation on saving changes
 - Showing errors while import
 - buttons allocation UI
+- make user activity showing by 14, 30 or any number of days + show days on record
+- redesign statuses, so that they show and disappear (when need to show, it shows the needed one and hides all the other ones; after a few seconds it shows the other one)
 
 - create sql script for initial creation of users
 - script to delete empty folders
 
+- make current user label
 
 More advanced:
 - excel problems
 - clean code
-- editing of images
+- editing images
 - more advanced printing
 
 
