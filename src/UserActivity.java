@@ -42,7 +42,7 @@ public class UserActivity extends Application {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scrollPane.setPrefWidth(570);
+        scrollPane.setPrefWidth(650);
 //        scrollPane.setPrefHeight();
         VBox vbox = renderStats();
         scrollPane.setContent(vbox);
@@ -51,7 +51,7 @@ public class UserActivity extends Application {
         BorderPane pane = new BorderPane();
         pane.setCenter(scrollPane);
 
-        Scene scene = new Scene(pane, 700, 570);
+        Scene scene = new Scene(pane, 700, 650);
         Stage importPreviewStage = new Stage();
         importPreviewStage.setTitle("User Activity - "+user);
         importPreviewStage.setScene(scene);
@@ -74,7 +74,7 @@ public class UserActivity extends Application {
             ResultSet rs = stmt.executeQuery("SELECT * from "+MainPage.schema+".useractions WHERE User = '"+user+"' order by Date desc");
             while (rs.next()){
                 BorderPane dayBorderPane = new BorderPane();
-                dayBorderPane.setMinWidth(520);
+                dayBorderPane.setMinWidth(600);
 
                 Date date = rs.getDate("Date");
                 String dayOfWeek = DayOfWeek.from(rs.getDate("Date").toLocalDate()).name();
@@ -84,10 +84,10 @@ public class UserActivity extends Application {
                 dayBorderPane.setTop(dateLbl);
 
                 TextArea historyArea = new TextArea();
-                historyArea.setMaxWidth(320);
+                historyArea.setMaxWidth(450);
                 historyArea.setPrefRowCount(7);
                 historyArea.setEditable(false);
-                historyArea.setWrapText(true);
+//                historyArea.setWrapText(true);
 
                 String origTxt = rs.getString("Log");
                 String formatted = origTxt.replaceAll("<<<:::===","\n");

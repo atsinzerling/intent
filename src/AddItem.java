@@ -67,6 +67,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javafx.stage.WindowEvent;
@@ -80,6 +81,7 @@ import javax.print.PrintServiceLookup;
 public class AddItem extends Application {
 
     Label status = new Label("");
+    Stack<Integer> statusStack = new Stack<Integer>();
     Label imageStatus = new Label("");
     String windowMode = "adding"; //can be "editing" "previewing", "adding"
     Item currItem = null;
@@ -96,6 +98,7 @@ public class AddItem extends Application {
     }
 
     public void start(Stage primaryStage) {
+
 
         GridPane grid = new GridPane();
         grid.setHgap(5);
@@ -559,7 +562,8 @@ public class AddItem extends Application {
             }
 
         }
-        imageBlockPane.setCenter(new imageAdditMethods().generateImages());
+        imageAdditMethods imageAdditMethod = new imageAdditMethods();
+        imageBlockPane.setCenter(imageAdditMethod.generateImages());
 
 
         FileChooser fil_chooser = new FileChooser();
@@ -593,14 +597,14 @@ public class AddItem extends Application {
                     }
                 }
                 System.out.println("Got " + images.size() + " images");
-                imageBlockPane.setCenter(new imageAdditMethods().generateImages());
+                imageBlockPane.setCenter(imageAdditMethod.generateImages());
 //                newWindow.setHeight(secondScene.getHeight()+200);
                 event.consume();
             }
         });
 
         dragDropLbl.setOnMousePressed((e) -> {
-            new imageAdditMethods().configureFileChooser(fil_chooser);
+            imageAdditMethod.configureFileChooser(fil_chooser);
             List<File> files = fil_chooser.showOpenMultipleDialog(newWindow);
             if (files != null) {
                 for (File fl : files) {
@@ -620,11 +624,11 @@ public class AddItem extends Application {
                 }
                 System.out.println("Got " + images.size() + " images");
 
-                imageBlockPane.setCenter(new imageAdditMethods().generateImages());
+                imageBlockPane.setCenter(imageAdditMethod.generateImages());
             }
         });
         updateImages.setOnAction(e -> {
-            new imageAdditMethods().saveOnActionImages();
+            imageAdditMethod.saveOnActionImages();
             String timm = new Timestamp(System.currentTimeMillis()).toString();
             if (timm.split("\\.").length>0){
                 timm = timm.split("\\.")[0];
@@ -638,7 +642,7 @@ public class AddItem extends Application {
             }
             otherRecs = otherRecs + ";<<<:::===" + (currItem.OtherRecords == null ? "" : currItem.OtherRecords);
 
-            String sqll = "UPDATE items SET OtherRecords='" + otherRecs + "' WHERE SKU=" + currItem.SKU;
+            String sqll = "UPDATE "+MainPage.schema+".items SET OtherRecords='" + otherRecs + "' WHERE SKU=" + currItem.SKU;
             System.out.println("\tSQL "+sqll);
 
             try {
@@ -810,7 +814,7 @@ public class AddItem extends Application {
                 updateImages.setVisible(true);
                 directr.setText("Current directory: " + MainPage.imagesPath + "\\" + currItem.SKU + "\\");
 
-                imageBlockPane.setCenter(new imageAdditMethods().generateImages());
+                imageBlockPane.setCenter(imageAdditMethod.generateImages());
 
             }
 
@@ -901,7 +905,7 @@ public class AddItem extends Application {
                     long SKU = 0;
                     boolean SKUmessage = false;
                     String SKUfieldText = SKUField.getText().strip();
-                    if (SKUfieldText == "") {
+                    if (SKUfieldText.equals("")) {
 //                        setStatus("Cannot have empty SKU", 5, "red");
 //                        setImageStatus("", 0, "");
                         SKUmessage = true;
@@ -923,6 +927,11 @@ public class AddItem extends Application {
 
                     if (SKUmessage) {
                         setStatus("SKU should be a 6-digit number without leading zeros", 5, "red");
+                        setImageStatus("", 0, "");
+                        return;
+                    }
+                    if(locField.getText()!=null && locField.getText().strip().equals("")){
+                        setStatus("Cannot add an item without Location", 3, "red");
                         setImageStatus("", 0, "");
                         return;
                     }
@@ -968,7 +977,7 @@ public class AddItem extends Application {
                             (POnumField.getText().strip().equals("") ? null :
                                 "'" + POnumField.getText().strip() + "'") + "," +
                             (specsArea.getText().strip().equals("") ? null : "'" + specsArea.getText().strip() + "'");
-                    String sql = ("INSERT INTO items " +
+                    String sql = ("INSERT INTO "+MainPage.schema+".items " +
 //                        "(SKU,SN,PN,UPC,Grade,Location,Notes,User,DateTime,Images,OtherRecords) " +
                         "VALUES (" + values + ")");
 
@@ -1004,7 +1013,7 @@ public class AddItem extends Application {
                     }
                     setStatus("An Item Successfully Added! Saving Images and opening preview window", 3, "green");
                     new additMethods().updateCurItem();
-                    new imageAdditMethods().saveOnActionImages();
+                    imageAdditMethod.saveOnActionImages();
                     MainPage.updateTable();
                     new additMethods().setPreviewing();
                     Methods.updateUserLog(user,"created item SKU=\""+currItem.SKU+"\"");
@@ -1036,6 +1045,11 @@ public class AddItem extends Application {
                         (POnumField.getText() != null && POnumField.getText().equals("") ? null : POnumField.getText());
                     String Specsnew =
                         (specsArea.getText() != null && specsArea.getText().equals("") ? null : specsArea.getText());
+
+                    if(locField.getText()!=null && locField.getText().strip().equals("")){
+                        setStatus("Cannot save an item without Location", 3, "red");
+                        return;
+                    }
 
                     String sqll = "UPDATE items SET " +
                         (needReplacement(SNnew, currItem.SN) ?
@@ -1091,6 +1105,25 @@ public class AddItem extends Application {
 
                             stmt.executeUpdate(sqll);
                             currItem.OtherRecords = otherRecs;
+
+
+                            String userLog =
+                                    (sqll.contains("Location=") ? "Loc, " : "") +
+                                        (sqll.contains("Grade=") ? "Grade, " : "") +
+                                    (sqll.contains("Notes=") ? "Notes, " : "") +
+                                    (sqll.contains("SN=") ? "SN, " : "") +
+                                    (sqll.contains("PN=") ? "PN, " : "") +
+                                    (sqll.contains("UPC=") ? "UPC, " : "") +
+                                    (sqll.contains("POnumber=") ? "PO#, " : "") +
+                                    (sqll.contains("Specs=") ? "Specs, " : "");
+                            if (userLog.length() > 2 &&
+                                userLog.substring(userLog.length() - 2, userLog.length()).equals(", ")) {
+                                userLog = userLog.substring(0, userLog.length() - 2);
+                            }
+
+                            setStatus("Changes successfully saved!", 3, "green");
+                            Methods.updateUserLog(user,"edited item SKU=\""+currItem.SKU+"\" ("+userLog+")");
+
                         } catch (SQLIntegrityConstraintViolationException ex) {
                             String message = ex.getMessage();
                             if (message.contains("Duplicate entry ") && message.contains(" for key 'items.SN'")) {
@@ -1103,8 +1136,6 @@ public class AddItem extends Application {
                             stmt.close();
                             conn.close();
                         }
-                        setStatus("Changes successfully saved!", 3, "green");
-                        Methods.updateUserLog(user,"edited item SKU=\""+currItem.SKU+"\"");
                         updateCurItem();
                         MainPage.updateTable();
 
@@ -1178,7 +1209,7 @@ public class AddItem extends Application {
                             break;
                         case "preview":
                             setPreviewing();
-                            new imageAdditMethods().loadImagesFromDir();
+                            imageAdditMethod.loadImagesFromDir();
                             break;
                         }
                     } else{
@@ -1192,7 +1223,7 @@ public class AddItem extends Application {
                         break;
                     case "preview":
                         setPreviewing();
-                        new imageAdditMethods().loadImagesFromDir();
+                        imageAdditMethod.loadImagesFromDir();
                         break;
                     }
                 }
@@ -1238,13 +1269,14 @@ public class AddItem extends Application {
                 }
             }
         }
+        additMethods additMethod = new additMethods();
 
         cancel.setOnAction(e -> {
-            new additMethods().exitConfirmAction("exit");
-//            new additMethods().setSelectionOfCurrItem();
+            additMethod.exitConfirmAction("exit");
+//            additMethod.setSelectionOfCurrItem();
         });
         save.setOnAction(e -> {
-            new additMethods().addItemAction();
+            additMethod.addItemAction();
         });
         save.setOnMousePressed(e -> {
             if (windowMode != "editing") {
@@ -1256,26 +1288,27 @@ public class AddItem extends Application {
 ////            setImageStatus("saving images...", 0, "");
 //        });
         newWindow.setOnCloseRequest(e->{
-            new additMethods().exitConfirmAction("exit");
+            additMethod.exitConfirmAction("exit");
             e.consume();
         });
         secondScene.setOnKeyReleased((KeyEvent e) -> {
             if (e.getCode() == KeyCode.ESCAPE) {
 //                System.out.println("firing exit from setonkeypressed\t\tfocus: "+ secondScene.focusOwnerProperty().get().getClass());
-                new additMethods().exitConfirmAction("exit");
+                additMethod.exitConfirmAction("exit");
             }
         });
 
         switch (windowMode) {
         case "adding":
+            SKUField.setText(String.valueOf(Methods.generateCustomSKU()));
             break;
         case "editing":
-            new additMethods().setEditing();
+            additMethod.setEditing();
             break;
         case "previewing":
-            new additMethods().setPreviewing();
-            new imageAdditMethods().loadImagesFromDir();
-//            imageBlockPane.setCenter(new imageAdditMethods().generateImages());
+            additMethod.setPreviewing();
+            imageAdditMethod.loadImagesFromDir();
+//            imageBlockPane.setCenter(imageAdditMethod.generateImages());
 
             break;
         default:
@@ -1291,10 +1324,13 @@ public class AddItem extends Application {
     public void setStatus(String message, double seconds, String color) {
         status.setText(message);
         status.setTextFill((color.equals("red") ? Color.RED : (color.equals("green") ? Color.GREEN : Color.BLACK)));
+        int num = statusStack.size();
+        statusStack.push(num);
         if (seconds != 0) {
             Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(seconds), ev -> {
-                if (status.getText().equals(message)) {
+                if (status.getText().equals(message)&&!statusStack.isEmpty()&&statusStack.peek()==num) {
                     status.setText("");
+                    statusStack.clear();
                 }
             }));
             timeline.setCycleCount(1);

@@ -360,25 +360,27 @@ CREATE TABLE `products`.`useractions` (
 Done:
 - esc button exits editing or previewing of elements (adding mode works too now)
 - Changes are saved with old value record for Pn, location, grade, po#
+- create admin and user role lol
+- make current user label
+- addit methods use one instance
+- Generating SKU for custom items
+- redesign statuses, so that they show and disappear (when need to show, it shows the needed one and hides all the other ones; after a few seconds it shows the other one)
 
+- Location confirmation on saving changes
 
 
 List of tasks:
 
-- Generating SKU for custom items
-- hide history column for users
-- create admin and user role lol
 - Changing location for many elements functionality for admin
-- Location confirmation on saving changes
 - Showing errors while import
 - buttons allocation UI
 - make user activity showing by 14, 30 or any number of days + show days on record
-- redesign statuses, so that they show and disappear (when need to show, it shows the needed one and hides all the other ones; after a few seconds it shows the other one)
+- when importing, if error sku then use another sku
+- add details what was added to history
 
 - create sql script for initial creation of users
 - script to delete empty folders
 
-- make current user label
 
 More advanced:
 - excel problems
@@ -386,6 +388,10 @@ More advanced:
 - editing images
 - more advanced printing
 
+test al importnt feratures
+
+
+sometimes might ned update authentication policy
 
 
 
@@ -394,5 +400,25 @@ More advanced:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Developed a Java application that keeps track of items in the warehouse, stores images, prints labels for items, keeps history of refurbishing an item and manages users
+
+Developed a Java application that keeps track of items in the refurbishing department and shows the activity of each worker. It allows workers to record the process of refurbishing an item, store images of it, see the history of previous changes made and automatically print labels for the item. For managers, there is functionality to import and export data in .xlsx format and see each worker's productivity.
+Technologies: MySQL, SQLite, file management, multithreading, command prompt
 
 

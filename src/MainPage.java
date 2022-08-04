@@ -80,11 +80,11 @@ public class MainPage extends Application {
         "admin";
     static String passw =
 //        "658etra";
-    "newpass";
+        "newpass";
     static String bartendPath = null;
     static String imagesPath =
 //        "\\\\DESKTOP-E5VI6AD\\application\\Images";
-            "D:\\Mine stuff\\Compiling\\Images";
+        "D:\\Mine stuff\\Compiling\\Images";
 
     static Label importLoadLbl;
     static BorderPane loadingPane;
@@ -97,7 +97,9 @@ public class MainPage extends Application {
         this.passw = passw;
         this.schema = schema;
     }
-    public MainPage() {}
+
+    public MainPage() {
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -113,7 +115,7 @@ public class MainPage extends Application {
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-        System.out.println("Current dir "+System.getProperty("user.dir"));
+        System.out.println("Current dir " + System.getProperty("user.dir"));
 
         //read path to bartend.exe
 
@@ -126,13 +128,13 @@ public class MainPage extends Application {
             String printEnabledStr = myReader.nextLine().split(",")[1].strip();
             boolean printEnabled = printEnabledStr.equalsIgnoreCase("true");
             String nextLi = myReader.nextLine();
-            if (printEnabled){
+            if (printEnabled) {
                 bartendPath = nextLi.split(",")[1].strip();
             }
             String imgPathStr = myReader.nextLine().split(",")[1].strip();
             boolean imgPathBool = imgPathStr.equalsIgnoreCase("true");
             nextLi = myReader.nextLine();
-            if (imgPathBool){
+            if (imgPathBool) {
                 imagesPath = nextLi.split(",")[1].strip();
             }
 
@@ -143,10 +145,11 @@ public class MainPage extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Config file error");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText(Methods.wrap("An error reading configuration file at \"C:\\Program Files Intent\\configg.csv\" occurred."));
+            alert.setContentText(Methods.wrap(
+                "An error reading configuration file at \"C:\\Program Files Intent\\configg.csv\" occurred."));
             alert.showAndWait();
         }
-        System.out.println("path to bartend "+bartendPath);
+        System.out.println("path to bartend " + bartendPath);
 
         String version = "version ";
         try {
@@ -174,7 +177,7 @@ public class MainPage extends Application {
         Thread.UncaughtExceptionHandler h = new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread th, Throwable ex) {
-                System.out.println("\nUncaught Thread exception: \n" + ex+"\n\n");
+                System.out.println("\nUncaught Thread exception: \n" + ex + "\n\n");
                 ex.printStackTrace();
             }
         };
@@ -187,26 +190,27 @@ public class MainPage extends Application {
 
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         TableColumn[] tablArr = updateTable();
-        BorderPane.setMargin(table,new Insets(14,9,12,0));
+        BorderPane.setMargin(table, new Insets(14, 9, 12, 0));
 
         table.getColumns()
-            .addAll(tablArr[13], tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7], tablArr[9],
-                tablArr[8], tablArr[6],tablArr[11], tablArr[10],tablArr[12]);
+            .addAll(tablArr[13], tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7],
+                tablArr[9],
+                tablArr[8], tablArr[6], tablArr[11], tablArr[10], tablArr[12]);
         table.setOnMouseClicked((MouseEvent event) -> {
-            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2){
+            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
 //                System.out.println(table.getSelectionModel().getSelectedItem());
-                if (table.getSelectionModel().getSelectedItem()!= null){
+                if (table.getSelectionModel().getSelectedItem() != null) {
                     new AddItem("previewing", table.getSelectionModel().getSelectedItem(), user).start(primaryStage);
                 }
             }
         });
 
         MenuItem itemCopy = new MenuItem("Copy");
-        itemCopy.setOnAction(e-> {
+        itemCopy.setOnAction(e -> {
             Methods.copyAct(new ArrayList<>(table.getSelectionModel().getSelectedItems()));
         });
         MenuItem itemDel = new MenuItem("Delete");
-        itemDel.setOnAction(e-> {
+        itemDel.setOnAction(e -> {
             deleteAct();
         });
         ContextMenu menu = new ContextMenu();
@@ -218,7 +222,7 @@ public class MainPage extends Application {
         Label versionLbl = new Label(version);
         HBox bottomHbox = new HBox(5, versionLbl);
         bottomHbox.setAlignment(Pos.BOTTOM_RIGHT);
-        HBox.setMargin(versionLbl, new Insets(0,130,0,0));
+        HBox.setMargin(versionLbl, new Insets(0, 130, 0, 0));
         pane.setBottom(bottomHbox);
 
         /** loading animation for import */ //creating new node
@@ -240,29 +244,30 @@ public class MainPage extends Application {
         infoPic.setFitHeight(15);
         infoPic.setPreserveRatio(true);
         BorderPane infoWrap = new BorderPane(infoPic);
-        HBox.setMargin(infoWrap, new Insets(3,0,0,0));
-        infoWrap.setOnMouseEntered(e->{
+        HBox.setMargin(infoWrap, new Insets(3, 0, 0, 0));
+        infoWrap.setOnMouseEntered(e -> {
             infoPic.setCursor(Cursor.HAND);
         });
-        infoWrap.setOnMouseClicked(e->{
+        infoWrap.setOnMouseClicked(e -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Import Info");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText(Methods.wrap("The columns in the imported xlsx file should be named \"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"."));
+            alert.setContentText(Methods.wrap(
+                "The columns in the imported xlsx file should be named \"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"."));
 
             alert.showAndWait();
         });
 
         Button importBtn = new Button("Import ");
         FileChooser importFileChooser = new FileChooser();
-        importBtn.setOnAction(e->{
+        importBtn.setOnAction(e -> {
 
             new ImportPreviewWindow().importBtnAction(importFileChooser, user, primaryStage);
 
         });
 
         Button exportBtn = new Button("Export");
-        exportBtn.setOnAction(e->{
+        exportBtn.setOnAction(e -> {
             DirectoryChooser exportDirChooser = new DirectoryChooser();
             exportDirChooser.setTitle("Choose the destination for the export file");
 //            exportDirChooser.setInitialDirectory(
@@ -270,7 +275,7 @@ public class MainPage extends Application {
 //            );
 
             File exportFile = exportDirChooser.showDialog(primaryStage);
-            if (exportFile == null){
+            if (exportFile == null) {
                 return;
             }
             System.out.println(exportFile.getAbsolutePath().toString());
@@ -278,20 +283,20 @@ public class MainPage extends Application {
             SimpleDateFormat sdf = new SimpleDateFormat("MM_dd_yyyy-HH-mm");
             String dateeime = sdf.format(new Timestamp(System.currentTimeMillis()));
 
-            String fullpath = exportFile.getAbsolutePath().toString() + "\\Intent_db_export_"+dateeime+".xlsx";
+            String fullpath = exportFile.getAbsolutePath().toString() + "\\Intent_db_export_" + dateeime + ".xlsx";
 
             Methods.export_func(fullpath);
-            Methods.updateUserLog(user,"created new export");
+            Methods.updateUserLog(user, "created new export");
 
-            File file = new File (fullpath);
-            if (file.exists()){
+            File file = new File(fullpath);
+            if (file.exists()) {
                 try {
                     Desktop desktop = Desktop.getDesktop();
                     desktop.open(file);
                 } catch (IOException exxxx) {
                     exxxx.printStackTrace();
                 }
-            } else{
+            } else {
 //                    Alert alert = new Alert(Alert.AlertType.ERROR);
 //                    alert.setTitle("Folder unavailable");
 ////            alert.setHeaderText("Look, a Confirmation Dialog");
@@ -315,21 +320,22 @@ public class MainPage extends Application {
 
         HBox adminOptHbox = new HBox(15, importBtn, infoWrap, exportBtn, manageUsersBtn);
 
-        VBox adminOptVbox = new VBox(3,adminToolsLbl, adminOptHbox);
+        VBox adminOptVbox = new VBox(3, adminToolsLbl, adminOptHbox);
 //        adminOptHbox.setPrefWidth(Double.MAX_VALUE);
 //        adminOptHbox.setAlignment(Pos.CENTER_LEFT);
         adminOptVbox.setPadding(new Insets(5));
-        HBox.setMargin(adminOptVbox, new Insets(0, 50,0,0));
-        adminOptVbox.setBorder(new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, new CornerRadii(3),
-            new BorderWidths(0.5))));
-        if (!Methods.isAdmin(user)){
+        HBox.setMargin(adminOptVbox, new Insets(0, 50, 0, 0));
+        adminOptVbox.setBorder(
+            new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, new CornerRadii(3),
+                new BorderWidths(0.5))));
+        if (!Methods.isAdmin(user)) {
             adminOptVbox.setVisible(false);
         }
 
 
         /** profile */
 
-        loggedInLbl = new Label("logged in as "+user);
+        loggedInLbl = new Label("logged in as " + user);
 //        loggedInLbl.setPrefHeight(30);
         loggedInLbl.setAlignment(Pos.CENTER);
         Label signOut = new Label("Sign out");
@@ -348,10 +354,10 @@ public class MainPage extends Application {
 //            signOut.setStyle("-fx-background-color: #0089cc;");
         });
         String finalDeskto = deskto;
-        signOut.setOnMouseClicked(e->{
+        signOut.setOnMouseClicked(e -> {
             new LoginPage().start(primaryStage);
             primaryStage.close();
-            Methods.updateUserLog(user,"signed out on "+ finalDeskto);
+            Methods.updateUserLog(user, "signed out on " + finalDeskto);
         });
 
         Label seeActivity = new Label("See my activity");
@@ -369,22 +375,21 @@ public class MainPage extends Application {
             seeActivity.setTextFill(Color.BLACK);
 //            signOut.setStyle("-fx-background-color: #0089cc;");
         });
-        seeActivity.setOnMouseClicked(e->{
+        seeActivity.setOnMouseClicked(e -> {
             new UserActivity(user).start(primaryStage);
         });
 
 
-
-
-        VBox.setMargin(loggedInLbl, new Insets(5,0,0,0));
-        ImageView profilePic = new ImageView("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\profile_icon.png");
+        VBox.setMargin(loggedInLbl, new Insets(5, 0, 0, 0));
+        ImageView profilePic =
+            new ImageView("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\profile_icon.png");
         profilePic.setFitHeight(40);
         profilePic.setPreserveRatio(true);
-        VBox profileTextVbox = new VBox(0,loggedInLbl, signOut, seeActivity);
+        VBox profileTextVbox = new VBox(0, loggedInLbl, signOut, seeActivity);
         profileTextVbox.setAlignment(Pos.TOP_RIGHT);
         HBox profileHbox = new HBox(10, adminOptVbox, profileTextVbox, profilePic);
         profileHbox.setAlignment(Pos.TOP_RIGHT);
-        VBox.setMargin(profileHbox, new Insets(10, 15, 10 ,0));
+        VBox.setMargin(profileHbox, new Insets(10, 15, 10, 0));
         /////
 
         /** Search **/
@@ -399,7 +404,7 @@ public class MainPage extends Application {
         searchHBox.setAlignment(Pos.CENTER);
 //        searchHBox.setHgrow(searchField, Priority.ALWAYS);
 
-        VBox topVbox = new VBox(0,profileHbox, searchHBox);
+        VBox topVbox = new VBox(0, profileHbox, searchHBox);
         pane.setTop(topVbox);
 
         searchSubm.setOnAction(e -> {
@@ -414,9 +419,10 @@ public class MainPage extends Application {
         table.widthProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                if (newValue.floatValue()!=oldValue.floatValue() && oldValue.floatValue() > 1){
-                    searchField.setPrefWidth(newValue.floatValue()*0.45);
-                };
+                if (newValue.floatValue() != oldValue.floatValue() && oldValue.floatValue() > 1) {
+                    searchField.setPrefWidth(newValue.floatValue() * 0.45);
+                }
+                ;
 //                System.out.println(oldValue + ", " + newValue + ";");
             }
         });
@@ -424,7 +430,7 @@ public class MainPage extends Application {
 
         /** Buttons **/
         Button addNew = new Button("Add new Item");
-        addNew.setMinSize(120,45);
+        addNew.setMinSize(120, 45);
         Button refresh = new Button("Refresh");
         Button delete = new Button("Delete selected items");
 
@@ -447,7 +453,7 @@ public class MainPage extends Application {
             }
 
         });
-        pane.setRight(new VBox(8,refresh, addNew));
+        pane.setRight(new VBox(8, refresh, addNew));
         pane.setLeft(delete);
 
 
@@ -463,17 +469,18 @@ public class MainPage extends Application {
 //        pane.setDisable(false);
 
 
-        primaryStage.getIcons().add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
+        primaryStage.getIcons()
+            .add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
         Scene scene = new Scene(root, 950, 700);
         primaryStage.setTitle("Intent - database tool");
         primaryStage.setScene(scene);
         primaryStage.setResizable(true);
         primaryStage.show();
 
-        Methods.updateUserLog(user,"logged in on "+deskto);
-        primaryStage.setOnCloseRequest(e->{
+        Methods.updateUserLog(user, "logged in on " + deskto);
+        primaryStage.setOnCloseRequest(e -> {
             primaryStage.close();
-            Methods.updateUserLog(user,"signed out on "+finalDeskto);
+            Methods.updateUserLog(user, "signed out on " + finalDeskto);
         });
 
     }
@@ -487,7 +494,7 @@ public class MainPage extends Application {
         Connection conn = null;
         Statement stmt = null;
         try {
-            conn = DriverManager.getConnection(urll,user,passw);
+            conn = DriverManager.getConnection(urll, user, passw);
             stmt = conn.createStatement();
             rs = stmt.executeQuery(query);
         } catch (SQLException e) {
@@ -499,34 +506,34 @@ public class MainPage extends Application {
         try {
             while (rs.next()) {
                 long st1 = rs.getInt(1);
-                String st2=rs.getString(2);
-                String st3=rs.getString(3);
-                String st4=rs.getString(4);
-                String st5=rs.getString(5);
-                String st6=rs.getString(6);
-                String st7=rs.getString(7);
-                String st8=rs.getString(8);
-                Timestamp st9=rs.getTimestamp(9);
-                String st10=rs.getString(10);
-                String st11=rs.getString(11);
-                Timestamp st12=rs.getTimestamp(12);
-                String st13=rs.getString(13);
-                String st14=rs.getString(14);
+                String st2 = rs.getString(2);
+                String st3 = rs.getString(3);
+                String st4 = rs.getString(4);
+                String st5 = rs.getString(5);
+                String st6 = rs.getString(6);
+                String st7 = rs.getString(7);
+                String st8 = rs.getString(8);
+                Timestamp st9 = rs.getTimestamp(9);
+                String st10 = rs.getString(10);
+                String st11 = rs.getString(11);
+                Timestamp st12 = rs.getTimestamp(12);
+                String st13 = rs.getString(13);
+                String st14 = rs.getString(14);
                 outList.add(new Item(
                     rs.getInt(1),
-                    (st2==""?null:st2),
-                    (st3==""?null:st3),
-                    (st4==""?null:st4),
-                    (st5==""?null:st5),
-                    (st6==""?null:st6),
-                    (st7==""?null:st7),
-                    (st8==""?null:st8),
+                    (st2 == "" ? null : st2),
+                    (st3 == "" ? null : st3),
+                    (st4 == "" ? null : st4),
+                    (st5 == "" ? null : st5),
+                    (st6 == "" ? null : st6),
+                    (st7 == "" ? null : st7),
+                    (st8 == "" ? null : st8),
                     st9,
-                    (st10==""?null:st10),
-                    (st11==""?null:st11),
+                    (st10 == "" ? null : st10),
+                    (st11 == "" ? null : st11),
                     st12,
-                    (st13==""?null:st13),
-                    (st14==""?null:st14)
+                    (st13 == "" ? null : st13),
+                    (st14 == "" ? null : st14)
                 ));
 
 //                rs.next();
@@ -536,9 +543,21 @@ public class MainPage extends Application {
         } catch (SQLException e) {
             MainPage.databaseErrorAlert(e).showAndWait();
         }
-        try {rs.close();} catch (SQLException e) {e.printStackTrace();}
-        try {conn.close();} catch (SQLException e) {e.printStackTrace();}
-        try {stmt.close();} catch (SQLException e) {e.printStackTrace();}
+        try {
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         Item[] out = outList.toArray(new Item[outList.size()]);
         return out;
@@ -565,13 +584,17 @@ public class MainPage extends Application {
                     rs.getString(13),
                     rs.getString(14)
 
-                    ));
+                ));
 //                rs.next();
             }
         } catch (SQLException e) {
             MainPage.databaseErrorAlert(e).showAndWait();
         }
-        try {rs.close();} catch (SQLException e) {e.printStackTrace();}
+        try {
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         Item[] out = outList.toArray(new Item[outList.size()]);
         return out;
     }
@@ -596,7 +619,7 @@ public class MainPage extends Application {
         TableColumn othrecCol = new TableColumn("History");
         TableColumn numCol = new TableColumn("#");
 
-        othrecCol.setPrefWidth(500);
+        othrecCol.setPrefWidth(300);
         specsCol.setPrefWidth(400);
         notesCol.setPrefWidth(250);
         numCol.setPrefWidth(40);
@@ -604,7 +627,8 @@ public class MainPage extends Application {
 //        othrecCol.setStyle( "-fx-alignment: CENTER-LEFT;");
 
         Item[] arr = extractItemsFromDb(
-            "SELECT * FROM "+schema+".items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
+            "SELECT * FROM " + schema + ".items" + "\n" +
+                "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
         );
         ObservableList<Item> data = FXCollections.observableArrayList();
         for (Item ite : arr) {
@@ -632,9 +656,11 @@ public class MainPage extends Application {
         table.setItems(data);
 
 //        table.getColumns().addAll(SKUCol,SNCol,PNCol,UPCCol,isPerfCol, imgCol);
-        return new TableColumn[] {SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol, othrecCol, numCol};
+        return new TableColumn[] {SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol,
+            dateModifiedCol, POnumCol, specsCol, othrecCol, numCol};
     }
-    public static void deleteAct(){
+
+    public static void deleteAct() {
 
 //        new Thread(()->{
 //            Platform.runLater(() -> {
@@ -652,10 +678,8 @@ public class MainPage extends Application {
 //        }).start();
 
 
-
-
         ArrayList<Item> itemsSelect = new ArrayList<>(table.getSelectionModel().getSelectedItems());
-        if (itemsSelect.isEmpty()){
+        if (itemsSelect.isEmpty()) {
             return;
         }
 
@@ -665,37 +689,41 @@ public class MainPage extends Application {
         MainPage.pane.setDisable(true);
         StringBuilder itemsStr = new StringBuilder("");
         int count = 0;
-        for (Item it : itemsSelect){
+        for (Item it : itemsSelect) {
             itemsStr.append(it.SKU + ", ");
             count++;
-            if (count == 100){
+            if (count == 100) {
                 itemsStr.append("..., ");
                 break;
             }
         }
-        String itemsStrrr = itemsStr.toString().substring(0, itemsStr.length()-2);
+        String itemsStrrr = itemsStr.toString().substring(0, itemsStr.length() - 2);
 
         if (itemsStrrr != "") {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Deletion Confirmation");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
-            alert.setContentText(Methods.wrap("Are you sure you want to delete " +(itemsSelect.size() == 1 ? "this item: " : "these "+itemsSelect.size()+" items: ") +itemsStrrr+ "?"));
+            alert.setContentText(Methods.wrap("Are you sure you want to delete " +
+                (itemsSelect.size() == 1 ? "this item: " : "these " + itemsSelect.size() + " items: ") + itemsStrrr +
+                "?"));
 
             Optional<ButtonType> result = alert.showAndWait();
             if (result.get() == ButtonType.OK) {
-                new Thread(()->{
+                new Thread(() -> {
 
-                    Platform.runLater(() -> {
-                        MainPage.importLoadLbl.setText("deleting");
-                        AddItem.dotAnim(MainPage.importLoadLbl);
-                        MainPage.loadingPane.toFront();
-                        MainPage.pane.setDisable(true);
-                    });
                     int itemsDeleted = 0;
 
-
                     try {
-                        Connection conn = DriverManager.getConnection(urll,user,passw);
+
+                        Platform.runLater(() -> {
+                            MainPage.importLoadLbl.setText("deleting");
+                            AddItem.dotAnim(MainPage.importLoadLbl);
+                            MainPage.loadingPane.toFront();
+                            MainPage.pane.setDisable(true);
+                        });
+
+
+                        Connection conn = DriverManager.getConnection(urll, user, passw);
                         Statement stmt = conn.createStatement();
                         StringBuilder failed = new StringBuilder("");
 
@@ -705,7 +733,7 @@ public class MainPage extends Application {
                         SimpleDateFormat sdf = new SimpleDateFormat("MM_dd_yyyy-HH-mm");
                         String dateeime = sdf.format(new Timestamp(System.currentTimeMillis()));
 
-                        String folderpath = System.getProperty("user.home") +"\\Downloads\\Intent_automatic_export";
+                        String folderpath = System.getProperty("user.home") + "\\Downloads\\Intent_automatic_export";
                         System.out.println(folderpath);
                         try {
                             Files.createDirectories(Paths.get(folderpath));
@@ -713,33 +741,33 @@ public class MainPage extends Application {
                             MainPage.ioErrorAlert(e).showAndWait();
                             return;
                         }
-                        Methods.export_func(folderpath + "\\Intent_automatic_export_"+dateeime+".xlsx");
+                        Methods.export_func(folderpath + "\\Intent_automatic_export_" + dateeime + ".xlsx");
 
 
-
-                        for (Item ite: itemsSelect){
-                            if (!Methods.isAdmin(user) && !user.equals(ite.User)){
+                        for (Item ite : itemsSelect) {
+                            if (!Methods.isAdmin(user) && !user.equals(ite.User)) {
                                 failed.append(ite.SKU + ", ");
                                 continue;
                             }
                             itemsDeleted++;
-                            System.out.println("\tSQL   DELETE from "+schema+".items WHERE SKU=" + ite.SKU);
-                            stmt.executeUpdate("DELETE from "+schema+".items WHERE SKU=" + ite.SKU);
+                            System.out.println("\tSQL   DELETE from " + schema + ".items WHERE SKU=" + ite.SKU);
+                            stmt.executeUpdate("DELETE from " + schema + ".items WHERE SKU=" + ite.SKU);
                         }
                         conn.close();
                         stmt.close();
                         System.out.println("deleted");
 
 
-                        if (!failed.equals("")){
-                            String finalFailed = failed.toString();
+                        String finalFailed = failed.toString();
+                        if (finalFailed.length() > 1) {
                             Platform.runLater(() -> {
                                 Alert alert2 = new Alert(Alert.AlertType.ERROR);
                                 alert2.setTitle("Delete failed");
                                 //                      alert.setHeaderText("Look, a Confirmation Dialog");
-                                String failedStr = finalFailed.substring(0, finalFailed.length()-2);
-                                alert2.setContentText(Methods.wrap("User "+user+" is not allowed to delete elements "+
-                                    failedStr +" created by other users."));
+                                String failedStr = finalFailed.substring(0, finalFailed.length() - 2);
+                                alert2.setContentText(
+                                    Methods.wrap("User " + user + " is not allowed to delete elements " +
+                                        failedStr + " created by other users."));
                                 alert2.showAndWait();
 
                                 MainPage.pane.toFront();
@@ -749,26 +777,29 @@ public class MainPage extends Application {
 
                     } catch (SQLException ex) {
                         MainPage.databaseErrorAlert(ex).showAndWait();
-                    }
-                    Methods.updateUserLog(user,"deleted "+(itemsDeleted == 1 ? "1 item" :itemsDeleted + " items"));
+                    } finally {
+                        Methods.updateUserLog(user,
+                            "deleted " + (itemsDeleted == 1 ? "1 item" : itemsDeleted + " items"));
 
-                    Platform.runLater(() -> {
-                        updateTable();
-                        MainPage.pane.toFront();
-                        MainPage.pane.setDisable(false);
-                    });
+                        Platform.runLater(() -> {
+                            updateTable();
+                            MainPage.pane.toFront();
+                            MainPage.pane.setDisable(false);
+                        });
+                    }
+
 
                 }).start();
 
-            }
-            else{
+            } else {
                 MainPage.pane.toFront();
                 MainPage.pane.setDisable(false);
             }
         }
 
     }
-    public static Alert databaseErrorAlert(SQLException e){
+
+    public static Alert databaseErrorAlert(SQLException e) {
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Database Error");
@@ -777,14 +808,16 @@ public class MainPage extends Application {
 
         return alert;
     }
-    public static Alert ioErrorAlert(IOException e){
+
+    public static Alert ioErrorAlert(IOException e) {
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("IO File Error");
         alert.setContentText(Methods.wrap(e.getMessage()));
         return alert;
     }
-    public static Alert unknownErrorAlert(Exception e){
+
+    public static Alert unknownErrorAlert(Exception e) {
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Unknown error occured");

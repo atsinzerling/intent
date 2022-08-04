@@ -178,10 +178,12 @@ public class ManageUsers extends Application {
         passwVbox.setMaxWidth(170);
         passwVbox.setAlignment(Pos.TOP_RIGHT);
 
+        Label currUserLbl = new Label((userObj.getUsername().equals(MainPage.user)?"current user":""));
+        VBox.setMargin(currUserLbl, new Insets(0,0,0,8));
         Label seeActivity = new Label("see user activity");
 
 
-        VBox leftVbox = new VBox(8, new HBox(20,userStackPane, rightsVbox), passwVbox, seeActivity);
+        VBox leftVbox = new VBox(8, new HBox(20,new VBox(userStackPane,currUserLbl), rightsVbox), passwVbox, seeActivity);
         BorderPane.setMargin(leftVbox, new Insets(10));
 
         VBox rightVbox = new VBox(5,edit, delete, saveCancelHbox);
@@ -199,8 +201,6 @@ public class ManageUsers extends Application {
         pane.setLeft(leftVbox);
         pane.setRight(rightVbox);
         pane.setMinSize(350, 135);
-
-
 
 
 
@@ -321,6 +321,10 @@ public class ManageUsers extends Application {
                     stmt.executeUpdate(granttt);
                     stmt.execute(new String("FLUSH PRIVILEGES;"));
 
+//
+//                    stmt.execute(new String("SET GLOBAL authentication_policy='mysql_native_password';"));
+//                    stmt.execute(new String("FLUSH PRIVILEGES;"));
+
                     System.out.println("\t SQL "+sqlCreate+" | "+granttt);
                     stmt.close();
                     conn.close();
@@ -378,6 +382,8 @@ public class ManageUsers extends Application {
                         if (!userObj.getPassword().equals(newPassw)){
                             stmt.execute(sqlOAOA);
                             stmt.execute(new String("FLUSH PRIVILEGES;"));
+//                            stmt.execute(new String("SET GLOBAL authentication_policy='mysql_native_password';"));
+//                            stmt.execute(new String("FLUSH PRIVILEGES;"));
                             if (userObj.getUsername().equals(MainPage.user)){
                                 MainPage.passw = newPassw;
                             }
@@ -506,8 +512,8 @@ public class ManageUsers extends Application {
 
         choicebox.getSelectionModel().selectedIndexProperty().addListener(
             (ObservableValue<? extends Number> ov, Number old_val, Number new_val) -> {
-                System.out.println(userTypes.get((int) new_val)+" "+new_val);
-                System.out.println(userTextF.getText());
+//                System.out.println(userTypes.get((int) new_val)+" "+new_val);
+//                System.out.println(userTextF.getText());
                 String textt = userTextF.getText();
                 if ((int) new_val == 0){ //admin
                     if(!textt.contains("/")){

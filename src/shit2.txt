@@ -201,30 +201,12 @@ public class Methods {
             System.out.println("nothing to copy");
         }
     }
-
-    public static long generateCustomSKU(){
-        long currSKU= 0;
-        try {
-            Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT SKUcustom from "+MainPage.schema+".addit_data");
-            rs.next();
-            long lastSKU = rs.getLong(1); //last used sku
-            currSKU = lastSKU++;
-//            System.out.println("generated custom sku "+ currSKU+ "; execute update - "+stmt.executeUpdate("UPDATE addit_data SET SKUgenerated="+currSKU+" WHERE IDcolumn=1"));
-            rs.close();
-            while (stmt.executeQuery("SELECT * from "+MainPage.schema+".items WHERE SKU="+currSKU).next()){ //while used    is it used?
-                currSKU++;
-            }
-            //we got the first SKU thats not used
-            if (currSKU > lastSKU+1){
-                stmt.executeUpdate("UPDATE "+MainPage.schema+".addit_data SET SKUcustom="+(currSKU-1)+" WHERE IDcolumn=1");
-            }
-        }  catch (SQLException ex) {
-            ex.printStackTrace();
-//            MainPage.databaseErrorAlert(ex).showAndWait();
-        }
-        return currSKU;
-    }
 }
+
+
+
+
+
+
+
 

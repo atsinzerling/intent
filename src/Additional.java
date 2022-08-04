@@ -16,19 +16,19 @@ public class Additional {
         try {
             Connection conn = DriverManager.getConnection(MainPage.urll,"root","intentgroup");
             Statement stmt = conn.createStatement();
-            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
+            int row_count = stmt.executeQuery("SELECT COUNT(*) from "+MainPage.schema+".items").getInt(1);
 //            ResultSet rs = stmt.executeQuery(query);
 //            out = new Item[row_count];
 //            rs.next();
             for (int i = 0; i < row_count; i++){
 
-                Timestamp timest = stmt.executeQuery("SELECT DateTime from items WHERE rowid=" + (i+1)).getTimestamp(1);
+                Timestamp timest = stmt.executeQuery("SELECT DateTime from "+MainPage.schema+".items WHERE rowid=" + (i+1)).getTimestamp(1);
                 System.out.println(timest);
-                System.out.println("SELECT DateTime from items WHERE rowid=" + (i+1) +"\n"+
-                    "UPDATE items SET DateTime='" + (timest == null ? "" : timest) + "' WHERE rowid=" + (i+1)
+                System.out.println("SELECT DateTime from "+MainPage.schema+".items WHERE rowid=" + (i+1) +"\n"+
+                    "UPDATE "+MainPage.schema+".items SET DateTime='" + (timest == null ? "" : timest) + "' WHERE rowid=" + (i+1)
                 );
                 if (timest!= null){
-                    stmt.executeUpdate("UPDATE items SET DateTime='" + timest + "' WHERE rowid=" + (i+1));
+                    stmt.executeUpdate("UPDATE "+MainPage.schema+".items SET DateTime='" + timest + "' WHERE rowid=" + (i+1));
                 }
             }
             conn.close();
@@ -46,7 +46,7 @@ public class Additional {
         try {
             Connection conn = DriverManager.getConnection(url);
             Statement stmt = conn.createStatement();
-            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
+            int row_count = stmt.executeQuery("SELECT COUNT(*) from "+MainPage.schema+".items").getInt(1);
 //            ResultSet rs = stmt.executeQuery(query);
 //            out = new Item[row_count];
 //            rs.next();
@@ -58,10 +58,10 @@ public class Additional {
                 Timestamp timest;
                 try {
                     timest =
-                        stmt.executeQuery("SELECT DateTime from items WHERE rowid=" + (i + 1)).getTimestamp(1);
+                        stmt.executeQuery("SELECT DateTime from "+MainPage.schema+".items WHERE rowid=" + (i + 1)).getTimestamp(1);
 
                     if (timest == null){
-                        stmt.executeUpdate("UPDATE items SET DateTime='' WHERE rowid=" + (i+1));
+                        stmt.executeUpdate("UPDATE "+MainPage.schema+".items SET DateTime='' WHERE rowid=" + (i+1));
                     }
 
                 } catch (SQLException e) {
@@ -69,9 +69,9 @@ public class Additional {
                     System.out.println(e.getMessage());
                 }
 
-                String loc = stmt.executeQuery("SELECT Location from items WHERE rowid=" + (i+1)).getString(1);
-                String img = stmt.executeQuery("SELECT Images from items WHERE rowid=" + (i+1)).getString(1);
-                String othrec = stmt.executeQuery("SELECT OtherRecords from items WHERE rowid=" + (i+1)).getString(1);
+                String loc = stmt.executeQuery("SELECT Location from "+MainPage.schema+".items WHERE rowid=" + (i+1)).getString(1);
+                String img = stmt.executeQuery("SELECT Images from "+MainPage.schema+".items WHERE rowid=" + (i+1)).getString(1);
+                String othrec = stmt.executeQuery("SELECT OtherRecords from "+MainPage.schema+".items WHERE rowid=" + (i+1)).getString(1);
 
 
 
@@ -86,13 +86,13 @@ public class Additional {
 
 
                 if (loc == null){
-                    stmt.executeUpdate("UPDATE items SET Location='' WHERE rowid=" + (i+1));
+                    stmt.executeUpdate("UPDATE "+MainPage.schema+".items SET Location='' WHERE rowid=" + (i+1));
                 }
                 if (img == null){
-                    stmt.executeUpdate("UPDATE items SET Images='' WHERE rowid=" + (i+1));
+                    stmt.executeUpdate("UPDATE "+MainPage.schema+".items SET Images='' WHERE rowid=" + (i+1));
                 }
                 if (othrec == null){
-                    stmt.executeUpdate("UPDATE items SET OtherRecords='' WHERE rowid=" + (i+1));
+                    stmt.executeUpdate("UPDATE "+MainPage.schema+".items SET OtherRecords='' WHERE rowid=" + (i+1));
                 }
 
             }
@@ -107,13 +107,13 @@ public class Additional {
         try {
             Connection conn = DriverManager.getConnection(MainPage.urll,"root","intentgroup");
             Statement stmt = conn.createStatement();
-            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
+            int row_count = stmt.executeQuery("SELECT COUNT(*) from "+MainPage.schema+".items").getInt(1);
 //            ResultSet rs = stmt.executeQuery(query);
 //            out = new Item[row_count];
 //            rs.next();
 
             String sqlStatement = "";
-            ResultSet rss = stmt.executeQuery("SELECT * FROM items ");
+            ResultSet rss = stmt.executeQuery("SELECT * FROM "+MainPage.schema+".items ");
             rss.next();
             for (int i = 0; i < row_count; i++){
 

@@ -28,7 +28,7 @@ public class Search {
         Item[] arr;
         try {
             arr = MainPage.extractItemsFromDb(
-                    "SELECT * FROM items WHERE SKU=" + Integer.parseInt(searchText)
+                    "SELECT * FROM "+MainPage.schema+".items WHERE SKU=" + Integer.parseInt(searchText)
 //                + "\n" + "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime ASC"
 
             );
@@ -47,7 +47,7 @@ public class Search {
         System.out.println(arr.length);
         if (arr.length == 0) {
             arr = MainPage.extractItemsFromDb(
-                    "SELECT * FROM items WHERE SN=" + "'" + searchText + "'"
+                    "SELECT * FROM "+MainPage.schema+".items WHERE SN=" + "'" + searchText + "'"
 //                + "\n" + "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime ASC"
 
             );
@@ -60,7 +60,7 @@ public class Search {
 //                ArrayList<Item> arrList = new ArrayList<Item>(Arrays.asList(
             Item[] arrBig =
                 MainPage.extractItemsFromDb(
-                        "SELECT * FROM items" + "\n" +
+                        "SELECT * FROM "+MainPage.schema+".items" + "\n" +
                             "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime DESC"
                     );
 

@@ -39,16 +39,20 @@ import java.util.Iterator;
 
 //import com.monitorjbl.xlsx.StreamingReader;
 
-public class ImportPreviewWindow  extends Application {
+public class ImportPreviewWindow extends Application {
 
     ObservableList<Item> importData;
     String errorString = "";
     int itemCount = 0;
 
     public ImportPreviewWindow(ObservableList<Item> importData, String errorString, int itemCount) {
-        this.importData = importData; this.errorString = errorString; this.itemCount = itemCount;
+        this.importData = importData;
+        this.errorString = errorString;
+        this.itemCount = itemCount;
     }
-    public ImportPreviewWindow() {}
+
+    public ImportPreviewWindow() {
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -85,13 +89,15 @@ public class ImportPreviewWindow  extends Application {
         historyCol.setCellValueFactory(new PropertyValueFactory<Item, String>("OtherRecords"));
         tablePr.setItems(importData);
 
-        tablePr.getColumns().addAll(SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol, POnumCol, specsCol, historyCol);
+        tablePr.getColumns()
+            .addAll(SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol,
+                POnumCol, specsCol, historyCol);
 
 
         Button cancel = new Button("Cancel");
         Button addItems = new Button("Add Items");
 
-        Label errorsLbl = new Label ("Errors:");
+        Label errorsLbl = new Label("Errors:");
 
         TextArea errorsArea = new TextArea();
         errorsArea.setMaxWidth(Double.MAX_VALUE);
@@ -100,9 +106,9 @@ public class ImportPreviewWindow  extends Application {
         errorsArea.setWrapText(true);
         errorsArea.setText(errorString);
 
-        Label previewLbl = new Label("Preview Items that will be added: (total "+itemCount+" items)");
+        Label previewLbl = new Label("Preview Items that will be added: (total " + itemCount + " items)");
 
-        VBox mainVbox = new VBox(8,previewLbl,tablePr, errorsLbl,errorsArea);
+        VBox mainVbox = new VBox(8, previewLbl, tablePr, errorsLbl, errorsArea);
         HBox buttonsHbox = new HBox(10, cancel, addItems);
 
         BorderPane pane = new BorderPane();
@@ -110,7 +116,7 @@ public class ImportPreviewWindow  extends Application {
         pane.setCenter(mainVbox);
         pane.setBottom(buttonsHbox);
 
-        BorderPane.setMargin(mainVbox, new Insets(10,10,0,10));
+        BorderPane.setMargin(mainVbox, new Insets(10, 10, 0, 10));
         BorderPane.setMargin(buttonsHbox, new Insets(10));
 
 
@@ -124,28 +130,31 @@ public class ImportPreviewWindow  extends Application {
         importPreviewStage.show();
 
 
-        cancel.setOnAction(e->{
+        cancel.setOnAction(e -> {
             importPreviewStage.close();
         });
-        addItems.setOnAction(e->{
+        addItems.setOnAction(e -> {
 
-            new Thread(()->{
-                Platform.runLater(() -> {
-                    MainPage.importLoadLbl.setText("adding items");
-                    AddItem.dotAnim(MainPage.importLoadLbl);
-                    MainPage.loadingPane.toFront();
-                    MainPage.pane.setDisable(true);
-                    importPreviewStage.hide();
-                });
+            new Thread(() -> {
+
 
                 int countAdded = 0;
 
                 try {
+                    Platform.runLater(() -> {
+                        MainPage.importLoadLbl.setText("adding items");
+                        AddItem.dotAnim(MainPage.importLoadLbl);
+                        MainPage.loadingPane.toFront();
+                        MainPage.pane.setDisable(true);
+                        importPreviewStage.hide();
+                    });
+
+
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
 
 
-                    for (Item it: importData){
+                    for (Item it : importData) {
                         String values =
                             "'" + it.SKU + "'" + "," +
                                 (it.SN == null ? null : "'" + it.SN + "'") + "," +
@@ -161,44 +170,44 @@ public class ImportPreviewWindow  extends Application {
                                 (it.DateModified == null ? null : "'" + it.DateModified + "'") + "," +
                                 (it.POnumber == null ? null : "'" + it.POnumber + "'") + "," +
                                 (it.Specs == null ? null : "'" + it.Specs + "'");
-                        String sql = ("INSERT INTO items " +
+                        String sql = ("INSERT INTO " + MainPage.schema + ".items " +
                             "VALUES (" + values + ")");
                         countAdded += stmt.executeUpdate(sql);
-                        System.out.println("added element "+it.SKU);
+                        System.out.println("added element " + it.SKU);
                     }
 
                     stmt.close();
                     conn.close();
 
 
-
                 } catch (SQLException ex) {
                     MainPage.databaseErrorAlert(ex).showAndWait();
+                } finally {
+                    int finalCountAdded = countAdded;
+                    Methods.updateUserLog(MainPage.user,
+                        "imported " + (finalCountAdded == 1 ? "1 item" : finalCountAdded + " items"));
+                    Platform.runLater(() -> {
+                        MainPage.pane.toFront();
+                        MainPage.pane.setDisable(false);
+
+                        MainPage.updateTable();
+                        importPreviewStage.close();
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Import Successful!");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                        alert.setContentText("Successfully added " + finalCountAdded + " items.");
+
+                        alert.showAndWait();
+
+                    });
                 }
 
-                int finalCountAdded = countAdded;
-                Methods.updateUserLog(MainPage.user,"imported "+(finalCountAdded == 1 ? "1 item" :finalCountAdded + " items"));
-                Platform.runLater(() -> {
-                    MainPage.pane.toFront();
-                    MainPage.pane.setDisable(false);
 
-                    MainPage.updateTable();
-                    importPreviewStage.close();
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Import Successful!");
-//            alert.setHeaderText("Look, a Confirmation Dialog");
-                    alert.setContentText("Successfully added "+ finalCountAdded +" items.");
-
-                    alert.showAndWait();
-
-                });
             }).start();
-
-
         });
     }
 
-    public void importBtnAction(FileChooser importFileChooser, String user, Stage primaryStage){
+    public void importBtnAction(FileChooser importFileChooser, String user, Stage primaryStage) {
 
         //configuring file chooser
         importFileChooser.setTitle("Choose Excel File");
@@ -214,27 +223,30 @@ public class ImportPreviewWindow  extends Application {
 
         File importFile = importFileChooser.showOpenDialog(primaryStage);
 //            (System.getProperty("user.dir") + "/src/data/table.xlsx")
-        if (importFile == null){
+        if (importFile == null) {
             return;
         }
         ObservableList<Item> importDataMethod = FXCollections.observableArrayList();
 
-        new Thread(()->{
-            Platform.runLater(() -> {
-                MainPage.importLoadLbl.setText("processing import file");
-                AddItem.dotAnim(MainPage.importLoadLbl);
-                MainPage.loadingPane.toFront();
-                MainPage.pane.setDisable(true);
-            });
+        new Thread(() -> {
+
             int itemCountMethod = 0;
 
 //            StringBuffer errorStringBuff = new StringBuffer(errorString);
 
+            FileInputStream fis = null;
+            XSSFWorkbook workbook = null;
             try {
+                Platform.runLater(() -> {
+                    MainPage.importLoadLbl.setText("processing import file");
+                    AddItem.dotAnim(MainPage.importLoadLbl);
+                    MainPage.loadingPane.toFront();
+                    MainPage.pane.setDisable(true);
+                });
 
 
-                FileInputStream fis = new FileInputStream(importFile);
-                XSSFWorkbook workbook = new XSSFWorkbook(new FileInputStream(importFile));
+                fis = new FileInputStream(importFile);
+                workbook = new XSSFWorkbook(new FileInputStream(importFile));
                 XSSFSheet sheet = workbook.getSheetAt(0);
                 Iterator<Row> rowIterator = sheet.iterator();
                 if (rowIterator.hasNext()) { //just the first column
@@ -261,15 +273,17 @@ public class ImportPreviewWindow  extends Application {
 
                     for (int i = 0; i < num_columns; i++) {
                         String colmnString = cellIterator.next().getStringCellValue();
-                        if (colsHashm.containsKey(colmnString)){
+                        if (colsHashm.containsKey(colmnString)) {
                             colsHashm.put(colmnString, i);
-                        } else{
-                            errorString += "\""+colmnString+"\", ";
+                        } else {
+                            errorString += "\"" + colmnString + "\", ";
                         }
                     }
-                    if (!errorString.equals("")){
-                        errorString = errorString.substring(0,errorString.length()-2);
-                        errorString = "Column"+(errorString.contains(",")?"s ":" ")+errorString+(errorString.contains(",")?" are":" is")+" not found in the database, make sure that the columns are named " +
+                    if (!errorString.equals("")) {
+                        errorString = errorString.substring(0, errorString.length() - 2);
+                        errorString = "Column" + (errorString.contains(",") ? "s " : " ") + errorString +
+                            (errorString.contains(",") ? " are" : " is") +
+                            " not found in the database, make sure that the columns are named " +
                             "\"SKU\", \"SN\", \"PN\", \"UPC\", \"Grade\", \"Location\", \"PO#\", \"Specs\", \"Notes\", \"User\", \"Date Created\", \"Date Modified\", \"History\"";
 
                     }
@@ -282,7 +296,7 @@ public class ImportPreviewWindow  extends Application {
                     int generatedSKUcount = 0;
                     int rowNum = 2;
 
-                    while (rowIterator.hasNext()){
+                    while (rowIterator.hasNext()) {
                         long currSKU = 0;
                         String currSN = null;
                         String currPN = null;
@@ -305,161 +319,173 @@ public class ImportPreviewWindow  extends Application {
 
                         //1
                         boolean needGenerating = false;
-                        if (colsHashm.get("SKU") != null){
+                        if (colsHashm.get("SKU") != null) {
                             Cell SKUcell = currRow.getCell(colsHashm.get("SKU"));
-                            if (SKUcell == null){
+                            if (SKUcell == null) {
                                 needGenerating = true;
-                            } else if (SKUcell.getCellType() == CellType.NUMERIC || (SKUcell.getCellType() == CellType.FORMULA && SKUcell.getCachedFormulaResultType() == CellType.NUMERIC)) {
+                            } else if (SKUcell.getCellType() == CellType.NUMERIC ||
+                                (SKUcell.getCellType() == CellType.FORMULA &&
+                                    SKUcell.getCachedFormulaResultType() == CellType.NUMERIC)) {
                                 currSKU = (long) SKUcell.getNumericCellValue();
                             } else {
 //                                System.out.println(SKUcell.getCellType());
-                                errorString += "Error in row "+rowNum+": couldn't retrieve SKU number from a cell;\n";
+                                errorString +=
+                                    "Error in row " + rowNum + ": couldn't retrieve SKU number from a cell;\n";
                             }
-                        } else{
+                        } else {
                             //generate SKU
 //                            currSKU =
                             needGenerating = true;
                         }
 
-                        if (needGenerating){
-                            ResultSet rs = stmt.executeQuery("SELECT SKUgenerated from addit_data");
+                        if (needGenerating) {
+                            ResultSet rs =
+                                stmt.executeQuery("SELECT SKUgenerated from " + MainPage.schema + ".addit_data");
                             rs.next();
                             long lastSKU = rs.getLong(1);
-                            currSKU = lastSKU+1;
-                            System.out.println("generated sku "+ currSKU+ "; execute update - "+stmt.executeUpdate("UPDATE addit_data SET SKUgenerated="+currSKU+" WHERE IDcolumn=1"));
+                            currSKU = lastSKU + 1;
+                            System.out.println("generated sku " + currSKU + "; execute update - " + stmt.executeUpdate(
+                                "UPDATE " + MainPage.schema + ".addit_data SET SKUgenerated=" + currSKU +
+                                    " WHERE IDcolumn=1"));
                             rs.close();
                             generatedSKUcount++;
                         }
-                        System.out.println(rowNum + " "+ currSKU);
+                        System.out.println(rowNum + " " + currSKU);
 
                         //2
-                        if (colsHashm.get("SN") != null){
+                        if (colsHashm.get("SN") != null) {
                             Cell SNcell = currRow.getCell(colsHashm.get("SN"));
-                            currSN = (SNcell == null? null: readCell(SNcell));
-                        } else{
+                            currSN = (SNcell == null ? null : readCell(SNcell));
+                        } else {
                             currSN = null;
                         }
 
                         //3
-                        if (colsHashm.get("PN") != null){
+                        if (colsHashm.get("PN") != null) {
                             Cell PNcell = currRow.getCell(colsHashm.get("PN"));
-                            currPN = (PNcell == null? null: readCell(PNcell));
-                        } else{
+                            currPN = (PNcell == null ? null : readCell(PNcell));
+                        } else {
                             currPN = null;
                         }
 
                         //4
-                        if (colsHashm.get("UPC") != null){
+                        if (colsHashm.get("UPC") != null) {
                             Cell UPCcell = currRow.getCell(colsHashm.get("UPC"));
-                            currUPC = (UPCcell == null? null: readCell(UPCcell));
-                        } else{
+                            currUPC = (UPCcell == null ? null : readCell(UPCcell));
+                        } else {
                             currUPC = null;
                         }
 
                         //5
-                        if (colsHashm.get("Grade") != null){
+                        if (colsHashm.get("Grade") != null) {
                             Cell gradecell = currRow.getCell(colsHashm.get("Grade"));
-                            currGrade = (gradecell == null? null: readCell(gradecell));
-                        } else{
+                            currGrade = (gradecell == null ? null : readCell(gradecell));
+                        } else {
                             currGrade = null;
                         }
 
                         //6
-                        if (colsHashm.get("Location") != null){
+                        if (colsHashm.get("Location") != null) {
                             Cell Locationcell = currRow.getCell(colsHashm.get("Location"));
-                            currLocation = (Locationcell == null? null: readCell(Locationcell));
-                        } else{
+                            currLocation = (Locationcell == null ? null : readCell(Locationcell));
+                        } else {
                             currLocation = null;
                         }
 
                         //7
-                        if (colsHashm.get("Notes") != null){
+                        if (colsHashm.get("Notes") != null) {
                             Cell Notescell = currRow.getCell(colsHashm.get("Notes"));
-                            currNotes = (Notescell == null? null: readCell(Notescell));
-                        } else{
+                            currNotes = (Notescell == null ? null : readCell(Notescell));
+                        } else {
                             currNotes = null;
                         }
 
                         //8
-                        if (colsHashm.get("User") != null){
+                        if (colsHashm.get("User") != null) {
                             Cell Usercell = currRow.getCell(colsHashm.get("User"));
-                            currUser = (Usercell == null? user: readCell(Usercell));
-                        } else{
+                            currUser = (Usercell == null ? user : readCell(Usercell));
+                        } else {
                             currUser = user;
                         }
 
                         //9
-                        if (colsHashm.get("Images") != null){
+                        if (colsHashm.get("Images") != null) {
                             Cell Imagescell = currRow.getCell(colsHashm.get("Images"));
-                            currImages = (Imagescell == null? null: readCell(Imagescell));
-                        } else{
+                            currImages = (Imagescell == null ? null : readCell(Imagescell));
+                        } else {
                             currImages = null;
                         }
 
                         //10
-                        if (colsHashm.get("History") != null){
+                        if (colsHashm.get("History") != null) {
                             Cell Historycell = currRow.getCell(colsHashm.get("History"));
-                            currOtherRecords = (Historycell == null? null: readCell(Historycell));
-                        } else{
+                            currOtherRecords = (Historycell == null ? null : readCell(Historycell));
+                        } else {
                             currOtherRecords = null;
                         }
 
                         //11
-                        if (colsHashm.get("PO#") != null){
+                        if (colsHashm.get("PO#") != null) {
                             Cell POnumcell = currRow.getCell(colsHashm.get("PO#"));
-                            currPOnumber = (POnumcell == null? null: readCell(POnumcell));
-                        } else{
+                            currPOnumber = (POnumcell == null ? null : readCell(POnumcell));
+                        } else {
                             currPOnumber = null;
                         }
 
                         //12
-                        if (colsHashm.get("Specs") != null){
+                        if (colsHashm.get("Specs") != null) {
                             Cell specscell = currRow.getCell(colsHashm.get("Specs"));
-                            currSpecs = (specscell == null? null: readCell(specscell));
-                        } else{
+                            currSpecs = (specscell == null ? null : readCell(specscell));
+                        } else {
                             currSpecs = null;
                         }
 
                         //13
-                        if (colsHashm.get("Date Created") != null){
+                        if (colsHashm.get("Date Created") != null) {
                             Cell datecrcell = currRow.getCell(colsHashm.get("Date Created"));
-                            System.out.println("date cell "+datecrcell.getCellType());
-                            if (datecrcell == null){
+                            System.out.println("date cell " + datecrcell.getCellType());
+                            if (datecrcell == null) {
                                 currDateCreated = currDateModified;
-                            } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
+                            } else if (datecrcell.getCellType() == CellType.NUMERIC &&
+                                DateUtil.isCellDateFormatted(datecrcell)) {
                                 System.out.println("getting data from ");
                                 try {
                                     currDateCreated = new Timestamp(datecrcell.getDateCellValue().getTime());
-                                } catch (Exception eee){
+                                } catch (Exception eee) {
                                     currDateCreated = currDateModified;
                                     System.out.println("error reading DateCreated");
                                 }
-                            } else{
-                                System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
+                            } else {
+                                System.out.println(
+                                    "error with date cell, incorect type; dsate creatredf is set to modified date, type " +
+                                        datecrcell.getCellType());
                                 currDateCreated = currDateModified;
                             }
-                        } else{
+                        } else {
                             currDateCreated = currDateModified;
                         }
 
                         //14
-                        if (colsHashm.get("Date Modified") != null){
+                        if (colsHashm.get("Date Modified") != null) {
                             Cell datecrcell = currRow.getCell(colsHashm.get("Date Modified"));
-                            System.out.println("date cell "+datecrcell.getCellType());
-                            if (datecrcell == null){
+                            System.out.println("date cell " + datecrcell.getCellType());
+                            if (datecrcell == null) {
                                 currDateModified = null;
-                            } else if (datecrcell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(datecrcell)){
-                                try{
+                            } else if (datecrcell.getCellType() == CellType.NUMERIC &&
+                                DateUtil.isCellDateFormatted(datecrcell)) {
+                                try {
                                     currDateModified = new Timestamp(datecrcell.getDateCellValue().getTime());
-                                } catch (Exception eee){
+                                } catch (Exception eee) {
                                     currDateModified = null;
                                     System.out.println("error reading DateModified");
                                 }
-                            } else{
-                                System.out.println("error with date cell, incorect type; dsate creatredf is set to modified date, type "+datecrcell.getCellType());
+                            } else {
+                                System.out.println(
+                                    "error with date cell, incorect type; dsate creatredf is set to modified date, type " +
+                                        datecrcell.getCellType());
                                 currDateModified = null;
                             }
-                        } else{
+                        } else {
                             currDateModified = null;
                         }
 
@@ -469,24 +495,24 @@ public class ImportPreviewWindow  extends Application {
                         rowNum++;
                         if (currSKU == 0) {
                             System.out.println("WTF LOL BREAKED");
-                            errorString+="\nCATASTROPHIC FAILURE";
+                            errorString += "\nCATASTROPHIC FAILURE";
                             continue;
                         }
 
 
                         if (needGenerating &&
-                            currSN==null &&
-                            currPN==null&&
-                            currUPC==null&&
-                            currGrade==null&&
-                            currLocation==null&&
-                            currNotes==null&&
-                            currUser==null&&
-                            currImages==null&&
-                            currOtherRecords==null&&
-                            currPOnumber==null&&
-                            currSpecs==null
-                        ){
+                            currSN == null &&
+                            currPN == null &&
+                            currUPC == null &&
+                            currGrade == null &&
+                            currLocation == null &&
+                            currNotes == null &&
+                            currUser == null &&
+                            currImages == null &&
+                            currOtherRecords == null &&
+                            currPOnumber == null &&
+                            currSpecs == null
+                        ) {
                             errorString += "\nThere was an empty item";
                             continue;
                         }
@@ -523,11 +549,12 @@ public class ImportPreviewWindow  extends Application {
                                 (currItem.DateModified == null ? null : "'" + currItem.DateModified + "'") + "," +
                                 (currItem.POnumber == null ? null : "'" + currItem.POnumber + "'") + "," +
                                 (currItem.Specs == null ? null : "'" + currItem.Specs + "'");
-                        String sql = ("INSERT INTO items " +
+                        String sql = ("INSERT INTO " + MainPage.schema + ".items " +
                             "VALUES (" + values + ")");
                         try {
                             int addingResult = stmt.executeUpdate(sql);
-                            int deleteResult = stmt.executeUpdate("DELETE from items WHERE SKU=" + currItem.SKU);
+                            int deleteResult = stmt.executeUpdate(
+                                "DELETE from " + MainPage.schema + ".items WHERE SKU=" + currItem.SKU);
 
                             importDataMethod.add(currItem);
                             itemCountMethod++;
@@ -536,65 +563,73 @@ public class ImportPreviewWindow  extends Application {
                             String message = ex.getMessage();
                             if (message.contains("Duplicate entry ") && message.contains(" for key 'items.PRIMARY'")) {
                                 System.out.println("Duplicate entry for key 'items.PRIMARY'");
-                                errorString += "\nError adding item "+currItem.SKU+": Duplicate SKU = "+currItem.SKU +";";
+                                errorString +=
+                                    "\nError adding item " + currItem.SKU + ": Duplicate SKU = " + currItem.SKU + ";";
 
-                            } else if (message.contains("Duplicate entry ") && message.contains(" for key 'items.SN'")) {
+                            } else if (message.contains("Duplicate entry ") &&
+                                message.contains(" for key 'items.SN'")) {
                                 System.out.println("Duplicate entry for key 'items.SN'");
-                                errorString += "\nError adding item "+currItem.SKU+": Duplicate SN = "+currItem.SN+";";
+                                errorString +=
+                                    "\nError adding item " + currItem.SKU + ": Duplicate SN = " + currItem.SN + ";";
 
-                            } else{
-                                errorString += "\nError adding item "+currItem.SKU+": Uncatched error;";
+                            } else {
+                                errorString += "\nError adding item " + currItem.SKU + ": Uncatched error;";
                             }
                         }
 
                     }
-                    fis.close();
-                    workbook.close();
+
                     stmt.close();
                     conn.close();
-                    System.out.println("num of rows "+ rowNum);
+                    System.out.println("num of rows " + rowNum);
 
                 }
+
             } catch (SQLException ex) {
                 errorString += "\nERROR: uncatched database error;";
                 MainPage.databaseErrorAlert(ex).showAndWait();
-            } catch (IOException ioe){
-                errorString += "\nERROR: uncatched IO Files error;";
+            } catch (IOException ioe) {
+                errorString += "\nERROR: uncatched IO error;";
                 Platform.runLater(() -> {
                     MainPage.ioErrorAlert(ioe).showAndWait();
                 });
-
-            } catch (Exception eeee){
+                ioe.printStackTrace();
+            } catch (Exception eeee) {
                 Platform.runLater(() -> {
                     MainPage.unknownErrorAlert(eeee).showAndWait();
 
                 });
+                eeee.printStackTrace();
+            } finally {
+                try {
+                    fis.close();
+                    workbook.close();
+                } catch (IOException e) {
+                    //thats alright who cares
+                }
+                int finalItemCountMethod = itemCountMethod;
+                Platform.runLater(() -> {
+                    MainPage.pane.toFront();
+                    MainPage.pane.setDisable(false);
+                    new ImportPreviewWindow(importDataMethod, errorString, finalItemCountMethod).start(primaryStage);
+                });
             }
-
-
-            int finalItemCountMethod = itemCountMethod;
-            Platform.runLater(() -> {
-                MainPage.pane.toFront();
-                MainPage.pane.setDisable(false);
-                new ImportPreviewWindow(importDataMethod, errorString, finalItemCountMethod).start(primaryStage);
-            });
         }).start();
 
-
-
     }
-    public String readCell(Cell cell){
-        switch (cell.getCellType()){
+
+    public String readCell(Cell cell) {
+        switch (cell.getCellType()) {
         case STRING:
-            return (cell.getStringCellValue().strip().equals("")?null:cell.getStringCellValue().strip());
+            return (cell.getStringCellValue().strip().equals("") ? null : cell.getStringCellValue().strip());
         case NUMERIC:
             return Integer.toString((int) cell.getNumericCellValue());
         case FORMULA:
-            switch (cell.getCachedFormulaResultType()){
+            switch (cell.getCachedFormulaResultType()) {
             case NUMERIC:
                 return Integer.toString((int) cell.getNumericCellValue());
             case STRING:
-                return (cell.getStringCellValue().strip().equals("")?null:cell.getStringCellValue().strip());
+                return (cell.getStringCellValue().strip().equals("") ? null : cell.getStringCellValue().strip());
             default:
 //                System.out.println("readCell() returned null,lol");
                 return null;
