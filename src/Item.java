@@ -28,6 +28,8 @@ public class Item {
 //    Images
 //    OtherRecords
 //    DateModified
+//    POnumber
+//    Specs
 
     //Strings
 //    SN
@@ -84,6 +86,23 @@ public class Item {
         this.DateModified = DateModified;
         this.POnumber = POnumber;
         this.Specs = Specs;
+    }
+
+    public void copy(Item other){
+        this.SKU = other.SKU;
+        this.SN = other.SN;
+        this.PN = other.PN;
+        this.UPC = other.UPC;
+        this.Grade = other.Grade;
+        this.Location = other.Location;
+        this.Notes = other.Notes;
+        this.User = other.User;
+        this.time = other.time;
+        this.Images = other.Images;
+        this.OtherRecords = other.OtherRecords;
+        this.DateModified = other.DateModified;
+        this.POnumber = other.POnumber;
+        this.Specs = other.Specs;
     }
 
     public String toString(){

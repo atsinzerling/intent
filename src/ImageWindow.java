@@ -34,7 +34,7 @@ public class ImageWindow extends Application {
         imageViewStage.initModality(Modality.WINDOW_MODAL);
         imageViewStage.setResizable(true);
         imageViewStage.show();
-        scene.setOnKeyPressed((KeyEvent e) -> {
+        scene.setOnKeyReleased((KeyEvent e) -> {
             if (e.getCode() == KeyCode.ESCAPE) {
                 imageViewStage.close();
             }

@@ -62,29 +62,24 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
 
-//import com.fasterxml.jackson.*;
-//import com.fasterxml.jackson.map.JsonMappingException;
-//import com.fasterxml.jackson.map.ObjectMapper;
-
-
 public class MainPage extends Application {
 
     static TableView<Item> table = new TableView<Item>();
     static String urll =
-//        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
-        "jdbc:mysql://localhost:3306/products2";
+        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+//        "jdbc:mysql://localhost:3306/products2";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
     static String schema =
-        "products2";
+        "products";
     static String user =
         "admin";
     static String passw =
-//        "658etra";
-        "newpass";
+        "658etra";
+//        "newpass";
     static String bartendPath = null;
     static String imagesPath =
-//        "\\\\DESKTOP-E5VI6AD\\application\\Images";
-        "D:\\Mine stuff\\Compiling\\Images";
+        "\\\\DESKTOP-E5VI6AD\\application\\Images";
+//        "D:\\Mine stuff\\Compiling\\Images";
 
     static Label importLoadLbl;
     static BorderPane loadingPane;
@@ -190,7 +185,7 @@ public class MainPage extends Application {
 
         table.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         TableColumn[] tablArr = updateTable();
-        BorderPane.setMargin(table, new Insets(14, 9, 12, 0));
+        BorderPane.setMargin(table, new Insets(14, 9, 12, 9));
 
         table.getColumns()
             .addAll(tablArr[13], tablArr[0], tablArr[1], tablArr[2], tablArr[3], tablArr[4], tablArr[5], tablArr[7],
@@ -213,8 +208,16 @@ public class MainPage extends Application {
         itemDel.setOnAction(e -> {
             deleteAct();
         });
+        MenuItem itemChangeLoc = new MenuItem("Change location");
+        itemChangeLoc.setOnAction(e -> {
+            new ChangeLocation(table.getSelectionModel().getSelectedItems(), "",0).start(primaryStage);
+            //make changes to history of items and user activity
+        });
         ContextMenu menu = new ContextMenu();
         menu.getItems().addAll(itemCopy, itemDel);
+        if (Methods.isAdmin(user)){
+            menu.getItems().addAll(itemChangeLoc);
+        }
         table.setContextMenu(menu);
 
         pane.setCenter(table);

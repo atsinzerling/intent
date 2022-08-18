@@ -60,6 +60,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
@@ -154,7 +155,7 @@ public class AddItem extends Application {
         rightGrid.add(specsArea, 0, 1);
 
         TextArea historyArea = new TextArea();
-        historyArea.setMaxWidth(320);
+        historyArea.setMaxWidth(465);
         historyArea.setPrefRowCount(11);
         historyArea.setEditable(false);
         historyArea.setWrapText(true);
@@ -163,9 +164,11 @@ public class AddItem extends Application {
         historyVbox.setVisible(false);
 
         Button save = new Button("Add Item");
-        save.setMinHeight(40);
+        save.setMinHeight(35);
         Button cancel = new Button("Cancel");
-        HBox bottomHistoryHbox = new HBox(10, historyVbox, cancel, save);
+        cancel.setMinSize(52,28);
+        HBox.setMargin(cancel,new Insets(0,6,0,0));
+        HBox bottomHistoryHbox = new HBox(10, historyVbox);
         bottomHistoryHbox.setAlignment(Pos.BOTTOM_LEFT);
 
 
@@ -176,17 +179,17 @@ public class AddItem extends Application {
         HBox.setMargin(historyArea, new Insets(0, 20, 0, 0));
 
         Button edit = new Button("Edit Item");
-        edit.setMinSize(120, 40);
+        edit.setMinSize(120, 35);
         edit.setVisible(false);
 
 
-        HBox editButHBox = new HBox();
+        HBox editButHBox = new HBox(10);
         editButHBox.setAlignment(Pos.CENTER_RIGHT);
-        editButHBox.getChildren().addAll(edit);
+        editButHBox.getChildren().addAll(cancel, save);
 //        editButHBox.setStyle("-fx-padding: 5 10 0 0; "
 ////            +"-fx-background-color: #dbdbff;"
 //        );
-        VBox.setMargin(editButHBox, new Insets(10, 16, 0, 0));
+        HBox.setMargin(editButHBox, new Insets(10, 16, 0, 0));
 
 
         grid.setStyle("-fx-padding: 10 0 0 30; "
@@ -204,10 +207,11 @@ public class AddItem extends Application {
 //        inputpane.setAlignment(rightGrid, Pos.TOP_LEFT);
         inputpane.setLeft(grid);
         inputpane.setBottom(bottomHistoryHbox);
-        BorderPane.setMargin(bottomHistoryHbox, new Insets(50, 10, 10, 30));
+        BorderPane.setMargin(bottomHistoryHbox, new Insets(70, 10, 10, 30));
 
         status.setAlignment(Pos.CENTER);
         status.setMaxWidth(Double.MAX_VALUE);
+        HBox.setMargin(imageStatus, new Insets(0,50,0,0));
 
         imageStatus.setAlignment(Pos.CENTER);
         HBox statusHbox = new HBox(60, status, imageStatus);
@@ -217,7 +221,9 @@ public class AddItem extends Application {
         BorderPane pane = new BorderPane();
         pane.setCenter(inputpane);
 //        pane.setBottom(hbox);
-        pane.setTop(new VBox(editButHBox, statusHbox));
+        HBox topHbox = new HBox(statusHbox, editButHBox);
+        topHbox.setAlignment(Pos.CENTER_RIGHT);
+        pane.setTop(topHbox);
 
 
         Scene secondScene = new Scene(pane, 1000, 610);
@@ -471,6 +477,19 @@ public class AddItem extends Application {
                         allSaved.set(false);
                     }
 
+                    try {
+                        Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                        Statement stmt = conn.createStatement();
+                        String sqll = "UPDATE "+MainPage.schema+".items SET DateModified='" + new Timestamp(System.currentTimeMillis()) +"' WHERE SKU="+currItem.SKU;
+
+                        stmt.executeUpdate(new String(sqll));
+                        stmt.close();
+                        conn.close();
+                        MainPage.updateTable();
+                    } catch (SQLException e) {
+                        MainPage.databaseErrorAlert(e).showAndWait();
+                    }
+
                     Platform.runLater(() -> {
                         if (allSaved.get()) {
                             setImageStatus("Images saved!", 3, "green");
@@ -634,8 +653,8 @@ public class AddItem extends Application {
                 timm = timm.split("\\.")[0];
             }
             String otherRecs =
-                MainPage.user + " on " + timm + " : saved images; total " +
-                    (images.size() == 1 ? "1 image." : images.size() + " images.");
+                MainPage.user + " on " + timm + " : saved images (" +
+                    (images.size() == 1 ? "1 image" : images.size() + " images")+" total)";
             if (otherRecs.length() > 2 &&
                 otherRecs.substring(otherRecs.length() - 2, otherRecs.length()).equals(", ")) {
                 otherRecs = otherRecs.substring(0, otherRecs.length() - 2);
@@ -661,7 +680,7 @@ public class AddItem extends Application {
         });
 
         pane.setRight(imageBlockPane);
-        BorderPane.setMargin(imageBlockPane, new Insets(0, 8, 0, 10));
+        BorderPane.setMargin(imageBlockPane, new Insets(20, 8, 0, 10));
         /** images ended*/
 
         /** print block added to the bottom of imageblockpane*/
@@ -809,6 +828,13 @@ public class AddItem extends Application {
                     exitConfirmAction("preview");
                 });
 
+//                editButHBox.getChildren().remove(edit);
+//                editButHBox.getChildren().addAll(save,edit);
+
+                editButHBox.getChildren().clear();
+                editButHBox.getChildren().addAll(cancel,save,edit);
+
+
 //                dragDropLbl.setVisible(true);
                 dragDropLbl.setDisable(false);
                 updateImages.setVisible(true);
@@ -821,7 +847,6 @@ public class AddItem extends Application {
             void setPreviewing() {
                 newWindow.setTitle("Preview an Item");
                 windowMode = "previewing";
-
 
                 SKUField.setEditable(false);
                 SNField.setEditable(false);
@@ -844,6 +869,9 @@ public class AddItem extends Application {
                 specsArea.setStyle(notEditableColorCSS);
 
                 SKUField.setText(Long.toString(currItem.SKU));
+
+                new additMethods().updateCurItem();
+
                 SNField.setText(currItem.SN);
                 PNField.setText(currItem.PN);
                 UPCField.setText(currItem.UPC);
@@ -880,6 +908,9 @@ public class AddItem extends Application {
 //                    edit.setDisable(true);
 //                }
                 //add field that was created by user
+                editButHBox.getChildren().clear();
+                editButHBox.getChildren().addAll(cancel, edit);
+
                 createdBy.setText("Item created by " + currItem.User);
 
                 System.out.println("previewing item "+currItem);
@@ -1012,7 +1043,7 @@ public class AddItem extends Application {
                         conn.close();
                     }
                     setStatus("An Item Successfully Added! Saving Images and opening preview window", 3, "green");
-                    new additMethods().updateCurItem();
+//                    new additMethods().updateCurItem();
                     imageAdditMethod.saveOnActionImages();
                     MainPage.updateTable();
                     new additMethods().setPreviewing();
@@ -1051,7 +1082,7 @@ public class AddItem extends Application {
                         return;
                     }
 
-                    String sqll = "UPDATE items SET " +
+                    String sqll = "UPDATE "+MainPage.schema+".items SET " +
                         (needReplacement(SNnew, currItem.SN) ?
                             (SNnew != null ? "SN='" + SNnew + "', " : "SN=" + SNnew + ", ") : "") +
                         (needReplacement(PNnew, currItem.PN) ?
@@ -1075,7 +1106,7 @@ public class AddItem extends Application {
                         sqll = sqll.replace(", WHERE SKU=" + currItem.SKU, " WHERE SKU=" + currItem.SKU);
                     }
 
-                    if (!sqll.contains("UPDATE items SET WHERE SKU=")) {
+                    if (!sqll.contains("UPDATE "+MainPage.schema+".items SET WHERE SKU=")) {
                         try {
                             String timm = new Timestamp(System.currentTimeMillis()).toString();
                             if (timm.split("\\.").length>0){
@@ -1208,6 +1239,7 @@ public class AddItem extends Application {
 //                            setSelectionOfCurrItem();
                             break;
                         case "preview":
+//                            new additMethods().updateCurItem();
                             setPreviewing();
                             imageAdditMethod.loadImagesFromDir();
                             break;
@@ -1240,7 +1272,7 @@ public class AddItem extends Application {
 
             void updateCurItem() {
                 long SKU = Long.parseLong(SKUField.getText());
-                currItem = MainPage.extractItemsFromDb("SELECT * FROM items WHERE SKU=" + SKU)[0];
+                currItem.copy(MainPage.extractItemsFromDb("SELECT * FROM "+MainPage.schema+".items WHERE SKU=" + SKU)[0]);
             }
 
             void updateFields() {
@@ -1257,7 +1289,7 @@ public class AddItem extends Application {
             void setSelectionOfCurrItem() {
                 if (currItem != null) {
                     int rowcount = 0;
-                    for (Item it : MainPage.extractItemsFromDb("SELECT * FROM items" + "\n" +
+                    for (Item it : MainPage.extractItemsFromDb("SELECT * FROM "+MainPage.schema+".items" + "\n" +
                         "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime DESC"
                     )) {
                         if (currItem.SKU == it.SKU) {

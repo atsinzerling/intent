@@ -60,7 +60,8 @@ public class ManageUsers extends Application {
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setPrefWidth(570);
 //        scrollPane.setPrefHeight();
-        scrollPane.setContent(new HBox(10, usersVbox, addUserBtn));
+        HBox scrollHbox = new HBox(10, usersVbox, addUserBtn);
+        scrollPane.setContent(scrollHbox);
 
         BorderPane pane = new BorderPane();
         pane.setLeft(scrollPane);
@@ -90,6 +91,8 @@ public class ManageUsers extends Application {
 //                manageUsersStage.close();
 //            }
 //        });
+        Methods.boostScroll(scrollPane, scrollHbox,50);
+
     }
     public void setUsersBox(){
         usersVbox = generateUsersVbox();
@@ -364,6 +367,7 @@ public class ManageUsers extends Application {
 
                             ResultSet rs = stmt.executeQuery("SELECT * FROM "+MainPage.schema+".useractions WHERE User='"+userObj.getUsername()+"'");
                             int coun = 0;
+                            conn.setAutoCommit(false);
                             while(rs.next()) {
                                 stmt.addBatch(
                                     "UPDATE "+MainPage.schema+".useractions SET User='" + newUsern + "' WHERE (User, Date) = ('" +
@@ -371,6 +375,8 @@ public class ManageUsers extends Application {
                                 coun++;
                             }
                             stmt.executeBatch();
+                            conn.commit();
+                            conn.setAutoCommit(true);
                             if (userObj.getUsername().equals(MainPage.user)){
                                 MainPage.user = newUsern;
                                 MainPage.loggedInLbl.setText("logged in as "+MainPage.user);

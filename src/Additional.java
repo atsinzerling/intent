@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 public class Additional {
     public static String url = "jdbc:sqlite:D:/Mine stuff/CS python folder/JAVA/spring/src/GENERAL/products.db";
@@ -217,8 +218,135 @@ public class Additional {
         }
     }
 
-//    public static void main(String[] args) {
-//        eliminateNulls();
-//    }
+    public static void main(String[] args) {
+        try {
+            String newL = "location8";
+
+            String timm = new Timestamp(System.currentTimeMillis()).toString();
+            if (timm.split("\\.").length>0){
+                timm = timm.split("\\.")[0];
+            }
+            Timestamp timmst = new Timestamp(System.currentTimeMillis());
+
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/products2", "admin", "newpass");
+            Statement stmt = conn.createStatement();
+
+            Item[] arr = extractItemsFromDb(
+                "SELECT * FROM " + "products2" + ".items"
+//                    + "\n" +
+//                    "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC"
+            );
+
+            long start = System.currentTimeMillis();
+
+            int count = 0;
+
+
+
+            conn.setAutoCommit(false);
+
+//            ResultSet rs = stmt.executeQuery("SELECT SKU, OtherRecords, Location FROM products2.items");
+            for (Item it: arr){
+                String otherRecs = "user on " + timm+ " : " + "updated Location from \""+(it.Location==null?"":it.Location)+"\" to \"" + newL + "\"" + ";<<<:::===" + (it.OtherRecords == null ? "" : it.OtherRecords );;
+                String sqlll = "UPDATE products2.items SET Location='"+newL+"', OtherRecords='" + otherRecs + "', " +
+                    "DateModified='" + timmst + "' WHERE SKU="+it.SKU;
+
+                //sqlll updates history and item
+//                System.out.println(sqlll);
+                stmt.addBatch(new String(sqlll));
+                count++;
+            }
+            System.out.println(stmt.executeBatch());
+
+            conn.commit();
+            conn.setAutoCommit(true);
+
+            System.out.println(newL+" - "+count+" items; execution time: "+(System.currentTimeMillis()-start));
+            stmt.close();
+            conn.close();
+
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static Item[] extractItemsFromDb(String query) {
+        System.out.println("\t SQL extracting  " + query.replace("\n", "\t"));
+
+        /** just copy of convResultSetToItem(getResultSet(query)) but closing connection */
+
+        ResultSet rs = null;
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/products2", "admin", "newpass");
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(query);
+        } catch (SQLException e) {
+            MainPage.databaseErrorAlert(e).showAndWait();
+        }
+
+
+        ArrayList<Item> outList = new ArrayList<>();
+        try {
+            while (rs.next()) {
+                long st1 = rs.getInt(1);
+                String st2 = rs.getString(2);
+                String st3 = rs.getString(3);
+                String st4 = rs.getString(4);
+                String st5 = rs.getString(5);
+                String st6 = rs.getString(6);
+                String st7 = rs.getString(7);
+                String st8 = rs.getString(8);
+                Timestamp st9 = rs.getTimestamp(9);
+                String st10 = rs.getString(10);
+                String st11 = rs.getString(11);
+                Timestamp st12 = rs.getTimestamp(12);
+                String st13 = rs.getString(13);
+                String st14 = rs.getString(14);
+                outList.add(new Item(
+                    rs.getInt(1),
+                    (st2 == "" ? null : st2),
+                    (st3 == "" ? null : st3),
+                    (st4 == "" ? null : st4),
+                    (st5 == "" ? null : st5),
+                    (st6 == "" ? null : st6),
+                    (st7 == "" ? null : st7),
+                    (st8 == "" ? null : st8),
+                    st9,
+                    (st10 == "" ? null : st10),
+                    (st11 == "" ? null : st11),
+                    st12,
+                    (st13 == "" ? null : st13),
+                    (st14 == "" ? null : st14)
+                ));
+
+//                rs.next();
+            }
+
+
+        } catch (SQLException e) {
+            MainPage.databaseErrorAlert(e).showAndWait();
+        }
+        try {
+            rs.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        Item[] out = outList.toArray(new Item[outList.size()]);
+        return out;
+    }
 
 }

@@ -9,23 +9,6 @@ java.sql.SQLIntegrityConstraintViolationException: Duplicate entry '17' for key 
 //        "jdbc:mysql://localhost:3306/products";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
 
-//            ImageView imgview = new ImageView("...");
-//            imgview.setFitWidth(200);
-//            imgview.setFitHeight(200);
-//            try{
-//                imgview.setImage(new Image(new FileInputStream(fl)));
-//            } catch (FileNotFoundException ex) {
-//                ex.printStackTrace();
-//            }
-//            StackPane imgWrap = new StackPane(imgview);
-//            imgWrap.setMaxSize(200, 200);
-//            imgWrap.setStyle("-fx-border-radius: 20; " +
-//                "-fx-border-color: black;" +
-//                "-fx-border-width: 5 ;");
-//            vbox.getChildren().add(imgWrap);
-//            VBox.setMargin(imgWrap, new Insets(10, 10, 10, 10));
-
-
 
 CREATE TABLE `items` (
   `SKU` bigint NOT NULL,
@@ -56,216 +39,12 @@ Location
 POnumber
 Specs
 
-admin on 2022-05-30 15:38:52.38: updated UPC to "cccc", updated POnumber to "fg"<<<:::===admin on 2022-05-30 15:38:46.149: updated UPC to "cccccccccc"<<<:::===admin on 2022-05-30 15:38:33.83: updated Notes to "dd", updated Grade to "sdwdewd", updated Specs to "gddddd"<<<:::===admin on 2022-05-30 15:28:55.464: updated Notes to "gt4g", updated PN to "frg4", updated Specs to "g"<<<:::===
-
-
-
 when adding new user, first try to add it into the database, then add to the arraylist and update
 probably add button to refresh
 
 Platform.runLater(() -> {
 //            userLbl.setMinHeight(userTextF.getHeight());
         });
-
-
-//        ArrayList<Item> outList = new ArrayList<>();
-//
-//
-//        try {
-//            Connection conn = DriverManager.getConnection(urll);
-//            Statement stmt = conn.createStatement();
-////            int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
-//            ResultSet rs = stmt.executeQuery(query);
-////            out = new Item[row_count];
-////            rs.next();
-//
-//
-//            while (rs.next()) {
-////                System.out.println(rs.getInt(1) +  "\t" +
-////                    rs.getString(2) + "\t" +
-////                    rs.getString(3) + "\t" +
-////                    rs.getString(4) + "\t" +
-////                    rs.getString(5) + "\t" +
-////                    rs.getString(6) + "\t" +
-////                    rs.getString(7) + "\t" +
-////                    rs.getString(8) + "\t" +
-////                    rs.getTimestamp(9) + "\t" +
-////                    rs.getString(10) + "\t" +
-////                    rs.getString(11) + "\t"
-////                );
-////                if (rs.getTimestamp(9) != null){
-////                    System.out.println(rs.getTimestamp(9).getClass());
-////                }
-//                outList.add(new Item(
-//                    rs.getInt(1),
-//                    rs.getString(2),
-//                    rs.getString(3),
-//                    rs.getString(4),
-//                    rs.getString(5),
-//                    rs.getString(6),
-//                    rs.getString(7),
-//                    rs.getString(8),
-//                    rs.getTimestamp(9),
-//                    rs.getString(10),
-//                    rs.getString(11)
-//                ));
-////                rs.next();
-//                conn.close();
-//            }
-//        } catch (SQLException e) {
-//            System.out.println(e.getMessage());
-//        }
-//        Item[] out = outList.toArray(new Item[outList.size()]);
-
-
-
-//    public static Item[] readJson(){
-//        JSONParser jsonParser = new JSONParser();
-//
-//        FileReader reader = null;
-//        try {
-//            reader = new FileReader("src/items.json");
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//
-//        Object obj = null;
-//        try {
-//            obj = jsonParser.parse(reader);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (ParseException e) {
-//            e.printStackTrace();
-//        }
-//
-//        JSONArray arr = (JSONArray) obj;
-//        System.out.println(arr);
-//        Item[] out = new Item[arr.size()];
-//        int coun = 0;
-//        for (Object elm: arr){
-//            JSONObject ell = (JSONObject) elm;
-//            out[coun] = new Item((int)ell.get("SKU"),(String)ell.get("SN"),(String)ell.get("PN"),(String)ell.get("UPC"),true,null);
-//            coun++;
-//        }
-//        return out;
-//    }
-
-//    public static boolean writeToJson(Item[] arr){
-//        JSONArray jsonArr = new JSONArray();
-//        for (Item ite: arr){
-//            JSONObject jsonItem = new JSONObject();
-//            jsonItem.put("SKU", ite.SKU);
-//            jsonItem.put("SN", ite.SN);
-//            jsonItem.put("PN", ite.PN);
-//            jsonItem.put("UPC", ite.UPC);
-//            jsonItem.put("isPerfect", ite.isPerfect);
-//
-//            JSONArray jsonImages = new JSONArray();
-//            if (ite.images != null){
-//                for (String img : ite.images) {
-//                    jsonImages.add(img);
-//                }
-//            }
-//            jsonItem.put("images", jsonImages);
-//
-//
-//
-//            jsonArr.add(jsonItem);
-//        }
-//        try (FileWriter file = new FileWriter("src/items.json")) {
-//            //We can write any JSONArray or JSONObject instance to the file
-////            String st = jsonArr.toString(4);
-//            String stt = (new ObjectMapper()).writerWithDefaultPrettyPrinter().writeValueAsString(jsonArr);
-//            file.write(stt);
-//            System.out.println(stt);
-//            file.flush();
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return true;
-//    }
-
-
-
-//            Item[] oldArr = MainPage.readJson();
-//            Item[] newArr = new Item[oldArr.length+1];
-//            new Item(
-//                Integer.parseInt(SKUFieled.getText()),
-//                SNFieled.getText(),
-//                PNFieled.getText(),
-//                UPCFieled.getText(),
-//                "","","","",null,"",""
-//            );
-//            for (int i = 0; i < oldArr.length; i++){
-//                newArr[i+1] = oldArr[i];
-//            }
-//            MainPage.writeToJson(newArr);
-
-
-//            MainPage.table.refresh();
-
-
-
-
-//            ArrayList<Image> imagesFinal = new ArrayList<>();
-//            Thread newThread = new Thread(() -> {
-//                try {
-//                    System.out.println("started loading images");
-//
-//
-//
-//                } catch (IOException ex) {
-//                    ex.printStackTrace();
-//                }
-//            });
-//            newThread.start();
-//            try {
-//                newThread.join();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-
-
-
-
-                    //part before for not main functionality
-
-//                        System.out.println("SELECT from items WHERE SKU=" + itemsSelect.get(0).SKU);
-//                        ResultSet rss = stmt.executeQuery("SELECT * FROM items WHERE SKU=''");
-//                        System.out.println(rss.isClosed());
-//                        System.out.println((new Item(
-//                            rss.getInt(1),
-//                            rss.getString(2),
-//                            rss.getString(3),
-//                            rss.getString(4),
-//                            rss.getString(5),
-//                            rss.getString(6),
-//                            rss.getString(7),
-//                            rss.getString(8),
-//                            rss.getTimestamp(9),
-//                            rss.getString(10),
-//                            rss.getString(11)
-//                        )));
-
-
-
-//                System.out.println(rs.getInt(1) +  "\t" +
-//                    rs.getString(2) + "\t" +
-//                    rs.getString(3) + "\t" +
-//                    rs.getString(4) + "\t" +
-//                    rs.getString(5) + "\t" +
-//                    rs.getString(6) + "\t" +
-//                    rs.getString(7) + "\t" +
-//                    rs.getString(8) + "\t" +
-//                    rs.getTimestamp(9) + "\t" +
-//                    rs.getString(10) + "\t" +
-//                    rs.getString(11) + "\t"
-//                );
-//                if (rs.getTimestamp(9) != null){
-//                    System.out.println(rs.getTimestamp(9).getClass());
-//                }
 
 
 java --module-path "C:\Program Files\Eclipse Adoptium\libsss\javafx-sdk-11.0.2\lib" --add-modules=javafx.controls,javafx.media,javafx.fxml -jar intent.jar
@@ -298,11 +77,6 @@ C:\Windows\System32\cmd.exe /k java --module-path "C:\Program Files\Intent Datab
 | | +--------------------------------------------------------+ | |
 | +------------------------------------------------------------+ |
 +----------------------------------------------------------------+
-
-
-
-
-
 
 
 
@@ -357,6 +131,8 @@ CREATE TABLE `products`.`useractions` (
 
   SET GLOBAL authentication_policy='mysql_native_password';
 
+
+
 Done:
 - esc button exits editing or previewing of elements (adding mode works too now)
 - Changes are saved with old value record for Pn, location, grade, po#
@@ -365,22 +141,22 @@ Done:
 - addit methods use one instance
 - Generating SKU for custom items
 - redesign statuses, so that they show and disappear (when need to show, it shows the needed one and hides all the other ones; after a few seconds it shows the other one)
-
+- add details what was added to history
+- buttons allocation UI
 - Location confirmation on saving changes
+- Changing location for many elements functionality for admin
+- fix item preview closing on esc
+- make user activity showing by 14, 30 or any number of days + show days on record   + refresh btn
 
 
 List of tasks:
 
-- Changing location for many elements functionality for admin
 - Showing errors while import
-- buttons allocation UI
-- make user activity showing by 14, 30 or any number of days + show days on record
 - when importing, if error sku then use another sku
-- add details what was added to history
+- change proportions of panes in the add item window
 
 - create sql script for initial creation of users
 - script to delete empty folders
-
 
 More advanced:
 - excel problems
@@ -389,11 +165,21 @@ More advanced:
 - more advanced printing
 
 test al importnt feratures
+- edit generating nums in import: it checks resultsets finding the right one and remembers it; at the end it commits the new SKU to the cell
+- disable auto-commit there
+
+sometimes might need update authentication policy
+
+- do tests how should i update data
+
+a307 b307
 
 
-sometimes might ned update authentication policy
-
-
+SET GLOBAL authentication_policy='mysql_native_password';
+CREATE USER 'admin'@'%' IDENTIFIED WITH mysql_native_password BY '658etra'
+FLUSH PRIVILEGES;
+GRANT SELECT,INSERT, DELETE, UPDATE, CREATE USER, ALTER, RELOAD ON *.* TO 'admin'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
 
 
 

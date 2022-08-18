@@ -1,7 +1,12 @@
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -220,11 +225,52 @@ public class Methods {
             if (currSKU > lastSKU+1){
                 stmt.executeUpdate("UPDATE "+MainPage.schema+".addit_data SET SKUcustom="+(currSKU-1)+" WHERE IDcolumn=1");
             }
+            stmt.close();
+            conn.close();
         }  catch (SQLException ex) {
             ex.printStackTrace();
 //            MainPage.databaseErrorAlert(ex).showAndWait();
         }
         return currSKU;
     }
+//    public static boolean isChildFocused(javafx.scene.Parent parent)
+//    {
+//        for (Node node : parent.getChildrenUnmodifiable())
+//        {
+//            if (node.isFocused())
+//            {
+//                return true;
+//            }
+//            else if (node instanceof javafx.scene.Parent)
+//            {
+//                if (isChildFocused((javafx.scene.Parent)node))
+//                {
+//                    return true;
+//                }
+//            }
+//        }
+//        return false;
+//    }
+    public static void boostScroll(ScrollPane scrollPane, Node content, double origBoost){
+        scrollPane.vvalueProperty().addListener(
+            (ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+                //System.out.println("from "+oldValue+" to "+newValue);
+                double boost = origBoost/ (content instanceof VBox?((VBox)content).getHeight() : ((HBox)content).getHeight());
+                double diff = (double) newValue - (double) oldValue;
+                if (almostEqual(diff, boost, 0.00001) || almostEqual(diff, (0 - boost), 0.00001) || almostEqual(diff, 0, 0.000001)) {
+                    return;
+                }
+                double newww = scrollPane.getVvalue() + (diff > 0 ? boost : (0 - boost));
+                //System.out.println("\tnewww val - "+newww+"; diff - "+diff);
+                if (0 < newww && newww < 1) {
+                    //System.out.println("\tsetting value");
+                    scrollPane.setVvalue(newww);
+                }
+            });
+    }
+    public static boolean almostEqual(double a, double b, double eps) {
+        return Math.abs(a - b) < eps;
+    }
+
 }
 
