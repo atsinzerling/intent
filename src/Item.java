@@ -68,10 +68,9 @@ public class Item {
 //    Specs
 
 
-
-
     public Item(long SKU, String SN, String PN, String UPC, String grade, String location, String notes,
-                String user, Timestamp time, String images, String otherRecords, Timestamp DateModified, String POnumber, String Specs) {
+                String user, Timestamp time, String images, String otherRecords, Timestamp DateModified,
+                String POnumber, String Specs) {
         this.SKU = SKU;
         this.SN = SN;
         this.PN = PN;
@@ -88,7 +87,7 @@ public class Item {
         this.Specs = Specs;
     }
 
-    public void copy(Item other){
+    public void copy(Item other) {
         this.SKU = other.SKU;
         this.SN = other.SN;
         this.PN = other.PN;
@@ -105,38 +104,38 @@ public class Item {
         this.Specs = other.Specs;
     }
 
-    public String toString(){
-        return "SKU:"+SKU+" "+
-            "SN:"+SN+" "+
-            "PN:"+PN+" "+
-            "UPC:"+UPC+" "+
-            "Grade:"+Grade+" "+
-            "Location:"+Location+" "+
-            "Notes:"+Notes+" "+
-            "User:"+User+" "+
-            "time:"+time+" "+
-            "Images:"+Images+" "+
-            "OtherRecords:"+OtherRecords+" "+
-            "DateModified:"+time;
+    public String toString() {
+        return "SKU:" + SKU + " " +
+            "SN:" + SN + " " +
+            "PN:" + PN + " " +
+            "UPC:" + UPC + " " +
+            "Grade:" + Grade + " " +
+            "Location:" + Location + " " +
+            "Notes:" + Notes + " " +
+            "User:" + User + " " +
+            "time:" + time + " " +
+            "Images:" + Images + " " +
+            "OtherRecords:" + OtherRecords + " " +
+            "DateModified:" + time;
     }
 
-    public String excelFormat(){
+    public String excelFormat() {
         return
-            (SKU)+"\t"+
-            (SN==null?"":SN)+"\t"+
-            (PN==null?"":PN)+"\t"+
-            (UPC==null?"":UPC)+"\t"+
-            (Grade==null?"":Grade)+"\t"+
-            (Location==null?"":Location)+"\t"+
-            (Notes==null?"":Notes.replaceAll("\t", "   ").replaceAll("\n", "   "))+"\t"+
-            (User==null?"":User)+"\t"+
-            (time==null?"":time)+"\t"+
-            "\t"+
-            (OtherRecords==null?"":OtherRecords.replaceAll("\t", "   ").replaceAll("\n", "   "))+"\t"+
-            (DateModified==null?"":DateModified)+"\t"+
-            (POnumber==null?"":POnumber)+"\t"+
-            (Specs==null?"":Specs.replaceAll("\t", "   ").replaceAll("\n", "   "))
-                +"\n"
+            (SKU) + "\t" +
+                (SN == null ? "" : SN) + "\t" +
+                (PN == null ? "" : PN) + "\t" +
+                (UPC == null ? "" : UPC) + "\t" +
+                (Grade == null ? "" : Grade) + "\t" +
+                (Location == null ? "" : Location) + "\t" +
+                (Notes == null ? "" : Notes.replaceAll("\t", "   ").replaceAll("\n", "   ")) + "\t" +
+                (User == null ? "" : User) + "\t" +
+                (time == null ? "" : time) + "\t" +
+                "\t" +
+                (OtherRecords == null ? "" : OtherRecords.replaceAll("\t", "   ").replaceAll("\n", "   ")) + "\t" +
+                (DateModified == null ? "" : DateModified) + "\t" +
+                (POnumber == null ? "" : POnumber) + "\t" +
+                (Specs == null ? "" : Specs.replaceAll("\t", "   ").replaceAll("\n", "   "))
+                + "\n"
             ;
     }
 
@@ -189,7 +188,7 @@ public class Item {
     }
 
     public String getNotes() {
-        return (Notes!=null?Notes.replaceAll("\n"," ").replaceAll("\t"," "):null);
+        return (Notes != null ? Notes.replaceAll("\n", " ").replaceAll("\t", " ") : null);
     }
 
     public void setNotes(String notes) {
@@ -221,16 +220,20 @@ public class Item {
     }
 
     public String getOtherRecords() {
-        return (OtherRecords!=null?OtherRecords.replaceAll("\n"," ").replaceAll("\t"," "):null);
+        return (OtherRecords != null ? OtherRecords.replaceAll("\n", " ").replaceAll("\t", " ") : null);
     }
 
     public void setOtherRecords(String otherRecords) {
         OtherRecords = otherRecords;
     }
 
-    public Timestamp getDateModified() {return DateModified;}
+    public Timestamp getDateModified() {
+        return DateModified;
+    }
 
-    public void setDateModified(Timestamp dateModified) { DateModified = dateModified; }
+    public void setDateModified(Timestamp dateModified) {
+        DateModified = dateModified;
+    }
 
     public String getPOnumber() {
         return POnumber;
@@ -241,7 +244,7 @@ public class Item {
     }
 
     public String getSpecs() {
-        return (Specs!=null?Specs.replaceAll("\n"," ").replaceAll("\t"," "):null);
+        return (Specs != null ? Specs.replaceAll("\n", " ").replaceAll("\t", " ") : null);
     }
 
     public void setSpecs(String specs) {

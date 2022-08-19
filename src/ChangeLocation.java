@@ -1,6 +1,5 @@
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -8,46 +7,28 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-//import com.monitorjbl.xlsx.StreamingReader;
 
 public class ChangeLocation extends Application {
 
@@ -61,14 +42,8 @@ public class ChangeLocation extends Application {
         this.itemCount = itemCount;
     }
 
-    public ChangeLocation() {
-    }
-
     @Override
     public void start(Stage primaryStage) {
-
-
-
 
         Button cancel = new Button("Cancel");
         Button Confirm = new Button("Confirm");
@@ -85,15 +60,15 @@ public class ChangeLocation extends Application {
         VBox mainVbox = new VBox(8);
 
         HashMap<String, Integer> hash = new HashMap<>();
-        for (Item it: changeData){
-            if (hash.containsKey(it.Location)){
-                hash.replace(it.Location, hash.get(it.Location)+1);
-            } else{
+        for (Item it : changeData) {
+            if (hash.containsKey(it.Location)) {
+                hash.replace(it.Location, hash.get(it.Location) + 1);
+            } else {
                 hash.put(it.Location, 1);
             }
         }
-        List<Map.Entry<String, Integer> > list
-            = new LinkedList<Map.Entry<String, Integer> >(
+        List<Map.Entry<String, Integer>> list
+            = new LinkedList<Map.Entry<String, Integer>>(
             hash.entrySet());
 
         // Sort the list using lambda expression
@@ -110,25 +85,24 @@ public class ChangeLocation extends Application {
         }
 
         StringBuilder prevLocs = new StringBuilder("");
-        for (Map.Entry<String, Integer> me: hash.entrySet()){
-            Label lbl = new Label( me.getValue()+(me.getValue()==1?" item":" items") + " with Location \""+me.getKey()+"\"");
-            prevLocs.append("\""+me.getKey()+"\"").append(", ");
+        for (Map.Entry<String, Integer> me : hash.entrySet()) {
+            Label lbl = new Label(
+                me.getValue() + (me.getValue() == 1 ? " item" : " items") + " with Location \"" + me.getKey() + "\"");
+            prevLocs.append("\"" + me.getKey() + "\"").append(", ");
             mainVbox.getChildren().add(lbl);
         }
         prevLocs.setLength(Math.max(prevLocs.length() - 2, 0));
 
         TextField textf = new TextField();
         Label newLocLbl = new Label("new Location:");
-        HBox changeBox = new HBox(6,newLocLbl, textf);
+        HBox changeBox = new HBox(6, newLocLbl, textf);
         changeBox.setAlignment(Pos.CENTER_LEFT);
-        VBox.setMargin(changeBox, new Insets(0,0,0,0));
-//        mainVbox.getChildren().add(changeBox);
+        VBox.setMargin(changeBox, new Insets(0, 0, 0, 0));
         // change location to empty
         HBox buttonsHbox = new HBox(10, cancel, Confirm);
-        VBox buttonsVbox = new VBox(8,changeBox,buttonsHbox);
+        VBox buttonsVbox = new VBox(8, changeBox, buttonsHbox);
 
         BorderPane pane = new BorderPane();
-//        pane.setTop();
         pane.setCenter(mainVbox);
         pane.setBottom(buttonsVbox);
 
@@ -138,7 +112,8 @@ public class ChangeLocation extends Application {
 
         Scene scene = new Scene(pane, 400, 350);
         Stage importPreviewStage = new Stage();
-        importPreviewStage.setTitle("Change Location for "+changeData.size()+" item"+(changeData.size()==1?"":"s"));
+        importPreviewStage.setTitle(
+            "Change Location for " + changeData.size() + " item" + (changeData.size() == 1 ? "" : "s"));
         importPreviewStage.setScene(scene);
         importPreviewStage.initOwner(primaryStage);
         importPreviewStage.initModality(Modality.WINDOW_MODAL);
@@ -147,8 +122,6 @@ public class ChangeLocation extends Application {
 
         scene.setOnKeyPressed((KeyEvent e) -> {
             if (e.getCode() == KeyCode.ESCAPE) {
-//                System.out.println("firing exit from setonkeypressed\t\tfocus: "+ secondScene.focusOwnerProperty().get().getClass());
-//                additMethod.exitConfirmAction("exit");
                 importPreviewStage.close();
             }
         });
@@ -158,12 +131,11 @@ public class ChangeLocation extends Application {
         });
         Confirm.setOnAction(e -> {
             String newL = textf.getText().strip();
-            if (newL==null || newL.equals("")){
+            if (newL == null || newL.equals("")) {
                 Methods.errorAlert("Empty location", "Cannot change to empty Location");
                 return;
             }
             new Thread(() -> {
-
 
                 int countAdded = 0;
 
@@ -181,19 +153,23 @@ public class ChangeLocation extends Application {
                     Statement stmt = conn.createStatement();
 
                     String timm = new Timestamp(System.currentTimeMillis()).toString();
-                    if (timm.split("\\.").length>0){
+                    if (timm.split("\\.").length > 0) {
                         timm = timm.split("\\.")[0];
                     }
                     Timestamp timmst = new Timestamp(System.currentTimeMillis());
                     conn.setAutoCommit(false);
 
-                    for (Item it: changeData){
-                        String otherRecs = MainPage.user+" on " + timm+ " : " + "updated Location from \""+(it.Location==null?"":it.Location)+"\" to \"" + newL + "\" (in a batch)" + ";<<<:::===" + (it.OtherRecords == null ? "" : it.OtherRecords );;
-                        String sqlll = "UPDATE "+MainPage.schema+".items SET Location='"+newL+"', OtherRecords='" + otherRecs + "', " +
-                            "DateModified='" + timmst + "' WHERE SKU="+it.SKU;
+                    for (Item it : changeData) {
+                        String otherRecs = MainPage.user + " on " + timm + " : " + "updated Location from \"" +
+                            (it.Location == null ? "" : it.Location) + "\" to \"" + newL + "\" (in a batch)" +
+                            ";<<<:::===" + (it.OtherRecords == null ? "" : it.OtherRecords);
+                        ;
+                        String sqlll =
+                            "UPDATE " + MainPage.schema + ".items SET Location='" + newL + "', OtherRecords='" +
+                                otherRecs + "', " +
+                                "DateModified='" + timmst + "' WHERE SKU=" + it.SKU;
 
                         //sqlll updates history and item
-//                System.out.println(sqlll);
                         stmt.executeUpdate(new String(sqlll));
                         countAdded++;
                     }
@@ -211,7 +187,8 @@ public class ChangeLocation extends Application {
                 } finally {
                     int finalCountAdded = countAdded;
                     Methods.updateUserLog(MainPage.user,
-                        "changed location for " + (finalCountAdded == 1 ? "1 item" : finalCountAdded + " items")+" from "+prevLocs+" to \""+newL+"\"");
+                        "changed location for " + (finalCountAdded == 1 ? "1 item" : finalCountAdded + " items") +
+                            " from " + prevLocs + " to \"" + newL + "\"");
                     Platform.runLater(() -> {
                         MainPage.pane.toFront();
                         MainPage.pane.setDisable(false);
@@ -220,8 +197,9 @@ public class ChangeLocation extends Application {
                         importPreviewStage.close();
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setTitle("Changing location successful!");
-//            alert.setHeaderText("Look, a Confirmation Dialog");
-                        alert.setContentText(Methods.wrap("Successfully changed location for "  + (finalCountAdded == 1 ? "1 item" : finalCountAdded + " items")+" from "+prevLocs+" to \""+newL+"\""));
+                        alert.setContentText(Methods.wrap("Successfully changed location for " +
+                            (finalCountAdded == 1 ? "1 item" : finalCountAdded + " items") + " from " + prevLocs +
+                            " to \"" + newL + "\""));
                         alert.showAndWait();
                     });
                 }

@@ -46,7 +46,12 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import org.apache.commons.io.FileUtils;
 
+import javax.imageio.ImageIO;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
 import java.awt.Desktop;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -69,14 +74,7 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javafx.util.Duration;
-import org.apache.commons.io.FileUtils;
-
-import javax.imageio.ImageIO;
-import javax.print.PrintService;
-import javax.print.PrintServiceLookup;
-
-public class AddItem extends Application {
+public class AddItem_old extends Application {
 
     Label status = new Label("");
     Stack<Integer> statusStack = new Stack<Integer>();
@@ -89,7 +87,7 @@ public class AddItem extends Application {
     //        "D:\\Mine stuff\\Compiling\\Images";
     String user = "";
 
-    public AddItem(String windowMode, Item currItem, String user) {
+    public AddItem_old(String windowMode, Item currItem, String user) {
         this.windowMode = windowMode;
         this.currItem = currItem;
         this.user = user;
@@ -292,12 +290,10 @@ public class AddItem extends Application {
             @Override
             public void uncaughtException(Thread th, Throwable ex) {
                 System.out.println("\n\n\nUncaught Thread exception: \n" + ex + "\n\n\n");
-                ex.printStackTrace();
             }
         };
-        HBox printHBox = new HBox(30);
 
-        class additMethods {
+        class imageAdditMethods {
             private void configureFileChooser(
                 final FileChooser fileChooser) {
                 fileChooser.setTitle("Choose Pictures");
@@ -385,7 +381,7 @@ public class AddItem extends Application {
 
             /** methods for save button, only in editing and adding*/
 
-            void saveOnActionImages(boolean initialsave) {
+            void saveOnActionImages() {
                 if (windowMode.equals("previewing")) {
                     return;
                 }
@@ -462,11 +458,6 @@ public class AddItem extends Application {
                         } else {
                             setImageStatus("There was an error saving images", 3, "red");
                         }
-                        if (initialsave) {
-                            MainPage.updateTable();
-                            setPreviewing();
-                            Methods.updateUserLog(user, "created item SKU=\"" + currItem.SKU + "\"");
-                        }
                     });
                 });
                 newThr.setUncaughtExceptionHandler(h);
@@ -525,7 +516,7 @@ public class AddItem extends Application {
 
                             try {
                                 if (imageBlockPane != null) {
-                                    imageBlockPane.setCenter(generateImages());
+                                    imageBlockPane.setCenter(new imageAdditMethods().generateImages());
                                 }
                             } catch (Exception e) {
                                 System.out.println("runlater exc catched");
@@ -543,9 +534,195 @@ public class AddItem extends Application {
                 newThr.setUncaughtExceptionHandler(h);
                 newThr.start();
             }
+        }
+        imageAdditMethods imageAdditMethod = new imageAdditMethods();
+        imageBlockPane.setCenter(imageAdditMethod.generateImages());
 
-            //addit methods
 
+        FileChooser fil_chooser = new FileChooser();
+
+        dragDropLbl.setOnDragOver((EventHandler) e -> {
+            if (e instanceof DragEvent) {
+                DragEvent event = (DragEvent) e;
+                if (event.getDragboard().hasFiles()) {
+                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                }
+                event.consume();
+            }
+        });
+        dragDropLbl.setOnDragDropped((EventHandler) e -> {
+            System.out.println("dragdrop event started");
+            if (e instanceof DragEvent) {
+                DragEvent event = (DragEvent) e;
+                for (File fl : event.getDragboard().getFiles()) {
+                    try {
+                        if (fl.isFile()) {
+                            String[] star = fl.toString().split("\\.");
+                            if (star.length > 1 &&
+                                (star[star.length - 1].equals("jpg") || star[star.length - 1].equals("png") ||
+                                    star[star.length - 1].equals("bmp"))) {
+                                Image img = (new Image(fl.toURI().toString()));
+                                if (img != null) {
+                                    images.add(img);
+                                }
+                            }
+                        }
+                    } catch (Exception exc) {
+                        System.out.println("There was an error processing file " + fl.toURI());
+                    }
+                }
+                System.out.println("Got " + images.size() + " images");
+                imageBlockPane.setCenter(imageAdditMethod.generateImages());
+//                newWindow.setHeight(secondScene.getHeight()+200);
+                event.consume();
+            }
+        });
+
+        dragDropLbl.setOnMousePressed((e) -> {
+            imageAdditMethod.configureFileChooser(fil_chooser);
+            List<File> files = fil_chooser.showOpenMultipleDialog(newWindow);
+            if (files != null) {
+                for (File fl : files) {
+                    try {
+                        if (fl.isFile()) {
+                            String[] star = fl.toString().split("\\.");
+                            if (star.length > 1 &&
+                                (star[star.length - 1].equals("jpg") || star[star.length - 1].equals("png") ||
+                                    star[star.length - 1].equals("bmp"))) {
+                                Image img = (new Image(fl.toURI().toString()));
+                                if (img != null) {
+                                    images.add(img);
+                                }
+                            }
+                        }
+                    } catch (Exception exc) {
+                        System.out.println("There was an error processing file " + fl.toURI());
+                    }
+                }
+                System.out.println("Got " + images.size() + " images");
+
+                imageBlockPane.setCenter(imageAdditMethod.generateImages());
+            }
+        });
+        updateImages.setOnAction(e -> {
+            imageAdditMethod.saveOnActionImages();
+            String timm = new Timestamp(System.currentTimeMillis()).toString();
+            if (timm.split("\\.").length > 0) {
+                timm = timm.split("\\.")[0];
+            }
+            String otherRecs =
+                MainPage.user + " on " + timm + " : saved images (" +
+                    (images.size() == 1 ? "1 image" : images.size() + " images") + " total)";
+            if (otherRecs.length() > 2 &&
+                otherRecs.substring(otherRecs.length() - 2, otherRecs.length()).equals(", ")) {
+                otherRecs = otherRecs.substring(0, otherRecs.length() - 2);
+            }
+            otherRecs = otherRecs + ";<<<:::===" + (currItem.OtherRecords == null ? "" : currItem.OtherRecords);
+
+            String sqll =
+                "UPDATE " + MainPage.schema + ".items SET OtherRecords='" + otherRecs + "' WHERE SKU=" + currItem.SKU;
+            System.out.println("\tSQL " + sqll);
+
+            try {
+                Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
+                Statement stmt = conn.createStatement();
+                stmt.executeUpdate(sqll);
+                currItem.OtherRecords = otherRecs;
+                stmt.close();
+                conn.close();
+            } catch (SQLException ee) {
+                ee.printStackTrace();
+                MainPage.databaseErrorAlert(ee).showAndWait();
+            }
+            Methods.updateUserLog(user,
+                "uploaded " + (images.size() == 1 ? "1 image" : images.size() + " images") + " for item SKU=\"" +
+                    currItem.SKU + "\"");
+
+        });
+
+        pane.setRight(imageBlockPane);
+        BorderPane.setMargin(imageBlockPane, new Insets(20, 8, 0, 10));
+        /** images ended*/
+
+        /** print block added to the bottom of imageblockpane*/
+
+        Label chosePrinLbl = new Label("Choose printer:");
+        VBox.setMargin(chosePrinLbl, new Insets(5, 0, 0, 0));
+
+        ObservableList<String> printersObsList = FXCollections.observableArrayList();
+//        PrintServiceLookup.lookupPrintServices(null, null)
+        PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
+        PrintService defaultPrinter = PrintServiceLookup.lookupDefaultPrintService();
+        String defaultPr = defaultPrinter.toString();
+        for (PrintService ps : printServices) {
+            String pss = ps.toString();
+            if (pss.contains("Win32 Printer : ")) {
+                pss = pss.replace("Win32 Printer : ", "");
+            }
+            if (ps.equals(defaultPrinter)) {
+                pss += " (default)";
+                defaultPr = pss;
+            }
+            printersObsList.add(pss);
+        }
+
+        ChoiceBox printerChoiceBox = new ChoiceBox(printersObsList);
+        printerChoiceBox.setValue(defaultPr);
+        VBox.setMargin(printerChoiceBox, new Insets(0, 0, 8, 0));
+        //
+        printerChoiceBox.setDisable(true);
+        //
+
+        VBox printerVbox = new VBox(8, chosePrinLbl, printerChoiceBox);
+        printerVbox.setAlignment(Pos.BOTTOM_LEFT);
+
+
+        ObservableList<String> labelsObsList = FXCollections.observableArrayList();
+        labelsObsList.addAll("default label");
+        ChoiceBox labelChoiceBox = new ChoiceBox((labelsObsList));
+        labelChoiceBox.setValue("default label");
+        labelChoiceBox.setDisable(true);
+
+        Button printBtn = new Button("Print");
+        printBtn.setMinSize(100, 40);
+
+        VBox printVbox = new VBox(3, labelChoiceBox, printBtn);
+
+        HBox printHBox = new HBox(30, printerVbox, printVbox);
+        printHBox.setAlignment(Pos.BOTTOM_RIGHT);
+        BorderPane.setMargin(printHBox, new Insets(9, 14, 25, 9));
+        printHBox.setPadding(new Insets(7));
+        printHBox.setBorder(
+            new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, new CornerRadii(3),
+                new BorderWidths(0.5))));
+
+        printHBox.setVisible(false);
+
+        imageBlockPane.setBottom(printHBox);
+
+        printBtn.setOnAction(e -> {
+            if (!new File(MainPage.bartendPath + "\\bartend.exe").exists()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error location \"bartend.exe\" file");
+//            alert.setHeaderText("Look, a Confirmation Dialog");
+                alert.setContentText(Methods.wrap(
+                    "Make sure that \"bartend.exe\" exists at the directory\"" + MainPage.bartendPath +
+                        "\", specified in the configg.csv file"));
+                alert.showAndWait();
+                return;
+            }
+            String printer = (String) printerChoiceBox.getValue();
+            if (printer.contains(" (default)")) {
+                printer = printer.replace(" (default)", "");
+            }
+            System.out.println(printer);
+            printNewLbl(currItem.PN, currItem.SN, currItem.Grade, currItem.Specs, "Win32 Printer : " + printer);
+        });
+
+        /** end printing*/
+
+
+        class additMethods {
 
             private String notEditableColorCSS = "-fx-text-inner-color: #5f5f5f;";
             private String editableColorCSS = "-fx-text-inner-color: #000000;";
@@ -619,7 +796,7 @@ public class AddItem extends Application {
                 updateImages.setVisible(true);
                 directr.setText("Current directory: " + MainPage.imagesPath + "\\" + currItem.SKU + "\\");
 
-                imageBlockPane.setCenter(generateImages());
+                imageBlockPane.setCenter(imageAdditMethod.generateImages());
             }
 
             void setPreviewing() {
@@ -796,31 +973,12 @@ public class AddItem extends Application {
                         stmt.close();
                         conn.close();
                     }
-                    currItem = new Item(
-
-                        SKU,
-                        (SNField.getText().strip().equals("") ? null : SNField.getText().strip()),
-                        (PNField.getText().strip().equals("") ? null : PNField.getText().strip()),
-                        (UPCField.getText().strip().equals("") ? null : UPCField.getText().strip()),
-                        (gradeField.getText().strip().equals("") ? null : gradeField.getText().strip()),
-                        (locField.getText().strip().equals("") ? null : locField.getText().strip()),
-                        (notesArea.getText().strip().equals("") ? null : notesArea.getText().strip()),
-                        MainPage.user,
-                        new Timestamp(System.currentTimeMillis()),
-                        null,
-                        null,
-                        new Timestamp(System.currentTimeMillis()),
-                        (POnumField.getText().strip().equals("") ? null :
-                            POnumField.getText().strip()),
-                        (specsArea.getText().strip().equals("") ? null : specsArea.getText().strip())
-
-                    );
                     setStatus("An Item Successfully Added! Saving Images and opening preview window", 3, "green");
 //                    new additMethods().updateCurItem();
-                    saveOnActionImages(true);
-//                    MainPage.updateTable();
-//                    new additMethods().setPreviewing();
-//                    Methods.updateUserLog(user, "created item SKU=\"" + currItem.SKU + "\"");
+                    imageAdditMethod.saveOnActionImages();
+                    MainPage.updateTable();
+                    new additMethods().setPreviewing();
+                    Methods.updateUserLog(user, "created item SKU=\"" + currItem.SKU + "\"");
                 } catch (SQLException ex) {
                     System.out.println("some big unhandled error");
                     MainPage.databaseErrorAlert(ex).showAndWait();
@@ -1026,7 +1184,7 @@ public class AddItem extends Application {
                         case "preview":
 //                            new additMethods().updateCurItem();
                             setPreviewing();
-                            loadImagesFromDir();
+                            imageAdditMethod.loadImagesFromDir();
                             break;
                         }
                     } else {
@@ -1040,7 +1198,7 @@ public class AddItem extends Application {
                         break;
                     case "preview":
                         setPreviewing();
-                        loadImagesFromDir();
+                        imageAdditMethod.loadImagesFromDir();
                         break;
                     }
                 }
@@ -1086,195 +1244,8 @@ public class AddItem extends Application {
 //                    }
 //                }
 //            }
-
-
         }
         additMethods additMethod = new additMethods();
-        imageBlockPane.setCenter(additMethod.generateImages());
-
-
-        FileChooser fil_chooser = new FileChooser();
-
-        dragDropLbl.setOnDragOver((EventHandler) e -> {
-            if (e instanceof DragEvent) {
-                DragEvent event = (DragEvent) e;
-                if (event.getDragboard().hasFiles()) {
-                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-                }
-                event.consume();
-            }
-        });
-        dragDropLbl.setOnDragDropped((EventHandler) e -> {
-            System.out.println("dragdrop event started");
-            if (e instanceof DragEvent) {
-                DragEvent event = (DragEvent) e;
-                for (File fl : event.getDragboard().getFiles()) {
-                    try {
-                        if (fl.isFile()) {
-                            String[] star = fl.toString().split("\\.");
-                            if (star.length > 1 &&
-                                (star[star.length - 1].equals("jpg") || star[star.length - 1].equals("png") ||
-                                    star[star.length - 1].equals("bmp"))) {
-                                Image img = (new Image(fl.toURI().toString()));
-                                if (img != null) {
-                                    images.add(img);
-                                }
-                            }
-                        }
-                    } catch (Exception exc) {
-                        System.out.println("There was an error processing file " + fl.toURI());
-                    }
-                }
-                System.out.println("Got " + images.size() + " images");
-                imageBlockPane.setCenter(additMethod.generateImages());
-//                newWindow.setHeight(secondScene.getHeight()+200);
-                event.consume();
-            }
-        });
-
-        dragDropLbl.setOnMousePressed((e) -> {
-            additMethod.configureFileChooser(fil_chooser);
-            List<File> files = fil_chooser.showOpenMultipleDialog(newWindow);
-            if (files != null) {
-                for (File fl : files) {
-                    try {
-                        if (fl.isFile()) {
-                            String[] star = fl.toString().split("\\.");
-                            if (star.length > 1 &&
-                                (star[star.length - 1].equals("jpg") || star[star.length - 1].equals("png") ||
-                                    star[star.length - 1].equals("bmp"))) {
-                                Image img = (new Image(fl.toURI().toString()));
-                                if (img != null) {
-                                    images.add(img);
-                                }
-                            }
-                        }
-                    } catch (Exception exc) {
-                        System.out.println("There was an error processing file " + fl.toURI());
-                    }
-                }
-                System.out.println("Got " + images.size() + " images");
-
-                imageBlockPane.setCenter(additMethod.generateImages());
-            }
-        });
-        updateImages.setOnAction(e -> {
-            additMethod.saveOnActionImages(false);
-            String timm = new Timestamp(System.currentTimeMillis()).toString();
-            if (timm.split("\\.").length > 0) {
-                timm = timm.split("\\.")[0];
-            }
-            String otherRecs =
-                MainPage.user + " on " + timm + " : saved images (" +
-                    (images.size() == 1 ? "1 image" : images.size() + " images") + " total)";
-            if (otherRecs.length() > 2 &&
-                otherRecs.substring(otherRecs.length() - 2, otherRecs.length()).equals(", ")) {
-                otherRecs = otherRecs.substring(0, otherRecs.length() - 2);
-            }
-            otherRecs = otherRecs + ";<<<:::===" + (currItem.OtherRecords == null ? "" : currItem.OtherRecords);
-
-            String sqll =
-                "UPDATE " + MainPage.schema + ".items SET OtherRecords='" + otherRecs + "' WHERE SKU=" + currItem.SKU;
-            System.out.println("\tSQL " + sqll);
-
-            try {
-                Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-                Statement stmt = conn.createStatement();
-                stmt.executeUpdate(sqll);
-                currItem.OtherRecords = otherRecs;
-                stmt.close();
-                conn.close();
-            } catch (SQLException ee) {
-                ee.printStackTrace();
-                MainPage.databaseErrorAlert(ee).showAndWait();
-            }
-            Methods.updateUserLog(user,
-                "uploaded " + (images.size() == 1 ? "1 image" : images.size() + " images") + " for item SKU=\"" +
-                    currItem.SKU + "\"");
-
-        });
-
-        pane.setRight(imageBlockPane);
-        BorderPane.setMargin(imageBlockPane, new Insets(20, 8, 0, 10));
-        /** images ended*/
-
-        /** print block added to the bottom of imageblockpane*/
-
-        Label chosePrinLbl = new Label("Choose printer:");
-        VBox.setMargin(chosePrinLbl, new Insets(5, 0, 0, 0));
-
-        ObservableList<String> printersObsList = FXCollections.observableArrayList();
-//        PrintServiceLookup.lookupPrintServices(null, null)
-        PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
-        PrintService defaultPrinter = PrintServiceLookup.lookupDefaultPrintService();
-        String defaultPr = defaultPrinter.toString();
-        for (PrintService ps : printServices) {
-            String pss = ps.toString();
-            if (pss.contains("Win32 Printer : ")) {
-                pss = pss.replace("Win32 Printer : ", "");
-            }
-            if (ps.equals(defaultPrinter)) {
-                pss += " (default)";
-                defaultPr = pss;
-            }
-            printersObsList.add(pss);
-        }
-
-        ChoiceBox printerChoiceBox = new ChoiceBox(printersObsList);
-        printerChoiceBox.setValue(defaultPr);
-        VBox.setMargin(printerChoiceBox, new Insets(0, 0, 8, 0));
-        //
-        printerChoiceBox.setDisable(true);
-        //
-
-        VBox printerVbox = new VBox(8, chosePrinLbl, printerChoiceBox);
-        printerVbox.setAlignment(Pos.BOTTOM_LEFT);
-
-
-        ObservableList<String> labelsObsList = FXCollections.observableArrayList();
-        labelsObsList.addAll("default label");
-        ChoiceBox labelChoiceBox = new ChoiceBox((labelsObsList));
-        labelChoiceBox.setValue("default label");
-        labelChoiceBox.setDisable(true);
-
-        Button printBtn = new Button("Print");
-        printBtn.setMinSize(100, 40);
-
-        VBox printVbox = new VBox(3, labelChoiceBox, printBtn);
-
-        printHBox.getChildren().addAll(printerVbox, printVbox);
-        printHBox.setAlignment(Pos.BOTTOM_RIGHT);
-        BorderPane.setMargin(printHBox, new Insets(9, 14, 25, 9));
-        printHBox.setPadding(new Insets(7));
-        printHBox.setBorder(
-            new Border(new BorderStroke(Color.web("#000000"), BorderStrokeStyle.SOLID, new CornerRadii(3),
-                new BorderWidths(0.5))));
-
-        printHBox.setVisible(false);
-
-        imageBlockPane.setBottom(printHBox);
-
-        printBtn.setOnAction(e -> {
-            if (!new File(MainPage.bartendPath + "\\bartend.exe").exists()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error location \"bartend.exe\" file");
-//            alert.setHeaderText("Look, a Confirmation Dialog");
-                alert.setContentText(Methods.wrap(
-                    "Make sure that \"bartend.exe\" exists at the directory\"" + MainPage.bartendPath +
-                        "\", specified in the configg.csv file"));
-                alert.showAndWait();
-                return;
-            }
-            String printer = (String) printerChoiceBox.getValue();
-            if (printer.contains(" (default)")) {
-                printer = printer.replace(" (default)", "");
-            }
-            System.out.println(printer);
-            printNewLbl(currItem.PN, currItem.SN, currItem.Grade, currItem.Specs, "Win32 Printer : " + printer);
-        });
-
-        /** end printing*/
-
 
         cancel.setOnAction(e -> {
             additMethod.exitConfirmAction("exit");
@@ -1307,7 +1278,7 @@ public class AddItem extends Application {
             break;
         case "previewing":
             additMethod.setPreviewing();
-            additMethod.loadImagesFromDir();
+            imageAdditMethod.loadImagesFromDir();
 //            imageBlockPane.setCenter(imageAdditMethod.generateImages());
 
             break;
@@ -1508,4 +1479,5 @@ public class AddItem extends Application {
         }
         return b;
     }
+
 }

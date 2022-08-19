@@ -126,78 +126,8 @@ public class UserActivity extends Application {
         importPreviewStage.setResizable(true);
         importPreviewStage.show();
 
-        Methods.boostScroll(scrollPane, scrollVbox,50);
+        Methods.boostScroll(scrollPane, scrollVbox, 50);
     }
-
-
-
-//    public VBox renderStats(){
-//        VBox vbox = new VBox();
-//        boolean haveActivity = false;
-//        try{
-//            Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
-//            Statement stmt = conn.createStatement();
-////            String sqlCreate = "CREATE USER '"+usern+"'@'%' IDENTIFIED WITH mysql_native_password BY '"+password+"'";
-////            String sqlUpdate = "UPDATE `mysql`.`user` SET `authentication_string` = '"+password+"' WHERE `User` = '"+usern+"';";
-//
-//            ResultSet rs = stmt.executeQuery("SELECT * from "+MainPage.schema+".useractions WHERE User = '"+user+"' order by Date desc");
-//            while (rs.next()){
-//                BorderPane dayBorderPane = new BorderPane();
-//                dayBorderPane.setMinWidth(600);
-//
-//                Date date = rs.getDate("Date");
-//                String dayOfWeek = DayOfWeek.from(rs.getDate("Date").toLocalDate()).name();
-////                System.out.println(dayOfWeek);
-//                Label dateLbl = new Label(date+" "+dayOfWeek);
-//                BorderPane.setMargin(dateLbl, new Insets(8,3,3,15));
-//                dayBorderPane.setTop(dateLbl);
-//
-//                TextArea historyArea = new TextArea();
-//                historyArea.setMaxWidth(450);
-//                historyArea.setPrefRowCount(7);
-//                historyArea.setEditable(false);
-////                historyArea.setWrapText(true);
-//
-//                String origTxt = rs.getString("Log");
-//                String formatted = origTxt.replaceAll("<<<:::===","\n");
-//                historyArea.setText(formatted);
-//                BorderPane.setMargin(historyArea, new Insets(3));
-//
-//                dayBorderPane.setLeft(historyArea);
-//
-//                Label stat1Lbl = new Label("worked on "+countItems(origTxt)+" unique items");
-//                VBox.setMargin(stat1Lbl,new Insets((3)));
-//                VBox statsVbox = new VBox(2, stat1Lbl);
-//
-//                dayBorderPane.setCenter(statsVbox);
-//
-//
-//
-//                dayBorderPane.setBorder(new Border(new BorderStroke(
-//                    Color.web("#b4b4b4"), BorderStrokeStyle.SOLID, new CornerRadii(5),
-//                    new BorderWidths(1))));
-//                VBox.setMargin(dayBorderPane,new Insets(6));
-//
-//                vbox.getChildren().add(dayBorderPane);
-//                haveActivity = true;
-//            }
-//            rs.close();
-//            stmt.close();
-//            conn.close();
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            MainPage.databaseErrorAlert(e).showAndWait();
-//        }
-//        if (!haveActivity){
-//            Label noActivityLbl = new Label("no user activity");
-//            vbox.setAlignment(Pos.CENTER);
-//            noActivityLbl.setAlignment(Pos.CENTER);
-//            vbox.getChildren().add(noActivityLbl);
-//        }
-//
-//        return vbox;
-//    }
 
     public void generateStats(int num) {
         vbox.getChildren().clear();
@@ -294,5 +224,4 @@ public class UserActivity extends Application {
 //    public static void main(String[] args) {
 //        launch(args);
 //    }
-
 }

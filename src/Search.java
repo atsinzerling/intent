@@ -28,7 +28,7 @@ public class Search {
         Item[] arr;
         try {
             arr = MainPage.extractItemsFromDb(
-                    "SELECT * FROM "+MainPage.schema+".items WHERE SKU=" + Integer.parseInt(searchText)
+                "SELECT * FROM " + MainPage.schema + ".items WHERE SKU=" + Integer.parseInt(searchText)
 //                + "\n" + "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime ASC"
 
             );
@@ -47,7 +47,7 @@ public class Search {
         System.out.println(arr.length);
         if (arr.length == 0) {
             arr = MainPage.extractItemsFromDb(
-                    "SELECT * FROM "+MainPage.schema+".items WHERE SN=" + "'" + searchText + "'"
+                "SELECT * FROM " + MainPage.schema + ".items WHERE SN=" + "'" + searchText + "'"
 //                + "\n" + "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime ASC"
 
             );
@@ -55,23 +55,20 @@ public class Search {
         if (arr.length == 0) {
             System.out.println("full search");
 
-//                Statement stmt = conn.createStatement();
-
-//                ArrayList<Item> arrList = new ArrayList<Item>(Arrays.asList(
             Item[] arrBig =
                 MainPage.extractItemsFromDb(
-                        "SELECT * FROM "+MainPage.schema+".items" + "\n" +
-                            "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime DESC"
-                    );
+                    "SELECT * FROM " + MainPage.schema + ".items" + "\n" +
+                        "ORDER BY CASE WHEN DateTime IS NULL THEN 1 ELSE 0 END, DateTime DESC"
+                );
 
 //                ));
-            for (Item it: arrBig){
+            for (Item it : arrBig) {
                 System.out.println(it == null);
             }
 
             //i ll be adding elements
             for (Item ite : arrBig) {
-                System.out.println("Item in SEARCH - "+ite);
+                System.out.println("Item in SEARCH - " + ite);
                 System.out.println(ite.Location == null);
                 if (
                     Long.toString(ite.SKU).contains(searchText) ||
@@ -82,10 +79,11 @@ public class Search {
                         ite.Location != null && ite.Location.toLowerCase().contains(searchText.toLowerCase()) ||
                         ite.Notes != null && ite.Notes.toLowerCase().contains(searchText.toLowerCase()) ||
                         ite.User != null && ite.User.toLowerCase().contains(searchText.toLowerCase()) ||
-                        ite.time!=null && ite.time.toString().toLowerCase().contains(searchText.toLowerCase()) ||
-                        ite.DateModified!=null && ite.DateModified.toString().toLowerCase().contains(searchText.toLowerCase()) ||
-                        ite.POnumber != null && ite.POnumber.toLowerCase().contains(searchText.toLowerCase())||
-                        ite.Specs != null && ite.Specs.toLowerCase().contains(searchText.toLowerCase())||
+                        ite.time != null && ite.time.toString().toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.DateModified != null &&
+                            ite.DateModified.toString().toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.POnumber != null && ite.POnumber.toLowerCase().contains(searchText.toLowerCase()) ||
+                        ite.Specs != null && ite.Specs.toLowerCase().contains(searchText.toLowerCase()) ||
                         ite.OtherRecords != null && ite.OtherRecords.toLowerCase().contains(searchText.toLowerCase())
                 ) {
                     data.add(ite);
@@ -94,23 +92,6 @@ public class Search {
 
                 //add ite to arraylist, then convert to arr
             }
-
-
-//                int row_count = stmt.executeQuery("SELECT COUNT(*) from items").getInt(1);
-//
-//                for (int i = 0; i < row_count; i++){
-//
-//                    Timestamp timest = stmt.executeQuery("SELECT DateTime from items WHERE rowid=" + (i+1)).getTimestamp(1);
-//                    System.out.println(timest);
-//                    System.out.println("SELECT DateTime from items WHERE rowid=" + (i+1) +"\n"+
-//                        "UPDATE items SET DateTime='" + (timest == null ? "" : timest) + "' WHERE rowid=" + (i+1)
-//                    );
-//                    if (timest!= null){
-//                        stmt.executeUpdate("UPDATE items SET DateTime='" + timest + "' WHERE rowid=" + (i+1));
-//                    }
-//                }
-
-
         }
 
 //        System.out.println(arr);
@@ -118,7 +99,6 @@ public class Search {
 //        for (Item elm : arr) {
 //            System.out.println(elm);
 //        }
-
 
         /** updating table */
 

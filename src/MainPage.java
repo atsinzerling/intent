@@ -66,16 +66,16 @@ public class MainPage extends Application {
 
     static TableView<Item> table = new TableView<Item>();
     static String urll =
-        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
-//        "jdbc:mysql://localhost:3306/products2";
+//        "jdbc:mysql://DESKTOP-E5VI6AD:3306/products";
+        "jdbc:mysql://localhost:3306/products2";
     //jdbc:mysql://DESKTOP-E5VI6AD:3306/?user=newuser
     static String schema =
-        "products";
+        "products2";
     static String user =
         "admin";
     static String passw =
-        "658etra";
-//        "newpass";
+//        "658etra";
+        "newpass";
     static String bartendPath = null;
     static String imagesPath =
         "\\\\DESKTOP-E5VI6AD\\application\\Images";
@@ -98,12 +98,6 @@ public class MainPage extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-//        try {
-//            Class.forName("com.mysql.cj.jdbc");
-////            Class.forName("com.mysql.cj.jdbc.com.mysql.cj.jdbc.Driver");
-//        } catch (ClassNotFoundException e) {
-//            e.printStackTrace();
-//        }
         try {
             Class.forName("org.apache.poi.ss.usermodel.Cell");
 //            Class.forName("com.mysql.cj.jdbc.com.mysql.cj.jdbc.Driver");
@@ -148,11 +142,6 @@ public class MainPage extends Application {
 
         String version = "version ";
         try {
-//            File fl = new File("C:\\Program Files Intent\\Intent Database 1.0.0\\intent.jar");
-//            String datime = Files.readAttributes(Paths.get("C:\\Program Files Intent\\Intent Database 1.0.0\\intent.jar"),
-//                BasicFileAttributes.class).lastModifiedTime();
-
-
             File file = new File("C:\\Program Files Intent\\Intent Database 1.0.0\\intent.jar");
             SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy-HH:mm");
             String datime = sdf.format(file.lastModified());
@@ -210,12 +199,12 @@ public class MainPage extends Application {
         });
         MenuItem itemChangeLoc = new MenuItem("Change location");
         itemChangeLoc.setOnAction(e -> {
-            new ChangeLocation(table.getSelectionModel().getSelectedItems(), "",0).start(primaryStage);
+            new ChangeLocation(table.getSelectionModel().getSelectedItems(), "", 0).start(primaryStage);
             //make changes to history of items and user activity
         });
         ContextMenu menu = new ContextMenu();
         menu.getItems().addAll(itemCopy, itemDel);
-        if (Methods.isAdmin(user)){
+        if (Methods.isAdmin(user)) {
             menu.getItems().addAll(itemChangeLoc);
         }
         table.setContextMenu(menu);
@@ -273,9 +262,6 @@ public class MainPage extends Application {
         exportBtn.setOnAction(e -> {
             DirectoryChooser exportDirChooser = new DirectoryChooser();
             exportDirChooser.setTitle("Choose the destination for the export file");
-//            exportDirChooser.setInitialDirectory(
-//                new File("D:\\Download")
-//            );
 
             File exportFile = exportDirChooser.showDialog(primaryStage);
             if (exportFile == null) {
@@ -299,21 +285,7 @@ public class MainPage extends Application {
                 } catch (IOException exxxx) {
                     exxxx.printStackTrace();
                 }
-            } else {
-//                    Alert alert = new Alert(Alert.AlertType.ERROR);
-//                    alert.setTitle("Folder unavailable");
-////            alert.setHeaderText("Look, a Confirmation Dialog");
-//                    alert.setContentText("Folder "+initDirectory+" is unavailable");
-//
-//                    alert.showAndWait();
             }
-
-//                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-//                alert.setTitle("Export Successful!");
-////            alert.setHeaderText("Look, a Confirmation Dialog");
-//                alert.setContentText("Successfully exported to\n"+fullpath);
-//
-//                alert.showAndWait();
         });
 
         Button manageUsersBtn = new Button("Manage Users");
@@ -324,8 +296,6 @@ public class MainPage extends Application {
         HBox adminOptHbox = new HBox(15, importBtn, infoWrap, exportBtn, manageUsersBtn);
 
         VBox adminOptVbox = new VBox(3, adminToolsLbl, adminOptHbox);
-//        adminOptHbox.setPrefWidth(Double.MAX_VALUE);
-//        adminOptHbox.setAlignment(Pos.CENTER_LEFT);
         adminOptVbox.setPadding(new Insets(5));
         HBox.setMargin(adminOptVbox, new Insets(0, 50, 0, 0));
         adminOptVbox.setBorder(
@@ -460,18 +430,6 @@ public class MainPage extends Application {
         pane.setLeft(delete);
 
 
-//        primaryStage.setScene(new Scene(root));
-//        primaryStage.show();
-
-
-        //importLoadLbl, loadingPane, pane
-//        loadingPane.toFront();
-//        pane.setDisable(true);
-////
-//        pane.toFront();
-//        pane.setDisable(false);
-
-
         primaryStage.getIcons()
             .add(new Image("file:C:\\Program Files Intent\\Intent Database 1.0.0\\img\\intent_logo.png"));
         Scene scene = new Scene(root, 950, 700);
@@ -538,8 +496,6 @@ public class MainPage extends Application {
                     (st13 == "" ? null : st13),
                     (st14 == "" ? null : st14)
                 ));
-
-//                rs.next();
             }
 
 
@@ -604,8 +560,6 @@ public class MainPage extends Application {
 
 
     public static TableColumn[] updateTable() {
-//        table = new TableView<Item>();
-//        table.setEditable(true);
 
         TableColumn SKUCol = new TableColumn("SKU");
         TableColumn SNCol = new TableColumn("SN");
@@ -665,22 +619,6 @@ public class MainPage extends Application {
 
     public static void deleteAct() {
 
-//        new Thread(()->{
-//            Platform.runLater(() -> {
-//                MainPage.importLoadLbl.setText("processing");
-//                AddItem.dotAnim(MainPage.importLoadLbl);
-//                MainPage.loadingPane.toFront();
-//                MainPage.pane.setDisable(true);
-//            });
-//
-//            Platform.runLater(() -> {
-//                MainPage.pane.toFront();
-//                MainPage.pane.setDisable(false);
-//
-//            });
-//        }).start();
-
-
         ArrayList<Item> itemsSelect = new ArrayList<>(table.getSelectionModel().getSelectedItems());
         if (itemsSelect.isEmpty()) {
             return;
@@ -691,18 +629,25 @@ public class MainPage extends Application {
         MainPage.loadingPane.toFront();
         MainPage.pane.setDisable(true);
         StringBuilder itemsStr = new StringBuilder("");
+        StringBuilder itemsStrForHistory = new StringBuilder("");
         int count = 0;
         for (Item it : itemsSelect) {
             itemsStr.append(it.SKU + ", ");
             count++;
+            if (count < 5) {
+                itemsStrForHistory.append(it.SKU + ", ");
+            } else if (count == 5) {
+                itemsStrForHistory.append("..., ");
+            }
             if (count == 100) {
                 itemsStr.append("..., ");
                 break;
             }
         }
         String itemsStrrr = itemsStr.toString().substring(0, itemsStr.length() - 2);
+        String itemsStrForHistoryStrrr = itemsStrForHistory.toString().substring(0, itemsStrForHistory.length() - 2);
 
-        if (itemsStrrr != "") {
+        if (!itemsStrrr.equals("")) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Deletion Confirmation");
 //            alert.setHeaderText("Look, a Confirmation Dialog");
@@ -729,7 +674,6 @@ public class MainPage extends Application {
                         Connection conn = DriverManager.getConnection(urll, user, passw);
                         Statement stmt = conn.createStatement();
                         StringBuilder failed = new StringBuilder("");
-
 
                         //automatic backup
 
@@ -782,7 +726,8 @@ public class MainPage extends Application {
                         MainPage.databaseErrorAlert(ex).showAndWait();
                     } finally {
                         Methods.updateUserLog(user,
-                            "deleted " + (itemsDeleted == 1 ? "1 item" : itemsDeleted + " items"));
+                            "deleted " + (itemsDeleted == 1 ? "1 item" : itemsDeleted + " items") + " (" +
+                                itemsStrForHistoryStrrr + ")");
 
                         Platform.runLater(() -> {
                             updateTable();
@@ -806,7 +751,6 @@ public class MainPage extends Application {
         e.printStackTrace();
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Database Error");
-//                    alert2.setHeaderText("Look, a Confirmation Dialog");
         alert.setContentText(Methods.wrap(e.getMessage()));
 
         return alert;

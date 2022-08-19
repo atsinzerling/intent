@@ -4,13 +4,14 @@ public class User {
     private String privileges;
     public boolean wasCreated;
 
-    public User(String username, String password,boolean wasCreated) {
+    public User(String username, String password, boolean wasCreated) {
         this.username = username;
         this.password = password;
         this.wasCreated = wasCreated;
     }
-    public String toString(){
-        return "User: "+username+" - "+password;
+
+    public String toString() {
+        return "User: " + username + " - " + password;
     }
 
     public String getUsername() {

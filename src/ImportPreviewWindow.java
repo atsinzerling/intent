@@ -37,8 +37,6 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
 
-//import com.monitorjbl.xlsx.StreamingReader;
-
 public class ImportPreviewWindow extends Application {
 
     ObservableList<Item> importData;
@@ -56,7 +54,6 @@ public class ImportPreviewWindow extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-
 
         TableView<Item> tablePr = new TableView<Item>();
 
@@ -93,7 +90,6 @@ public class ImportPreviewWindow extends Application {
             .addAll(SKUCol, SNCol, PNCol, UPCCol, gradeCol, locCol, notesCol, userCol, timeCol, dateModifiedCol,
                 POnumCol, specsCol, historyCol);
 
-
         Button cancel = new Button("Cancel");
         Button addItems = new Button("Add Items");
 
@@ -112,7 +108,6 @@ public class ImportPreviewWindow extends Application {
         HBox buttonsHbox = new HBox(10, cancel, addItems);
 
         BorderPane pane = new BorderPane();
-//        pane.setTop();
         pane.setCenter(mainVbox);
         pane.setBottom(buttonsHbox);
 
@@ -136,7 +131,6 @@ public class ImportPreviewWindow extends Application {
         addItems.setOnAction(e -> {
 
             new Thread(() -> {
-
 
                 int countAdded = 0;
 
@@ -201,8 +195,6 @@ public class ImportPreviewWindow extends Application {
 
                     });
                 }
-
-
             }).start();
         });
     }
@@ -211,9 +203,6 @@ public class ImportPreviewWindow extends Application {
 
         //configuring file chooser
         importFileChooser.setTitle("Choose Excel File");
-//        importFileChooser.setInitialDirectory(
-//            new File("D:\\Download")
-//        );
         importFileChooser.getExtensionFilters().addAll(
 //            new FileChooser.ExtensionFilter("All Images", "*.*"),
             new FileChooser.ExtensionFilter("Microsoft Excel Worksheet", "*.xlsx")
@@ -289,7 +278,6 @@ public class ImportPreviewWindow extends Application {
                     }
                     //now need to
                     Row currRow = null;
-
 
                     Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
                     Statement stmt = conn.createStatement();
@@ -576,13 +564,11 @@ public class ImportPreviewWindow extends Application {
                                 errorString += "\nError adding item " + currItem.SKU + ": Uncatched error;";
                             }
                         }
-
                     }
 
                     stmt.close();
                     conn.close();
                     System.out.println("num of rows " + rowNum);
-
                 }
 
             } catch (SQLException ex) {

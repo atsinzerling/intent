@@ -27,58 +27,66 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class Methods {
-    public static String wrap(String orig){
+    public static String wrap(String orig) {
 
-        char[] charArr = (orig+" ").toCharArray();
+        char[] charArr = (orig + " ").toCharArray();
 
         int lastLineBreak = 0;
         int lastSpace = 0;
-        for (int i = 0; i < charArr.length; i++){
-            if (charArr[i] == ' '){
-                if (i-lastLineBreak >=60){
+        for (int i = 0; i < charArr.length; i++) {
+            if (charArr[i] == ' ') {
+                if (i - lastLineBreak >= 60) {
                     charArr[lastSpace] = '\n';
                     lastLineBreak = lastSpace;
                 }
                 lastSpace = i;
             }
         }
-        return new String(charArr).substring(0, charArr.length-1);
+        return new String(charArr).substring(0, charArr.length - 1);
     }
 
-    public static void errorAlert(String title, String content){
+    public static void errorAlert(String title, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
         alert.setContentText(content);
         alert.showAndWait();
     }
 
-    public static boolean isAdmin(String username){
-        return (username.length() > 1 && username.substring(username.length() - 2).equals("/A")) || username.equals("admin");
+    public static boolean isAdmin(String username) {
+        return (username.length() > 1 && username.substring(username.length() - 2).equals("/A")) ||
+            username.equals("admin");
     }
 
-    public static void updateUserLog(String user, String log){
+    public static void updateUserLog(String user, String log) {
 
-        java.sql.Date date = java.sql.Date.valueOf(new Timestamp(System.currentTimeMillis()).toLocalDateTime().toLocalDate());
+        java.sql.Date date =
+            java.sql.Date.valueOf(new Timestamp(System.currentTimeMillis()).toLocalDateTime().toLocalDate());
 
-        try{
+        try {
             Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
             Statement stmt = conn.createStatement();
 
 
-            String selectsql = "SELECT * from "+MainPage.schema+".useractions WHERE (User, Date) = ('"+user+"','"+date+"')";
+            String selectsql =
+                "SELECT * from " + MainPage.schema + ".useractions WHERE (User, Date) = ('" + user + "','" + date +
+                    "')";
             ResultSet rs = stmt.executeQuery(selectsql);
 
             SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
             String dateeime = sdf.format(new Timestamp(System.currentTimeMillis()));
 
-            if (rs.next()){
+            if (rs.next()) {
                 System.out.println(rs.getString("User") + " " + rs.getDate("Date") + " " + rs.getString("Log"));
-                String updsql = "UPDATE "+MainPage.schema+".useractions SET Log='"+ dateeime+" "+log+";<<<:::==="+rs.getString("Log")   +"' WHERE (User, Date) = ('"+user+"','"+date+"')";
+                String updsql =
+                    "UPDATE " + MainPage.schema + ".useractions SET Log='" + dateeime + " " + log + ";<<<:::===" +
+                        rs.getString("Log") + "' WHERE (User, Date) = ('" + user + "','" + date + "')";
                 System.out.println(stmt.executeUpdate(updsql));
 
-            } else{
+            } else {
                 System.out.println("no record");
-                String sqll = "INSERT INTO "+MainPage.schema+".useractions "+"VALUES ('" + user+"','" +date+"','"+dateeime+" "+log+ "')";
+                String sqll =
+                    "INSERT INTO " + MainPage.schema + ".useractions " + "VALUES ('" + user + "','" + date + "','" +
+                        dateeime + " " + log + "')";
                 System.out.println(stmt.executeUpdate(sqll));
             }
 //            System.out.println(stmt.executeUpdate(sqll));
@@ -88,7 +96,7 @@ public class Methods {
     }
 
 
-    public static void export_func(String filepath){
+    public static void export_func(String filepath) {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet spreadsheet = workbook.createSheet("Intent Data");
         XSSFRow row = spreadsheet.createRow(0);
@@ -97,28 +105,29 @@ public class Methods {
             Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
             Statement stmt = conn.createStatement();
 
-            ResultSet rs = stmt.executeQuery("SELECT * FROM "+MainPage.schema+".items" + "\n" + "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC");
+            ResultSet rs = stmt.executeQuery("SELECT * FROM " + MainPage.schema + ".items" + "\n" +
+                "ORDER BY CASE WHEN DateModified IS NULL THEN DateTime ELSE DateModified END DESC");
             ResultSetMetaData metadata = rs.getMetaData();
 
             int columnCount = metadata.getColumnCount();
 
             System.out.print("test_table columns : ");
 
-            for (int i=0; i<columnCount; i++) {
+            for (int i = 0; i < columnCount; i++) {
 
-                String columnName = metadata.getColumnName(i+1);
-                switch (columnName){
+                String columnName = metadata.getColumnName(i + 1);
+                switch (columnName) {
                 case "DateTime":
-                    columnName="Date Created";
+                    columnName = "Date Created";
                     break;
                 case "DateModified":
-                    columnName="Date Modified";
+                    columnName = "Date Modified";
                     break;
                 case "OtherRecords":
-                    columnName="History";
+                    columnName = "History";
                     break;
                 case "POnumber":
-                    columnName="PO#";
+                    columnName = "PO#";
                     break;
                 }
                 System.out.print(columnName + " ");
@@ -129,36 +138,33 @@ public class Methods {
 
             int rowCounter = 1;
 
-            while(rs.next()){
+            while (rs.next()) {
                 row = spreadsheet.createRow(rowCounter);
-                for (int i = 0; i<columnCount; i++){
-                    switch (i){
+                for (int i = 0; i < columnCount; i++) {
+                    switch (i) {
                     case 0:
-                        row.createCell(i).setCellValue(rs.getLong(0+1));
+                        row.createCell(i).setCellValue(rs.getLong(0 + 1));
                         break;
                     case 8:
 
                     case 11:
                         Cell timecell = row.createCell(i);
                         CellStyle timestyle = workbook.createCellStyle();
-                        timestyle.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat("d/m/yy h:mm"));
+                        timestyle.setDataFormat(
+                            workbook.getCreationHelper().createDataFormat().getFormat("d/m/yy h:mm"));
                         timecell.setCellStyle(timestyle);
 
-                        if (rs.getTimestamp(i+1) != null) {
+                        if (rs.getTimestamp(i + 1) != null) {
                             timecell.setCellValue(new Date(rs.getTimestamp(i + 1).getTime()));
                         }
                         break;
                     default:
-                        row.createCell(i).setCellValue(rs.getString(i+1));
+                        row.createCell(i).setCellValue(rs.getString(i + 1));
                         break;
                     }
                 }
                 rowCounter++;
             }
-//            SimpleDateFormat sdf = new SimpleDateFormat("MM_dd_yyyy-HH-mm");
-//            String dateeime = sdf.format(new Timestamp(System.currentTimeMillis()));
-//
-//            String fullpath = exportFile.getAbsolutePath().toString() + "\\Intent_db_export_"+dateeime+".xlsx";
             FileOutputStream out = new FileOutputStream(filepath);
 
             workbook.write(out);
@@ -170,13 +176,13 @@ public class Methods {
             rs.close();
 
         } catch (SQLException ex) {
-            Platform.runLater(()->{
+            Platform.runLater(() -> {
 
                 MainPage.databaseErrorAlert(ex).showAndWait();
             });
             ex.printStackTrace();
-        } catch (IOException iox){
-            Platform.runLater(()->{
+        } catch (IOException iox) {
+            Platform.runLater(() -> {
 
                 MainPage.ioErrorAlert(iox).showAndWait();
             });
@@ -184,56 +190,58 @@ public class Methods {
         }
     }
 
-    public static void copyAct(ArrayList<Item> itemsSelect){
+    public static void copyAct(ArrayList<Item> itemsSelect) {
 
-        if (itemsSelect!=null && itemsSelect.size()>0){
+        if (itemsSelect != null && itemsSelect.size() > 0) {
             StringBuilder clipboardString = new StringBuilder();
 
-            for (Item it: itemsSelect) {
+            for (Item it : itemsSelect) {
                 clipboardString.append(it.excelFormat());
             }
             final ClipboardContent content = new ClipboardContent();
 
-            try{
+            try {
                 content.putString(clipboardString.toString());
                 Clipboard.getSystemClipboard().setContent(content);
-                System.out.println("text copied:\n"+clipboardString);
-            } catch (Exception e){
+                System.out.println("text copied:\n" + clipboardString);
+            } catch (Exception e) {
                 System.out.println("copy failed");
                 e.printStackTrace();
             }
-        } else{
+        } else {
             System.out.println("nothing to copy");
         }
     }
 
-    public static long generateCustomSKU(){
-        long currSKU= 0;
+    public static long generateCustomSKU() {
+        long currSKU = 0;
         try {
             Connection conn = DriverManager.getConnection(MainPage.urll, MainPage.user, MainPage.passw);
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT SKUcustom from "+MainPage.schema+".addit_data");
+            ResultSet rs = stmt.executeQuery("SELECT SKUcustom from " + MainPage.schema + ".addit_data");
             rs.next();
             long lastSKU = rs.getLong(1); //last used sku
             currSKU = lastSKU++;
-//            System.out.println("generated custom sku "+ currSKU+ "; execute update - "+stmt.executeUpdate("UPDATE addit_data SET SKUgenerated="+currSKU+" WHERE IDcolumn=1"));
             rs.close();
-            while (stmt.executeQuery("SELECT * from "+MainPage.schema+".items WHERE SKU="+currSKU).next()){ //while used    is it used?
+            while (stmt.executeQuery("SELECT * from " + MainPage.schema + ".items WHERE SKU=" + currSKU)
+                .next()) { //while used    is it used?
                 currSKU++;
             }
             //we got the first SKU thats not used
-            if (currSKU > lastSKU+1){
-                stmt.executeUpdate("UPDATE "+MainPage.schema+".addit_data SET SKUcustom="+(currSKU-1)+" WHERE IDcolumn=1");
+            if (currSKU > lastSKU + 1) {
+                stmt.executeUpdate(
+                    "UPDATE " + MainPage.schema + ".addit_data SET SKUcustom=" + (currSKU - 1) + " WHERE IDcolumn=1");
             }
             stmt.close();
             conn.close();
-        }  catch (SQLException ex) {
+        } catch (SQLException ex) {
             ex.printStackTrace();
 //            MainPage.databaseErrorAlert(ex).showAndWait();
         }
         return currSKU;
     }
-//    public static boolean isChildFocused(javafx.scene.Parent parent)
+
+    //    public static boolean isChildFocused(javafx.scene.Parent parent)
 //    {
 //        for (Node node : parent.getChildrenUnmodifiable())
 //        {
@@ -251,13 +259,15 @@ public class Methods {
 //        }
 //        return false;
 //    }
-    public static void boostScroll(ScrollPane scrollPane, Node content, double origBoost){
+    public static void boostScroll(ScrollPane scrollPane, Node content, double origBoost) {
         scrollPane.vvalueProperty().addListener(
             (ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
                 //System.out.println("from "+oldValue+" to "+newValue);
-                double boost = origBoost/ (content instanceof VBox?((VBox)content).getHeight() : ((HBox)content).getHeight());
+                double boost =
+                    origBoost / (content instanceof VBox ? ((VBox) content).getHeight() : ((HBox) content).getHeight());
                 double diff = (double) newValue - (double) oldValue;
-                if (almostEqual(diff, boost, 0.00001) || almostEqual(diff, (0 - boost), 0.00001) || almostEqual(diff, 0, 0.000001)) {
+                if (almostEqual(diff, boost, 0.00001) || almostEqual(diff, (0 - boost), 0.00001) ||
+                    almostEqual(diff, 0, 0.000001)) {
                     return;
                 }
                 double newww = scrollPane.getVvalue() + (diff > 0 ? boost : (0 - boost));
@@ -268,6 +278,7 @@ public class Methods {
                 }
             });
     }
+
     public static boolean almostEqual(double a, double b, double eps) {
         return Math.abs(a - b) < eps;
     }
